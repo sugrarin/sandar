@@ -1,13 +1,19 @@
-'use client';
+"use client";
 
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import type { GameMode, Difficulty, Task, GameSession, SessionAnswer } from '@/types';
-import { DIFFICULTIES, MODE_LABELS, OPERATION_SYMBOLS } from '@/types';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import type {
+  GameMode,
+  Difficulty,
+  Task,
+  GameSession,
+  SessionAnswer,
+} from "@/types";
+import { DIFFICULTIES, MODE_LABELS, OPERATION_SYMBOLS } from "@/types";
 
-const THIN_SPACE = '\u2009';
+const THIN_SPACE = "\u2009";
 const ROUND_SIZE = 12;
-const REVIEW_ROUND_ID = 'review';
+const REVIEW_ROUND_ID = "review";
 
 interface GameState {
   settings: {
@@ -30,7 +36,10 @@ interface GameState {
   startRound: (mode: GameMode) => void;
   startReviewRound: () => void;
   replayCurrentMode: () => void;
-  handleAnswer: (selected: number) => { isCorrect: boolean; shouldAdvance: boolean };
+  handleAnswer: (selected: number) => {
+    isCorrect: boolean;
+    shouldAdvance: boolean;
+  };
   advanceRound: () => void;
   finishCurrentRound: () => void;
   returnHome: () => void;
@@ -53,8 +62,8 @@ function shuffle<T>(array: T[]): T[] {
 
 function pickDifficultyProfile(difficultyId: Difficulty): Difficulty {
   const blend: Record<string, { current: number; previous: Difficulty }> = {
-    hard: { current: 0.8, previous: 'medium' },
-    brain: { current: 0.8, previous: 'hard' }
+    hard: { current: 0.8, previous: "medium" },
+    brain: { current: 0.8, previous: "hard" },
   };
 
   const b = blend[difficultyId];
@@ -77,9 +86,12 @@ function createOptions(answer: number): number[] {
   // Transpose digits for 2+ digit numbers
   const digits = String(Math.abs(answer));
   if (digits.length >= 2) {
-    const transposed = digits.length === 2
-      ? digits[1] + digits[0]
-      : digits.slice(0, -2) + digits[digits.length - 1] + digits[digits.length - 2];
+    const transposed =
+      digits.length === 2
+        ? digits[1] + digits[0]
+        : digits.slice(0, -2) +
+          digits[digits.length - 1] +
+          digits[digits.length - 2];
     const tNum = Number(transposed);
     if (tNum !== answer) options.add(tNum);
   }
@@ -89,7 +101,7 @@ function createOptions(answer: number): number[] {
   while (options.size < 4 && attempts < 20) {
     const jitter = randomInt(
       -Math.max(3, Math.ceil(Math.abs(answer) * 0.2)),
-      Math.max(3, Math.ceil(Math.abs(answer) * 0.2))
+      Math.max(3, Math.ceil(Math.abs(answer) * 0.2)),
     );
     const candidate = Math.max(0, answer + jitter);
     if (candidate !== answer) options.add(candidate);
@@ -99,8 +111,14 @@ function createOptions(answer: number): number[] {
   return shuffle(Array.from(options).slice(0, 4));
 }
 
-function formatTask(operation: GameMode, left: number, right: number, answer: number, subtitle?: string): Task {
-  const symbol = OPERATION_SYMBOLS[operation] || '+';
+function formatTask(
+  operation: GameMode,
+  left: number,
+  right: number,
+  answer: number,
+  subtitle?: string,
+): Task {
+  const symbol = OPERATION_SYMBOLS[operation] || "+";
   const question = `${left}${THIN_SPACE}${symbol}${THIN_SPACE}${right}`;
 
   return {
@@ -110,14 +128,14 @@ function formatTask(operation: GameMode, left: number, right: number, answer: nu
     operation,
     left,
     right,
-    subtitle: subtitle || MODE_LABELS[operation]
+    subtitle: subtitle || MODE_LABELS[operation],
   };
 }
 
 function buildAdditionTask(profile: typeof DIFFICULTIES.easy): Task {
   const left = randomInt(profile.addition.min, profile.addition.max);
   const right = randomInt(profile.addition.min, profile.addition.max);
-  return formatTask('addition', left, right, left + right);
+  return formatTask("addition", left, right, left + right);
 }
 
 function buildSubtractionTask(profile: typeof DIFFICULTIES.easy): Task {
@@ -125,38 +143,56 @@ function buildSubtractionTask(profile: typeof DIFFICULTIES.easy): Task {
   const b = randomInt(profile.subtraction.min, profile.subtraction.max);
   const left = Math.max(a, b);
   const right = Math.min(a, b);
-  return formatTask('subtraction', left, right, left - right);
+  return formatTask("subtraction", left, right, left - right);
 }
 
 function buildMultiplicationTask(profile: typeof DIFFICULTIES.easy): Task {
-  const left = randomInt(profile.multiplication.left[0], profile.multiplication.left[1]);
-  const right = randomInt(profile.multiplication.right[0], profile.multiplication.right[1]);
-  return formatTask('multiplication', left, right, left * right);
+  const left = randomInt(
+    profile.multiplication.left[0],
+    profile.multiplication.left[1],
+  );
+  const right = randomInt(
+    profile.multiplication.right[0],
+    profile.multiplication.right[1],
+  );
+  return formatTask("multiplication", left, right, left * right);
 }
 
 function buildDivisionTask(profile: typeof DIFFICULTIES.easy): Task {
-  const divisor = randomInt(profile.division.divisor[0], profile.division.divisor[1]);
-  const quotient = randomInt(profile.division.quotient[0], profile.division.quotient[1]);
-  return formatTask('division', divisor * quotient, divisor, quotient);
+  const divisor = randomInt(
+    profile.division.divisor[0],
+    profile.division.divisor[1],
+  );
+  const quotient = randomInt(
+    profile.division.quotient[0],
+    profile.division.quotient[1],
+  );
+  return formatTask("division", divisor * quotient, divisor, quotient);
 }
 
 function buildTableTask(): Task {
   const left = randomInt(1, 10);
   const right = randomInt(1, 10);
-  return formatTask('multiplication', left, right, left * right, 'Таблица умножения');
+  return formatTask(
+    "multiplication",
+    left,
+    right,
+    left * right,
+    "Таблица умножения",
+  );
 }
 
 export const useGameStore = create<GameState>()(
   persist(
     (set, get) => ({
-      settings: { difficulty: 'easy' },
+      settings: { difficulty: "easy" },
       activeRound: null,
       lastSession: null,
       answers: [],
 
       setDifficulty: (difficulty) => {
         set((state) => ({
-          settings: { ...state.settings, difficulty }
+          settings: { ...state.settings, difficulty },
         }));
       },
 
@@ -179,13 +215,13 @@ export const useGameStore = create<GameState>()(
             score: 0,
             tasks,
             mistakes: [],
-            status: 'playing',
+            status: "playing",
             allowAdvance: false,
             lastAnswer: null,
             reviewQueue: [],
-            startTime: Date.now()
+            startTime: Date.now(),
           },
-          answers: []
+          answers: [],
         });
       },
 
@@ -193,31 +229,31 @@ export const useGameStore = create<GameState>()(
         const session = get().lastSession;
         if (!session || session.mistakes.length === 0) return;
 
-        const mistakes = session.mistakes.map(m => ({ ...m }));
+        const mistakes = session.mistakes.map((m) => ({ ...m }));
 
         set({
           activeRound: {
             id: REVIEW_ROUND_ID,
             sourceMode: session.sourceMode,
-            mode: 'review',
+            mode: "review",
             difficulty: session.difficulty,
             index: 0,
             total: mistakes.length,
             score: 0,
             tasks: [...mistakes],
             mistakes: [],
-            status: 'playing',
+            status: "playing",
             allowAdvance: false,
             lastAnswer: null,
             reviewQueue: mistakes,
-            startTime: Date.now()
+            startTime: Date.now(),
           },
-          answers: []
+          answers: [],
         });
       },
 
       replayCurrentMode: () => {
-        const mode = get().lastSession?.sourceMode || 'mixed';
+        const mode = get().lastSession?.sourceMode || "mixed";
         get().startRound(mode);
       },
 
@@ -225,9 +261,10 @@ export const useGameStore = create<GameState>()(
         const round = get().activeRound;
         if (!round) return { isCorrect: false, shouldAdvance: false };
 
-        const task = round.mode === 'review'
-          ? round.reviewQueue[0]
-          : round.tasks[round.index];
+        const task =
+          round.mode === "review"
+            ? round.reviewQueue[0]
+            : round.tasks[round.index];
 
         if (!task) return { isCorrect: false, shouldAdvance: false };
 
@@ -245,7 +282,7 @@ export const useGameStore = create<GameState>()(
           correctAnswer: task.answer,
           userAnswer: selected,
           isCorrect,
-          timeSpentSeconds: timeSpent
+          timeSpentSeconds: timeSpent,
         };
 
         set((state) => ({
@@ -257,8 +294,8 @@ export const useGameStore = create<GameState>()(
             score: isCorrect ? round.score + 1 : round.score,
             mistakes: !isCorrect
               ? [...round.mistakes, { ...task, selected } as Task]
-              : round.mistakes
-          }
+              : round.mistakes,
+          },
         }));
 
         return { isCorrect, shouldAdvance: isCorrect };
@@ -266,17 +303,18 @@ export const useGameStore = create<GameState>()(
 
       advanceRound: () => {
         const round = get().activeRound;
-        if (!round) return;
+        if (!round) return { type: "error" as const, reason: "no_round" };
 
-        if (round.mode === 'review') {
+        if (round.mode === "review") {
           round.reviewQueue.shift();
         } else {
           round.index++;
         }
 
-        const hasMoreTasks = round.mode === 'review'
-          ? round.reviewQueue.length > 0
-          : round.index < round.tasks.length;
+        const hasMoreTasks =
+          round.mode === "review"
+            ? round.reviewQueue.length > 0
+            : round.index < round.tasks.length;
 
         if (!hasMoreTasks) {
           // Finish round
@@ -292,28 +330,28 @@ export const useGameStore = create<GameState>()(
               score: round.score,
               total: round.total,
               mistakes: round.mistakes,
-              finishedAt: Date.now()
+              finishedAt: Date.now(),
             },
-            activeRound: null
+            activeRound: null,
           });
 
-          return { type: 'finished', duration };
+          return { type: "finished" as const, duration };
         }
 
         set({
           activeRound: {
             ...round,
             allowAdvance: false,
-            lastAnswer: null
-          }
+            lastAnswer: null,
+          },
         });
 
-        return { type: 'advanced' };
+        return { type: "advanced" as const };
       },
 
       finishCurrentRound: () => {
         const round = get().activeRound;
-        if (!round) return;
+        if (!round) return { type: "error" as const, reason: "no_round" };
 
         const duration = round.startTime
           ? Math.floor((Date.now() - round.startTime) / 1000)
@@ -327,9 +365,9 @@ export const useGameStore = create<GameState>()(
             score: round.score,
             total: round.total,
             mistakes: round.mistakes,
-            finishedAt: Date.now()
+            finishedAt: Date.now(),
           },
-          activeRound: null
+          activeRound: null,
         });
 
         return { duration };
@@ -343,19 +381,27 @@ export const useGameStore = create<GameState>()(
         const round = get().activeRound;
         if (!round) return null;
 
-        if (round.mode === 'review') {
+        if (round.mode === "review") {
           return round.reviewQueue[0] || null;
         }
         return round.tasks[round.index] || null;
       },
 
       generateTask: (mode, difficultyId) => {
-        if (mode === 'mixed') {
-          const modes: GameMode[] = ['addition', 'subtraction', 'multiplication', 'division'];
-          return get().generateTask(modes[randomInt(0, modes.length - 1)], difficultyId);
+        if (mode === "mixed") {
+          const modes: GameMode[] = [
+            "addition",
+            "subtraction",
+            "multiplication",
+            "division",
+          ];
+          return get().generateTask(
+            modes[randomInt(0, modes.length - 1)],
+            difficultyId,
+          );
         }
 
-        if (mode === 'table') {
+        if (mode === "table") {
           return buildTableTask();
         }
 
@@ -363,25 +409,25 @@ export const useGameStore = create<GameState>()(
         const profile = DIFFICULTIES[effectiveDifficulty];
 
         switch (mode) {
-          case 'addition':
+          case "addition":
             return buildAdditionTask(profile);
-          case 'subtraction':
+          case "subtraction":
             return buildSubtractionTask(profile);
-          case 'multiplication':
+          case "multiplication":
             return buildMultiplicationTask(profile);
-          case 'division':
+          case "division":
             return buildDivisionTask(profile);
           default:
             return buildAdditionTask(profile);
         }
-      }
+      },
     }),
     {
-      name: 'math-trainer-v2',
+      name: "math-trainer-v2",
       partialize: (state) => ({
         settings: state.settings,
-        lastSession: state.lastSession
-      })
-    }
-  )
+        lastSession: state.lastSession,
+      }),
+    },
+  ),
 );
