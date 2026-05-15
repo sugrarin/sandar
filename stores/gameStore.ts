@@ -40,8 +40,16 @@ interface GameState {
     isCorrect: boolean;
     shouldAdvance: boolean;
   };
-  advanceRound: () => void;
-  finishCurrentRound: () => void;
+  advanceRound: () => {
+    type: "finished" | "advanced" | "error";
+    duration?: number;
+    reason?: string;
+  };
+  finishCurrentRound: () => {
+    type: "finished" | "error";
+    duration?: number;
+    reason?: string;
+  };
   returnHome: () => void;
   getCurrentTask: () => Task | null;
   generateTask: (mode: GameMode, difficultyId: Difficulty) => Task;
