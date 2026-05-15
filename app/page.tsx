@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useGameStore } from '@/stores/gameStore';
-import { HomeScreen } from '@/components/HomeScreen';
-import { GameScreen } from '@/components/GameScreen';
-import { ResultScreen } from '@/components/ResultScreen';
-import { AuthButton } from '@/components/AuthButton';
-import { AuthModal } from '@/components/AuthModal';
-import { saveSession } from '@/lib/session';
-import type { GameMode, Difficulty } from '@/types';
+import { useState, useEffect } from "react";
+import { useGameStore } from "@/stores/gameStore";
+import { HomeScreen } from "@/components/HomeScreen";
+import { GameScreen } from "@/components/GameScreen";
+import { ResultScreen } from "@/components/ResultScreen";
+import { AuthButton } from "@/components/AuthButton";
+import { AuthModal } from "@/components/AuthModal";
+import { saveSession } from "@/lib/session";
+import type { GameMode, Difficulty } from "@/types";
 
-type Screen = 'home' | 'game' | 'result';
+type Screen = "home" | "game" | "result";
 
 export default function Home() {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('home');
+  const [currentScreen, setCurrentScreen] = useState<Screen>("home");
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
   const {
@@ -28,15 +28,15 @@ export default function Home() {
     advanceRound,
     finishCurrentRound,
     returnHome,
-    getCurrentTask
+    getCurrentTask,
   } = useGameStore();
 
   // Handle screen transitions
   useEffect(() => {
     if (activeRound) {
-      setCurrentScreen('game');
-    } else if (lastSession && currentScreen === 'game') {
-      setCurrentScreen('result');
+      setCurrentScreen("game");
+    } else if (lastSession && currentScreen === "game") {
+      setCurrentScreen("result");
     }
   }, [activeRound, lastSession, currentScreen]);
 
@@ -52,16 +52,19 @@ export default function Home() {
     const result = handleAnswer(selected);
 
     if (result.shouldAdvance) {
-      setTimeout(() => {
-        const advanceResult = advanceRound();
-        if (advanceResult && advanceResult.type === 'finished') {
-          // Save session to backend if user is logged in
-          const round = useGameStore.getState().lastSession;
-          if (round) {
-            saveSession(round).catch(console.error);
+      setTimeout(
+        () => {
+          const advanceResult = advanceRound();
+          if (advanceResult.type === "finished") {
+            // Save session to backend if user is logged in
+            const round = useGameStore.getState().lastSession;
+            if (round) {
+              saveSession(round).catch(console.error);
+            }
           }
-        }
-      }, result.isCorrect ? 200 : 0);
+        },
+        result.isCorrect ? 200 : 0,
+      );
     }
   };
 
@@ -77,7 +80,7 @@ export default function Home() {
 
   const onReturnHome = () => {
     returnHome();
-    setCurrentScreen('home');
+    setCurrentScreen("home");
   };
 
   const onReviewMistakes = () => {
@@ -96,7 +99,7 @@ export default function Home() {
       <AuthButton onClick={() => setAuthModalOpen(true)} />
 
       <main className="app">
-        {currentScreen === 'home' && (
+        {currentScreen === "home" && (
           <HomeScreen
             difficulty={settings.difficulty}
             onSelectDifficulty={onSelectDifficulty}
@@ -104,11 +107,11 @@ export default function Home() {
           />
         )}
 
-        {currentScreen === 'game' && round && currentTask && (
+        {currentScreen === "game" && round && currentTask && (
           <GameScreen
             mode={round.mode}
             difficulty={round.difficulty}
-            currentIndex={round.mode === 'review' ? round.score : round.index}
+            currentIndex={round.mode === "review" ? round.score : round.index}
             total={round.total}
             score={round.score}
             task={currentTask}
@@ -117,7 +120,7 @@ export default function Home() {
             onAnswer={onAnswer}
             onAdvance={() => {
               const result = advanceRound();
-              if (result && result.type === 'finished') {
+              if (result && result.type === "finished") {
                 const session = useGameStore.getState().lastSession;
                 if (session) {
                   saveSession(session).catch(console.error);
@@ -128,7 +131,7 @@ export default function Home() {
           />
         )}
 
-        {currentScreen === 'result' && lastSession && (
+        {currentScreen === "result" && lastSession && (
           <ResultScreen
             score={lastSession.score}
             total={lastSession.total}
@@ -141,9 +144,7 @@ export default function Home() {
         )}
       </main>
 
-      {authModalOpen && (
-        <AuthModal onClose={() => setAuthModalOpen(false)} />
-      )}
+      {authModalOpen && <AuthModal onClose={() => setAuthModalOpen(false)} />}
     </>
   );
 }
