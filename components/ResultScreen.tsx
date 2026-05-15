@@ -33,12 +33,12 @@ const MODES: GameMode[] = [
 ];
 
 const MODE_ICONS: Record<GameMode, React.ReactNode> = {
-  addition: <Plus className="w-[22px] h-[22px]" strokeWidth={2} />,
-  subtraction: <Minus className="w-[22px] h-[22px]" strokeWidth={2} />,
-  multiplication: <X className="w-[22px] h-[22px]" strokeWidth={2} />,
-  division: <Divide className="w-[22px] h-[22px]" strokeWidth={2} />,
-  table: <Grid3X3 className="w-[22px] h-[22px]" strokeWidth={2} />,
-  mixed: <Dices className="w-[22px] h-[22px]" strokeWidth={2} />,
+  addition: <Plus strokeWidth={2} />,
+  subtraction: <Minus strokeWidth={2} />,
+  multiplication: <X strokeWidth={2} />,
+  division: <Divide strokeWidth={2} />,
+  table: <Grid3X3 strokeWidth={2} />,
+  mixed: <Dices strokeWidth={2} />,
   review: null,
 };
 
@@ -114,91 +114,75 @@ export function ResultScreen({
   }, [isPerfect]);
 
   return (
-    <section className="flex flex-col w-full">
+    <section className="screen screen--active">
       {isPerfect && (
         <canvas ref={canvasRef} className="confetti" aria-hidden="true" />
       )}
 
-      <section className="flex flex-col gap-4">
-        <section className="bg-[var(--card)] backdrop-blur-xl border border-[var(--card-border)] rounded-2xl p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-6">
-            <span className="inline-flex items-center px-3 py-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent)] text-sm font-semibold">
-              Раунд завершён
-            </span>
+      <section className="panel panel--result">
+        <div className="result-summary">
+          <p className="result-summary__eyebrow">Готово</p>
+          <div className="result-summary__title-row">
+            <h2 className="result-summary__title">Результат</h2>
             <button
-              className="w-10 h-10 flex items-center justify-center bg-black/[0.04] border-none rounded-xl cursor-pointer transition-all duration-200 hover:bg-black/[0.08] active:scale-95"
+              className="icon-button"
+              type="button"
               onClick={onReturnHome}
               aria-label="Вернуться на главную"
             >
-              <X
-                className="w-5 h-5 text-[var(--text-muted)]"
-                strokeWidth={2.5}
-              />
+              <X aria-hidden="true" />
             </button>
           </div>
+          <p className="result-summary__score">
+            {score}&thinsp;/&thinsp;{total}
+          </p>
+        </div>
 
-          <div className="text-center mb-6">
-            <p className="text-[clamp(4rem,18vw,6rem)] font-bold tabular-nums text-[var(--accent)] leading-none tracking-tight">
-              {score}
-              <span className="text-[var(--text-muted)] text-[0.5em] font-bold">
-                /{total}
+        <div className="action-stack">
+          <button
+            type="button"
+            className="action-button action-button--accent"
+            onClick={onReview}
+            disabled={!hasMistakes}
+          >
+            <span className="action-button__icon" aria-hidden="true">
+              <Search strokeWidth={2} />
+            </span>
+            <span className="action-button__label">
+              {hasMistakes ? "Разобрать ошибки" : "Ошибок нет"}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            className="action-button"
+            onClick={onReplay}
+          >
+            <span className="action-button__icon" aria-hidden="true">
+              <RefreshCw strokeWidth={2} />
+            </span>
+            <span className="action-button__label">Ещё раунд</span>
+          </button>
+        </div>
+
+        <div className="panel__header panel__header--tight">
+          <h3 className="panel__title">Новый раунд</h3>
+        </div>
+        <div className="mode-grid">
+          {MODES.map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              className="mode-card"
+              onClick={() => onStartGame(mode)}
+            >
+              <span className="mode-card__icon" aria-hidden="true">
+                {MODE_ICONS[mode]}
               </span>
-            </p>
-            <p className="text-base text-[var(--text-muted)] mt-3 font-medium">
-              {score === total
-                ? "Идеально! 🎉"
-                : score >= total * 0.8
-                  ? "Отлично! 👏"
-                  : score >= total * 0.5
-                    ? "Хорошо! 💪"
-                    : "Продолжай тренироваться! 🌱"}
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <button
-              className="w-full h-14 flex items-center justify-center gap-2.5 px-6 bg-[var(--accent)] text-white border-none rounded-xl cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold text-base"
-              onClick={onReview}
-              disabled={!hasMistakes}
-            >
-              <Search className="w-5 h-5" strokeWidth={2.5} />
-              <span>Разобрать ошибки</span>
+              <span className="mode-card__title">{MODE_LABELS[mode]}</span>
             </button>
-
-            <button
-              className="w-full h-14 flex items-center justify-center gap-2.5 px-6 bg-[var(--card)] border-2 border-[var(--card-border)] rounded-xl cursor-pointer transition-all duration-200 hover:border-[var(--accent)] hover:shadow-md active:scale-[0.98] font-semibold text-base"
-              onClick={onReplay}
-            >
-              <RefreshCw
-                className="w-5 h-5 text-[var(--accent)]"
-                strokeWidth={2.5}
-              />
-              <span>Ещё раунд</span>
-            </button>
-          </div>
-        </section>
-
-        <section className="bg-[var(--card)] backdrop-blur-xl border border-[var(--card-border)] rounded-2xl p-6 shadow-sm">
-          <h3 className="text-base font-semibold text-[var(--text)] mb-4">
-            Новый раунд
-          </h3>
-          <div className="grid grid-cols-2 gap-3">
-            {MODES.map((mode) => (
-              <button
-                key={mode}
-                className="flex items-center gap-3 h-16 px-4 bg-[var(--card)] border border-[var(--card-border)] rounded-xl cursor-pointer transition-all duration-200 hover:border-[var(--accent)] hover:shadow-md active:scale-[0.98] group"
-                onClick={() => onStartGame(mode)}
-              >
-                <span className="shrink-0 w-10 h-10 flex items-center justify-center bg-[var(--accent-soft)] rounded-xl text-[var(--accent)] transition-transform duration-200 group-hover:scale-110">
-                  {MODE_ICONS[mode]}
-                </span>
-                <span className="text-sm font-semibold text-left leading-tight">
-                  {MODE_LABELS[mode]}
-                </span>
-              </button>
-            ))}
-          </div>
-        </section>
+          ))}
+        </div>
       </section>
     </section>
   );

@@ -24,12 +24,12 @@ const MODES: GameMode[] = [
 ];
 
 const MODE_ICONS: Record<GameMode, React.ReactNode> = {
-  addition: <Plus className="w-[22px] h-[22px]" strokeWidth={2} />,
-  subtraction: <Minus className="w-[22px] h-[22px]" strokeWidth={2} />,
-  multiplication: <X className="w-[22px] h-[22px]" strokeWidth={2} />,
-  division: <Divide className="w-[22px] h-[22px]" strokeWidth={2} />,
-  table: <Grid3X3 className="w-[22px] h-[22px]" strokeWidth={2} />,
-  mixed: <Dices className="w-[22px] h-[22px]" strokeWidth={2} />,
+  addition: <Plus strokeWidth={2} />,
+  subtraction: <Minus strokeWidth={2} />,
+  multiplication: <X strokeWidth={2} />,
+  division: <Divide strokeWidth={2} />,
+  table: <Grid3X3 strokeWidth={2} />,
+  mixed: <Dices strokeWidth={2} />,
   review: null,
 };
 
@@ -51,49 +51,37 @@ export function HomeScreen({
   ][];
 
   return (
-    <section className="flex flex-col gap-4">
-      <div className="text-center pt-2 pb-1">
-        <p className="text-xs text-[var(--text-muted)] uppercase tracking-[0.2em] font-semibold mb-2">
-          Math Trainer
-        </p>
-        <h1 className="text-[clamp(1.75rem,7vw,2.5rem)] font-bold leading-tight tracking-tight">
-          Тренажёр счёта
-        </h1>
-      </div>
+    <section className="screen screen--active">
+      <header className="hero">
+        <p className="hero__eyebrow">Math trainer</p>
+        <h1 className="hero__title">Тренажёр счёта в уме</h1>
+      </header>
 
-      <section className="bg-[var(--card)] backdrop-blur-xl border border-[var(--card-border)] rounded-2xl p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold text-[var(--text)]">
-            Сложность
-          </h2>
-          <span className="inline-flex items-center px-3 py-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent)] text-sm font-semibold">
-            {DIFFICULTIES[difficulty].label}
-          </span>
+      <section className="panel panel--soft">
+        <div className="panel__header">
+          <h2 className="panel__title">Сложность</h2>
+          <p className="panel__note">{DIFFICULTIES[difficulty].label}</p>
         </div>
         <div
-          className="grid grid-cols-4 gap-2"
+          className="difficulty-picker"
           role="tablist"
           aria-label="Выбор сложности"
         >
           {difficulties.map(([key, profile]) => (
             <button
               key={key}
-              className={`flex flex-col items-center justify-center gap-2 h-[88px] rounded-xl transition-all duration-200 cursor-pointer border-2 ${
-                difficulty === key
-                  ? "bg-[var(--accent-soft)] border-[var(--accent)] shadow-sm"
-                  : "bg-transparent border-transparent hover:bg-black/[0.03]"
-              }`}
               type="button"
+              className={`difficulty-picker__option${
+                difficulty === key ? " difficulty-picker__option--active" : ""
+              }`}
               onClick={() => onSelectDifficulty(key)}
               role="tab"
               aria-selected={difficulty === key}
             >
-              <span className="text-3xl leading-none" aria-hidden="true">
+              <span className="difficulty-picker__emoji" aria-hidden="true">
                 {profile.emoji}
               </span>
-              <span
-                className={`text-xs font-semibold ${difficulty === key ? "text-[var(--text)]" : "text-[var(--text-muted)]"}`}
-              >
+              <span className="difficulty-picker__label">
                 {DIFFICULTY_LABELS[key]}
               </span>
             </button>
@@ -101,24 +89,22 @@ export function HomeScreen({
         </div>
       </section>
 
-      <section className="bg-[var(--card)] backdrop-blur-xl border border-[var(--card-border)] rounded-2xl p-6 shadow-sm">
-        <h2 className="text-base font-semibold text-[var(--text)] mb-4">
-          Режим игры
-        </h2>
-        <div className="grid grid-cols-2 gap-3">
+      <section className="panel">
+        <div className="panel__header panel__header--tight">
+          <h2 className="panel__title">Режим</h2>
+        </div>
+        <div className="mode-grid">
           {MODES.map((mode) => (
             <button
               key={mode}
-              className="flex flex-col items-center justify-center gap-3 h-[120px] bg-[var(--card)] border border-[var(--card-border)] rounded-xl cursor-pointer transition-all duration-200 hover:border-[var(--accent)] hover:shadow-md active:scale-[0.98] group"
               type="button"
+              className="mode-card"
               onClick={() => onStartGame(mode)}
             >
-              <span className="w-12 h-12 flex items-center justify-center bg-[var(--accent-soft)] rounded-xl text-[var(--accent)] transition-transform duration-200 group-hover:scale-110">
+              <span className="mode-card__icon" aria-hidden="true">
                 {MODE_ICONS[mode]}
               </span>
-              <span className="text-sm font-semibold text-center leading-tight">
-                {MODE_LABELS[mode]}
-              </span>
+              <span className="mode-card__title">{MODE_LABELS[mode]}</span>
             </button>
           ))}
         </div>

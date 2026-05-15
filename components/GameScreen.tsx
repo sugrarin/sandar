@@ -61,18 +61,12 @@ export function GameScreen({
     onAnswer(option);
   };
 
-  const getButtonClass = (option: number) => {
+  const getButtonModifier = (option: number) => {
     if (!showResult) return "";
-
-    if (option === task.answer) {
-      return "bg-[var(--success-soft)] border-[var(--accent)]";
-    }
-
-    if (option === lastAnswer && option !== task.answer) {
-      return "bg-[var(--error-soft)] border-[var(--error)]";
-    }
-
-    return "pointer-events-none";
+    if (option === task.answer) return " answer-button--correct";
+    if (option === lastAnswer && option !== task.answer)
+      return " answer-button--wrong";
+    return " answer-button--locked";
   };
 
   const subtitle =
@@ -81,56 +75,46 @@ export function GameScreen({
       : `${DIFFICULTIES[difficulty].emoji} ${DIFFICULTIES[difficulty].label}`;
 
   return (
-    <section className="flex flex-col w-full">
-      <section className="flex flex-col gap-6 bg-[var(--card)] backdrop-blur-xl border border-[var(--card-border)] rounded-2xl p-6 shadow-sm">
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between gap-3">
-            <span className="inline-flex items-center px-3 py-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent)] text-sm font-semibold">
-              {MODE_LABELS[mode]}
-            </span>
-            <div className="flex items-center gap-3">
-              <p className="text-sm text-[var(--text-muted)] tabular-nums font-semibold">
-                {currentIndex + 1} / {total}
+    <section className="screen screen--active">
+      <section className="panel panel--game">
+        <div className="game-status">
+          <div className="game-status__meta">
+            <p className="game-status__mode">{MODE_LABELS[mode]}</p>
+            <div className="game-status__side">
+              <p className="game-status__counter">
+                {currentIndex + 1}
+                {THIN_SPACE}/{THIN_SPACE}
+                {total}
               </p>
               <button
-                className="w-10 h-10 flex items-center justify-center bg-black/[0.04] border-none rounded-xl cursor-pointer transition-all duration-200 hover:bg-black/[0.08] active:scale-95"
+                className="icon-button"
                 type="button"
                 onClick={onFinish}
                 aria-label="Закончить раунд"
               >
-                <X
-                  className="w-5 h-5 text-[var(--text-muted)]"
-                  strokeWidth={2.5}
-                />
+                <X aria-hidden="true" />
               </button>
             </div>
           </div>
-          <div
-            className="h-2 bg-black/[0.06] rounded-full overflow-hidden"
-            aria-hidden="true"
-          >
+          <div className="progress" aria-hidden="true">
             <div
-              className="h-full bg-[var(--accent)] rounded-full transition-all duration-500 ease-out"
-              style={{ width: `${Math.max(progress, 5)}%` }}
+              className="progress__bar"
+              style={{ width: `${Math.max(progress, 8)}%` }}
             />
           </div>
         </div>
 
-        <div className="text-center py-4">
-          <p className="text-sm text-[var(--text-muted)] mb-3 font-semibold">
-            {subtitle}
-          </p>
-          <h2 className="text-[clamp(3rem,15vw,5rem)] font-bold tabular-nums tracking-tight leading-none">
-            {task.question}
-          </h2>
+        <div className="problem-card">
+          <p className="problem-card__subtitle">{subtitle}</p>
+          <h2 className="problem-card__question">{task.question}</h2>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="answer-grid">
           {task.options.map((option) => (
             <button
               key={option}
-              className={`h-20 px-4 bg-[var(--card)] border-2 border-[var(--card-border)] rounded-xl font-bold text-[clamp(1.5rem,6vw,2.25rem)] text-[var(--text)] cursor-pointer transition-all duration-200 tabular-nums hover:border-[var(--accent)] hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${getButtonClass(option)}`}
               type="button"
+              className={`answer-button${getButtonModifier(option)}`}
               onClick={() => handleClick(option)}
               disabled={
                 showResult &&
@@ -139,7 +123,7 @@ export function GameScreen({
                 option !== lastAnswer
               }
             >
-              {option}
+              <span className="answer-button__value">{option}</span>
             </button>
           ))}
         </div>

@@ -98,7 +98,7 @@ export default function Home() {
     <>
       <AuthButton onClick={() => setAuthModalOpen(true)} />
 
-      <main className="flex-1 flex flex-col">
+      <main className="app">
         {currentScreen === "home" && (
           <HomeScreen
             difficulty={settings.difficulty}

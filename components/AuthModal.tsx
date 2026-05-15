@@ -71,52 +71,37 @@ export function AuthModal({ onClose }: AuthModalProps) {
     }
   };
 
-  const inputClass =
-    "w-full h-12 px-4 border border-[var(--card-border)] rounded-xl text-base bg-[var(--bg)] text-[var(--text)] transition-all focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]";
-
-  const primaryBtnClass =
-    "w-full h-12 inline-flex items-center justify-center gap-2 bg-[var(--accent)] text-white border-none rounded-xl text-base font-semibold cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none";
-
   return (
     <div
-      className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+      className="auth-modal__overlay"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
     >
-      <div
-        className="relative w-[min(92vw,400px)] bg-[var(--card)] backdrop-blur-xl rounded-2xl border border-[var(--card-border)] p-6 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
         <button
           type="button"
+          className="auth-modal__close"
           onClick={onClose}
-          className="absolute top-3 right-3 w-10 h-10 flex items-center justify-center rounded-xl bg-black/[0.04] hover:bg-black/[0.08] transition-all active:scale-95"
           aria-label="Закрыть"
         >
-          <X className="w-5 h-5 text-[var(--text-muted)]" strokeWidth={2.5} />
+          <X aria-hidden="true" />
         </button>
 
-        <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)] mb-4">
-          {step === "email" ? (
-            <Mail className="w-6 h-6" strokeWidth={2} />
-          ) : (
-            <ShieldCheck className="w-6 h-6" strokeWidth={2} />
-          )}
+        <div className="auth-modal__icon" aria-hidden="true">
+          {step === "email" ? <Mail /> : <ShieldCheck />}
         </div>
 
         {step === "email" ? (
           <>
-            <h2 className="text-2xl font-bold mb-1.5 tracking-tight">
-              Вход в аккаунт
-            </h2>
-            <p className="text-sm text-[var(--text-muted)] mb-6 leading-relaxed">
+            <h2 className="auth-modal__title">Вход в аккаунт</h2>
+            <p className="auth-modal__subtitle">
               Введите email — пришлём 6-значный код для входа
             </p>
-            <form onSubmit={sendCode} className="flex flex-col gap-3">
+            <form className="auth-modal__form" onSubmit={sendCode}>
               <input
                 type="email"
-                className={inputClass}
+                className="auth-modal__input"
                 placeholder="your@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -126,7 +111,7 @@ export function AuthModal({ onClose }: AuthModalProps) {
               />
               <button
                 type="submit"
-                className={primaryBtnClass}
+                className="auth-modal__button"
                 disabled={loading || !email.trim()}
               >
                 {loading ? "Отправка..." : "Получить код"}
@@ -135,19 +120,14 @@ export function AuthModal({ onClose }: AuthModalProps) {
           </>
         ) : (
           <>
-            <h2 className="text-2xl font-bold mb-1.5 tracking-tight">
-              Подтвердите email
-            </h2>
-            <p className="text-sm text-[var(--text-muted)] mb-6 leading-relaxed">
-              Код отправлен на{" "}
-              <strong className="text-[var(--text)] font-semibold">
-                {email}
-              </strong>
+            <h2 className="auth-modal__title">Подтвердите email</h2>
+            <p className="auth-modal__subtitle">
+              Код отправлен на <strong>{email}</strong>
             </p>
-            <form onSubmit={verifyCode} className="flex flex-col gap-3">
+            <form className="auth-modal__form" onSubmit={verifyCode}>
               <input
                 type="text"
-                className={`${inputClass} text-center text-2xl font-bold tabular-nums tracking-[0.4em] h-14`}
+                className="auth-modal__input auth-modal__input--code"
                 placeholder="••••••"
                 value={code}
                 onChange={(e) =>
@@ -161,32 +141,28 @@ export function AuthModal({ onClose }: AuthModalProps) {
               />
               <button
                 type="submit"
-                className={primaryBtnClass}
+                className="auth-modal__button"
                 disabled={loading || code.length !== 6}
               >
                 {loading ? "Проверка..." : "Войти"}
               </button>
               <button
                 type="button"
-                className="h-10 inline-flex items-center justify-center gap-1.5 bg-transparent border-none text-sm text-[var(--text-muted)] cursor-pointer rounded-xl transition-colors hover:text-[var(--text)]"
+                className="auth-modal__link"
                 onClick={() => {
                   setStep("email");
                   setCode("");
                   setError(null);
                 }}
               >
-                <ArrowLeft className="w-4 h-4" strokeWidth={2.25} />
+                <ArrowLeft aria-hidden="true" />
                 Изменить email
               </button>
             </form>
           </>
         )}
 
-        {error && (
-          <div className="mt-4 p-3 bg-[var(--error-soft)] rounded-xl text-[var(--error)] text-sm font-medium">
-            {error}
-          </div>
-        )}
+        {error && <div className="auth-modal__error">{error}</div>}
       </div>
     </div>
   );
