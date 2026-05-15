@@ -1,7 +1,17 @@
-'use client';
+"use client";
 
-import { useEffect, useRef } from 'react';
-import { MODE_LABELS, type GameMode } from '@/types';
+import { useEffect, useRef } from "react";
+import {
+  Plus,
+  Minus,
+  X,
+  Divide,
+  Grid3X3,
+  Dices,
+  Search,
+  RefreshCw,
+} from "lucide-react";
+import { MODE_LABELS, type GameMode } from "@/types";
 
 interface ResultScreenProps {
   score: number;
@@ -13,19 +23,34 @@ interface ResultScreenProps {
   onStartGame: (mode: GameMode) => void;
 }
 
-const MODES: GameMode[] = ['addition', 'subtraction', 'multiplication', 'division', 'table', 'mixed'];
+const MODES: GameMode[] = [
+  "addition",
+  "subtraction",
+  "multiplication",
+  "division",
+  "table",
+  "mixed",
+];
 
-const MODE_ICONS: Record<GameMode, JSX.Element> = {
-  addition: <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></svg>,
-  subtraction: <svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg>,
-  multiplication: <svg viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>,
-  division: <svg viewBox="0 0 24 24"><circle cx="12" cy="6" r="1"/><line x1="5" x2="19" y1="12" y2="12"/><circle cx="12" cy="18" r="1"/></svg>,
-  table: <svg viewBox="0 0 24 24"><path d="M12 3v17a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1H3"/><path d="m16 16 5 5"/><path d="m16 21 5-5"/></svg>,
-  mixed: <svg viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M15 9h.01"/><path d="M9 15h.01"/></svg>,
-  review: <svg viewBox="0 0 24 24" />
+const MODE_ICONS: Record<GameMode, React.ReactNode> = {
+  addition: <Plus className="w-[22px] h-[22px]" strokeWidth={2} />,
+  subtraction: <Minus className="w-[22px] h-[22px]" strokeWidth={2} />,
+  multiplication: <X className="w-[22px] h-[22px]" strokeWidth={2} />,
+  division: <Divide className="w-[22px] h-[22px]" strokeWidth={2} />,
+  table: <Grid3X3 className="w-[22px] h-[22px]" strokeWidth={2} />,
+  mixed: <Dices className="w-[22px] h-[22px]" strokeWidth={2} />,
+  review: null,
 };
 
-export function ResultScreen({ score, total, hasMistakes, onReview, onReplay, onReturnHome, onStartGame }: ResultScreenProps) {
+export function ResultScreen({
+  score,
+  total,
+  hasMistakes,
+  onReview,
+  onReplay,
+  onReturnHome,
+  onStartGame,
+}: ResultScreenProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const isPerfect = score === total;
 
@@ -33,7 +58,7 @@ export function ResultScreen({ score, total, hasMistakes, onReview, onReplay, on
     if (!isPerfect || !canvasRef.current) return;
 
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     const dpr = window.devicePixelRatio || 1;
@@ -50,14 +75,16 @@ export function ResultScreen({ score, total, hasMistakes, onReview, onReplay, on
       vy: Math.random() * 2 + 1.5,
       rotation: Math.random() * Math.PI,
       spin: Math.random() * 0.25 + 0.04,
-      color: ['#1f8a70', '#f6c86a', '#ff7f6a', '#4c89ff', '#ffffff'][Math.floor(Math.random() * 5)]
+      color: ["#1f8a70", "#f6c86a", "#ff7f6a", "#4c89ff", "#ffffff"][
+        Math.floor(Math.random() * 5)
+      ],
     }));
 
     let frameId: number;
     const draw = () => {
       ctx.clearRect(0, 0, rect.width, rect.height);
 
-      pieces.forEach(p => {
+      pieces.forEach((p) => {
         p.x += p.vx;
         p.y += p.vy;
         p.rotation += p.spin;
@@ -87,55 +114,70 @@ export function ResultScreen({ score, total, hasMistakes, onReview, onReplay, on
   }, [isPerfect]);
 
   return (
-    <section className="screen screen--active">
-      {isPerfect && <canvas ref={canvasRef} className="confetti" aria-hidden="true" />}
+    <section className="flex flex-col">
+      {isPerfect && (
+        <canvas ref={canvasRef} className="confetti" aria-hidden="true" />
+      )}
 
-      <section className="panel panel--result">
-        <div className="result-summary">
-          <p className="result-summary__eyebrow">Готово</p>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h2 className="result-summary__title">Результат</h2>
-            <button className="icon-button" onClick={onReturnHome} aria-label="Вернуться на главную">
-              <svg viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      <section className="bg-[var(--card)] backdrop-blur-[10px] border border-[var(--card-border)] rounded-[1.25rem] p-4 mb-4">
+        <div className="text-center py-6 px-4">
+          <p className="text-sm text-[var(--text-muted)] uppercase tracking-wider">
+            Готово
+          </p>
+          <div className="flex items-center justify-between mt-1 mb-4">
+            <h2 className="text-[clamp(1.5rem,6vw,2rem)] font-semibold">
+              Результат
+            </h2>
+            <button
+              className="w-8 h-8 flex items-center justify-center bg-transparent border-none rounded-lg cursor-pointer transition-colors duration-150 hover:bg-black/5"
+              onClick={onReturnHome}
+              aria-label="Вернуться на главную"
+            >
+              <X className="w-5 h-5 text-[var(--text-muted)]" strokeWidth={2} />
             </button>
           </div>
-          <p className="result-summary__score">{score}&thinsp;/&thinsp;{total}</p>
+          <p className="text-[clamp(3rem,15vw,5rem)] font-semibold tabular-nums text-[var(--accent)]">
+            {score}&thinsp;/&thinsp;{total}
+          </p>
         </div>
 
-        <div className="action-stack">
+        <div className="flex flex-col gap-3 mb-6">
           <button
-            className="action-button action-button--wide"
+            className="w-full flex items-center justify-center gap-2 p-4 bg-[var(--card)] border border-[var(--card-border)] rounded-2xl cursor-pointer transition-all duration-150 hover:-translate-y-px hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none"
             onClick={onReview}
             disabled={!hasMistakes}
           >
-            <span className="action-button__icon">
-              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 7v4"/><path d="M11 15h.01"/></svg>
-            </span>
-            <span className="action-button__label">
-              {hasMistakes ? 'Разобрать ошибки' : 'Ошибок нет'}
+            <Search className="w-5 h-5 text-[var(--text)]" strokeWidth={2} />
+            <span className="text-[0.9375rem] font-medium">
+              {hasMistakes ? "Разобрать ошибки" : "Ошибок нет"}
             </span>
           </button>
 
-          <button className="action-button action-button--wide" onClick={onReplay}>
-            <span className="action-button__icon">
-              <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
-            </span>
-            <span className="action-button__label">Еще раунд</span>
+          <button
+            className="w-full flex items-center justify-center gap-2 p-4 bg-[var(--card)] border border-[var(--card-border)] rounded-2xl cursor-pointer transition-all duration-150 hover:-translate-y-px hover:shadow-lg active:scale-[0.985]"
+            onClick={onReplay}
+          >
+            <RefreshCw className="w-5 h-5 text-[var(--text)]" strokeWidth={2} />
+            <span className="text-[0.9375rem] font-medium">Еще раунд</span>
           </button>
         </div>
 
-        <div className="panel__header panel__header--tight">
-          <h3 className="panel__title">Новый раунд</h3>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-lg font-semibold">Новый раунд</h3>
         </div>
-        <div className="mode-grid">
+        <div className="grid grid-cols-2 gap-3">
           {MODES.map((mode) => (
             <button
               key={mode}
-              className="mode-card"
+              className="flex items-center gap-3 p-4 bg-[var(--card)] border border-[var(--card-border)] rounded-2xl cursor-pointer transition-all duration-150 hover:-translate-y-px hover:shadow-lg active:scale-[0.985]"
               onClick={() => onStartGame(mode)}
             >
-              <span className="mode-card__icon">{MODE_ICONS[mode]}</span>
-              <span className="mode-card__title">{MODE_LABELS[mode]}</span>
+              <span className="w-10 h-10 flex items-center justify-center bg-black/[0.04] rounded-xl text-[var(--text)]">
+                {MODE_ICONS[mode]}
+              </span>
+              <span className="text-[0.9375rem] font-medium">
+                {MODE_LABELS[mode]}
+              </span>
             </button>
           ))}
         </div>

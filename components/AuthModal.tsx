@@ -59,18 +59,24 @@ export function AuthModal({ onClose }: AuthModalProps) {
   };
 
   return (
-    <div className="auth-modal-overlay" onClick={onClose}>
-      <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-[min(90vw,380px)] bg-[var(--card)] rounded-[1.25rem] border border-[var(--card-border)] p-6 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         {step === "email" ? (
           <>
-            <h2 className="auth-modal__title">Вход в аккаунт</h2>
-            <p className="auth-modal__subtitle">
+            <h2 className="text-2xl font-semibold mb-1">Вход в аккаунт</h2>
+            <p className="text-sm text-[var(--text-muted)] mb-6">
               Введите email, чтобы получить код
             </p>
             <form onSubmit={sendCode}>
               <input
                 type="email"
-                className="auth-modal__input"
+                className="w-full py-3.5 px-4 mb-3 border border-[var(--card-border)] rounded-xl text-base bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:border-[var(--accent)]"
                 placeholder="your@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -79,7 +85,7 @@ export function AuthModal({ onClose }: AuthModalProps) {
               />
               <button
                 type="submit"
-                className="auth-modal__button"
+                className="w-full py-3.5 bg-[var(--text)] text-[var(--bg)] border-none rounded-xl text-[0.9375rem] font-medium cursor-pointer"
                 disabled={loading}
               >
                 {loading ? "Отправка..." : "Получить код"}
@@ -88,14 +94,14 @@ export function AuthModal({ onClose }: AuthModalProps) {
           </>
         ) : (
           <>
-            <h2 className="auth-modal__title">Подтвердите email</h2>
-            <p className="auth-modal__subtitle">
+            <h2 className="text-2xl font-semibold mb-1">Подтвердите email</h2>
+            <p className="text-sm text-[var(--text-muted)] mb-6">
               Код отправлен на <strong>{email}</strong>
             </p>
             <form onSubmit={verifyCode}>
               <input
                 type="text"
-                className="auth-modal__input"
+                className="w-full py-3.5 px-4 mb-3 border border-[var(--card-border)] rounded-xl text-base bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:border-[var(--accent)]"
                 placeholder="123456"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
@@ -106,20 +112,14 @@ export function AuthModal({ onClose }: AuthModalProps) {
               />
               <button
                 type="submit"
-                className="auth-modal__button"
+                className="w-full py-3.5 bg-[var(--text)] text-[var(--bg)] border-none rounded-xl text-[0.9375rem] font-medium cursor-pointer"
                 disabled={loading}
               >
                 {loading ? "Проверка..." : "Войти"}
               </button>
               <button
                 type="button"
-                style={{
-                  marginTop: "0.75rem",
-                  background: "transparent",
-                  border: "none",
-                  color: "var(--text-muted)",
-                  cursor: "pointer",
-                }}
+                className="mt-3 bg-transparent border-none text-[var(--text-muted)] cursor-pointer"
                 onClick={() => setStep("email")}
               >
                 Изменить email
@@ -128,7 +128,11 @@ export function AuthModal({ onClose }: AuthModalProps) {
           </>
         )}
 
-        {error && <div className="auth-modal__error">{error}</div>}
+        {error && (
+          <div className="mt-3 p-3 bg-[var(--error-soft)] rounded-lg text-[var(--error)] text-sm">
+            {error}
+          </div>
+        )}
       </div>
     </div>
   );

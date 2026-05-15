@@ -1,7 +1,14 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { MODE_LABELS, DIFFICULTIES, type GameMode, type Difficulty, type Task } from '@/types';
+import { useState, useEffect } from "react";
+import { X } from "lucide-react";
+import {
+  MODE_LABELS,
+  DIFFICULTIES,
+  type GameMode,
+  type Difficulty,
+  type Task,
+} from "@/types";
 
 interface GameScreenProps {
   mode: GameMode;
@@ -17,7 +24,7 @@ interface GameScreenProps {
   onFinish: () => void;
 }
 
-const THIN_SPACE = '\u2009';
+const THIN_SPACE = "\u2009";
 
 export function GameScreen({
   mode,
@@ -29,7 +36,7 @@ export function GameScreen({
   lastAnswer,
   onAnswer,
   onAdvance,
-  onFinish
+  onFinish,
 }: GameScreenProps) {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
@@ -55,65 +62,84 @@ export function GameScreen({
   };
 
   const getButtonClass = (option: number) => {
-    if (!showResult) return '';
+    if (!showResult) return "";
 
     if (option === task.answer) {
-      return 'answer-button--correct';
+      return "bg-[var(--success-soft)] border-[var(--accent)]";
     }
 
     if (option === lastAnswer && option !== task.answer) {
-      return 'answer-button--wrong';
+      return "bg-[var(--error-soft)] border-[var(--error)]";
     }
 
-    return 'answer-button--locked';
+    return "pointer-events-none";
   };
 
-  const subtitle = mode === 'review'
-    ? 'Ошибки до полного решения'
-    : `${DIFFICULTIES[difficulty].emoji} ${DIFFICULTIES[difficulty].label}`;
+  const subtitle =
+    mode === "review"
+      ? "Ошибки до полного решения"
+      : `${DIFFICULTIES[difficulty].emoji} ${DIFFICULTIES[difficulty].label}`;
 
   return (
-    <section className="screen screen--active">
-      <section className="panel panel--game">
-        <div className="game-status">
-          <div className="game-status__meta">
-            <p className="game-status__mode">{MODE_LABELS[mode]}</p>
-            <div className="game-status__side">
-              <p className="game-status__counter">
-                {currentIndex + 1}{THIN_SPACE}/{THIN_SPACE}{total}
+    <section className="flex flex-col">
+      <section className="flex flex-col gap-6 bg-[var(--card)] backdrop-blur-[10px] border border-[var(--card-border)] rounded-[1.25rem] p-5">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-[var(--text-muted)]">
+              {MODE_LABELS[mode]}
+            </p>
+            <div className="flex items-center gap-3">
+              <p className="text-sm text-[var(--text-muted)] tabular-nums">
+                {currentIndex + 1}
+                {THIN_SPACE}/{THIN_SPACE}
+                {total}
               </p>
               <button
-                className="icon-button"
+                className="w-8 h-8 flex items-center justify-center bg-transparent border-none rounded-lg cursor-pointer transition-colors duration-150 hover:bg-black/5"
                 type="button"
                 onClick={onFinish}
                 aria-label="Закончить раунд"
               >
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
-                </svg>
+                <X
+                  className="w-5 h-5 text-[var(--text-muted)]"
+                  strokeWidth={2}
+                />
               </button>
             </div>
           </div>
-          <div className="progress" aria-hidden="true">
-            <div className="progress__bar" style={{ width: `${Math.max(progress, 8)}%` }} />
+          <div
+            className="h-1 bg-black/[0.08] rounded-sm overflow-hidden"
+            aria-hidden="true"
+          >
+            <div
+              className="h-full bg-[var(--accent)] rounded-sm transition-all duration-300"
+              style={{ width: `${Math.max(progress, 8)}%` }}
+            />
           </div>
         </div>
 
-        <div className="problem-card">
-          <p className="problem-card__subtitle">{subtitle}</p>
-          <h2 className="problem-card__question">{task.question}</h2>
+        <div className="text-center py-8 px-4">
+          <p className="text-sm text-[var(--text-muted)] mb-2">{subtitle}</p>
+          <h2 className="text-[clamp(2.5rem,12vw,4rem)] font-semibold tabular-nums">
+            {task.question}
+          </h2>
         </div>
 
-        <div className="answer-grid">
+        <div className="grid grid-cols-2 gap-3">
           {task.options.map((option) => (
             <button
               key={option}
-              className={`answer-button ${getButtonClass(option)}`}
+              className={`p-5 bg-[var(--card)] border border-[var(--card-border)] rounded-2xl font-medium text-[clamp(1.25rem,5vw,1.75rem)] text-[var(--text)] cursor-pointer transition-all duration-150 tabular-nums hover:-translate-y-px hover:shadow-lg active:scale-[0.985] ${getButtonClass(option)}`}
               type="button"
               onClick={() => handleClick(option)}
-              disabled={showResult && !allowAdvance && option !== task.answer && option !== lastAnswer}
+              disabled={
+                showResult &&
+                !allowAdvance &&
+                option !== task.answer &&
+                option !== lastAnswer
+              }
             >
-              <span className="answer-button__value">{option}</span>
+              {option}
             </button>
           ))}
         </div>
