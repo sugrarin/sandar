@@ -82,18 +82,18 @@ export function GameScreen({
 
   return (
     <section className="flex flex-col w-full">
-      <section className="flex flex-col gap-8 bg-[var(--card)] backdrop-blur-xl border border-[var(--card-border)] rounded-2xl p-6 shadow-sm">
+      <section className="flex flex-col gap-6 bg-[var(--card)] backdrop-blur-xl border border-[var(--card-border)] rounded-2xl p-6 shadow-sm">
         <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--accent-soft)] text-[var(--accent)] text-sm font-semibold">
+          <div className="flex items-center justify-between gap-3">
+            <span className="inline-flex items-center px-3 py-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent)] text-sm font-semibold">
               {MODE_LABELS[mode]}
             </span>
-            <div className="flex items-center gap-4">
-              <p className="text-base text-[var(--text-muted)] tabular-nums font-medium">
+            <div className="flex items-center gap-3">
+              <p className="text-sm text-[var(--text-muted)] tabular-nums font-semibold">
                 {currentIndex + 1} / {total}
               </p>
               <button
-                className="w-10 h-10 flex items-center justify-center bg-black/[0.03] border-none rounded-xl cursor-pointer transition-all duration-200 hover:bg-black/[0.08] active:scale-95"
+                className="w-10 h-10 flex items-center justify-center bg-black/[0.04] border-none rounded-xl cursor-pointer transition-all duration-200 hover:bg-black/[0.08] active:scale-95"
                 type="button"
                 onClick={onFinish}
                 aria-label="Закончить раунд"
@@ -116,20 +116,20 @@ export function GameScreen({
           </div>
         </div>
 
-        <div className="text-center py-6">
-          <p className="text-base text-[var(--text-muted)] mb-3 font-medium">
+        <div className="text-center py-4">
+          <p className="text-sm text-[var(--text-muted)] mb-3 font-semibold">
             {subtitle}
           </p>
-          <h2 className="text-[clamp(3rem,15vw,5rem)] font-bold tabular-nums tracking-tight">
+          <h2 className="text-[clamp(3rem,15vw,5rem)] font-bold tabular-nums tracking-tight leading-none">
             {task.question}
           </h2>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           {task.options.map((option) => (
             <button
               key={option}
-              className={`py-6 px-4 bg-[var(--card)] border-2 border-[var(--card-border)] rounded-xl font-bold text-[clamp(1.5rem,6vw,2.25rem)] text-[var(--text)] cursor-pointer transition-all duration-200 tabular-nums hover:border-[var(--accent)] hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${getButtonClass(option)}`}
+              className={`h-20 px-4 bg-[var(--card)] border-2 border-[var(--card-border)] rounded-xl font-bold text-[clamp(1.5rem,6vw,2.25rem)] text-[var(--text)] cursor-pointer transition-all duration-200 tabular-nums hover:border-[var(--accent)] hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${getButtonClass(option)}`}
               type="button"
               onClick={() => handleClick(option)}
               disabled={

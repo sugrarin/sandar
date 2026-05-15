@@ -119,14 +119,14 @@ export function ResultScreen({
         <canvas ref={canvasRef} className="confetti" aria-hidden="true" />
       )}
 
-      <section className="bg-[var(--card)] backdrop-blur-xl border border-[var(--card-border)] rounded-2xl p-6 shadow-sm">
-        <div className="text-center py-4">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm text-[var(--text-muted)] uppercase tracking-widest font-semibold">
+      <section className="flex flex-col gap-4">
+        <section className="bg-[var(--card)] backdrop-blur-xl border border-[var(--card-border)] rounded-2xl p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <span className="inline-flex items-center px-3 py-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent)] text-sm font-semibold">
               Раунд завершён
             </span>
             <button
-              className="w-10 h-10 flex items-center justify-center bg-black/[0.03] border-none rounded-xl cursor-pointer transition-all duration-200 hover:bg-black/[0.08] active:scale-95"
+              className="w-10 h-10 flex items-center justify-center bg-black/[0.04] border-none rounded-xl cursor-pointer transition-all duration-200 hover:bg-black/[0.08] active:scale-95"
               onClick={onReturnHome}
               aria-label="Вернуться на главную"
             >
@@ -136,14 +136,15 @@ export function ResultScreen({
               />
             </button>
           </div>
-          <div className="mb-6">
-            <p className="text-[clamp(4rem,18vw,6rem)] font-bold tabular-nums text-[var(--accent)] leading-none">
+
+          <div className="text-center mb-6">
+            <p className="text-[clamp(4rem,18vw,6rem)] font-bold tabular-nums text-[var(--accent)] leading-none tracking-tight">
               {score}
-              <span className="text-[var(--text-muted)] text-[0.5em]">
+              <span className="text-[var(--text-muted)] text-[0.5em] font-bold">
                 /{total}
               </span>
             </p>
-            <p className="text-base text-[var(--text-muted)] mt-2 font-medium">
+            <p className="text-base text-[var(--text-muted)] mt-3 font-medium">
               {score === total
                 ? "Идеально! 🎉"
                 : score >= total * 0.8
@@ -153,51 +154,51 @@ export function ResultScreen({
                     : "Продолжай тренироваться! 🌱"}
             </p>
           </div>
-        </div>
 
-        <div className="flex flex-col gap-3 mb-8">
-          <button
-            className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-[var(--accent)] text-white border-none rounded-xl cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold text-base"
-            onClick={onReview}
-            disabled={!hasMistakes}
-          >
-            <Search className="w-5 h-5" strokeWidth={2.5} />
-            <span>Разобрать ошибки</span>
-          </button>
+          <div className="flex flex-col gap-3">
+            <button
+              className="w-full h-14 flex items-center justify-center gap-2.5 px-6 bg-[var(--accent)] text-white border-none rounded-xl cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold text-base"
+              onClick={onReview}
+              disabled={!hasMistakes}
+            >
+              <Search className="w-5 h-5" strokeWidth={2.5} />
+              <span>Разобрать ошибки</span>
+            </button>
 
-          <button
-            className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-[var(--card)] border-2 border-[var(--card-border)] rounded-xl cursor-pointer transition-all duration-200 hover:border-[var(--accent)] hover:shadow-md active:scale-[0.98] font-semibold text-base"
-            onClick={onReplay}
-          >
-            <RefreshCw
-              className="w-5 h-5 text-[var(--accent)]"
-              strokeWidth={2.5}
-            />
-            <span>Ещё раунд</span>
-          </button>
-        </div>
+            <button
+              className="w-full h-14 flex items-center justify-center gap-2.5 px-6 bg-[var(--card)] border-2 border-[var(--card-border)] rounded-xl cursor-pointer transition-all duration-200 hover:border-[var(--accent)] hover:shadow-md active:scale-[0.98] font-semibold text-base"
+              onClick={onReplay}
+            >
+              <RefreshCw
+                className="w-5 h-5 text-[var(--accent)]"
+                strokeWidth={2.5}
+              />
+              <span>Ещё раунд</span>
+            </button>
+          </div>
+        </section>
 
-        <div className="border-t border-[var(--card-border)] pt-5">
-          <h3 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-4">
+        <section className="bg-[var(--card)] backdrop-blur-xl border border-[var(--card-border)] rounded-2xl p-6 shadow-sm">
+          <h3 className="text-base font-semibold text-[var(--text)] mb-4">
             Новый раунд
           </h3>
           <div className="grid grid-cols-2 gap-3">
             {MODES.map((mode) => (
               <button
                 key={mode}
-                className="flex items-center gap-3 p-4 bg-black/[0.02] border border-[var(--card-border)] rounded-xl cursor-pointer transition-all duration-200 hover:border-[var(--accent)] hover:bg-[var(--accent-soft)] active:scale-[0.98] group"
+                className="flex items-center gap-3 h-16 px-4 bg-[var(--card)] border border-[var(--card-border)] rounded-xl cursor-pointer transition-all duration-200 hover:border-[var(--accent)] hover:shadow-md active:scale-[0.98] group"
                 onClick={() => onStartGame(mode)}
               >
-                <span className="w-10 h-10 flex items-center justify-center bg-[var(--accent-soft)] rounded-lg text-[var(--accent)] transition-transform duration-200 group-hover:scale-110">
+                <span className="shrink-0 w-10 h-10 flex items-center justify-center bg-[var(--accent-soft)] rounded-xl text-[var(--accent)] transition-transform duration-200 group-hover:scale-110">
                   {MODE_ICONS[mode]}
                 </span>
-                <span className="text-sm font-semibold">
+                <span className="text-sm font-semibold text-left leading-tight">
                   {MODE_LABELS[mode]}
                 </span>
               </button>
             ))}
           </div>
-        </div>
+        </section>
       </section>
     </section>
   );
