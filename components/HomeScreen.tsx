@@ -51,42 +51,44 @@ export function HomeScreen({
   ][];
 
   return (
-    <section className="flex flex-col">
-      <div className="my-5 mb-6">
-        <p className="text-sm text-[var(--text-muted)] uppercase tracking-wider mb-1">
-          Math trainer
+    <section className="flex flex-col gap-5">
+      <div className="text-center mb-2">
+        <p className="text-sm text-[var(--text-muted)] uppercase tracking-widest mb-2">
+          Math Trainer
         </p>
-        <h1 className="text-[clamp(2rem,8vw,3rem)] font-semibold leading-tight">
-          Тренажёр счёта в уме
+        <h1 className="text-[clamp(1.75rem,7vw,2.5rem)] font-bold leading-tight">
+          Тренажёр счёта
         </h1>
       </div>
 
-      <section className="bg-gradient-to-br from-white/50 to-white/30 backdrop-blur-[10px] border border-[var(--card-border)] rounded-[1.25rem] p-4 mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold">Сложность</h2>
-          <p className="text-sm text-[var(--text-muted)]">
+      <section className="bg-gradient-to-br from-white/60 to-white/40 backdrop-blur-xl border border-[var(--card-border)] rounded-2xl p-5 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-base font-semibold text-[var(--text)]">
+            Сложность
+          </h2>
+          <span className="text-sm px-3 py-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent)] font-medium">
             {DIFFICULTIES[difficulty].label}
-          </p>
+          </span>
         </div>
         <div className="flex gap-2" role="tablist" aria-label="Выбор сложности">
           {difficulties.map(([key, profile]) => (
             <button
               key={key}
-              className={`flex-1 flex flex-col items-center gap-1 py-3 px-2 rounded-xl transition-all duration-150 cursor-pointer border ${
+              className={`flex-1 flex flex-col items-center gap-2 py-4 px-2 rounded-xl transition-all duration-200 cursor-pointer border-2 ${
                 difficulty === key
-                  ? "bg-[rgba(31,138,112,0.12)] border-[rgba(31,138,112,0.3)]"
-                  : "bg-transparent border-transparent hover:bg-black/5"
+                  ? "bg-[var(--accent-soft)] border-[var(--accent)] shadow-sm"
+                  : "bg-transparent border-transparent hover:bg-black/[0.03]"
               }`}
               type="button"
               onClick={() => onSelectDifficulty(key)}
               role="tab"
               aria-selected={difficulty === key}
             >
-              <span className="text-2xl" aria-hidden="true">
+              <span className="text-3xl" aria-hidden="true">
                 {profile.emoji}
               </span>
               <span
-                className={`text-xs ${difficulty === key ? "text-[var(--text)] font-medium" : "text-[var(--text-muted)]"}`}
+                className={`text-xs font-medium ${difficulty === key ? "text-[var(--text)]" : "text-[var(--text-muted)]"}`}
               >
                 {DIFFICULTY_LABELS[key]}
               </span>
@@ -95,22 +97,22 @@ export function HomeScreen({
         </div>
       </section>
 
-      <section className="bg-[var(--card)] backdrop-blur-[10px] border border-[var(--card-border)] rounded-[1.25rem] p-4 mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold">Режим</h2>
-        </div>
+      <section className="bg-[var(--card)] backdrop-blur-xl border border-[var(--card-border)] rounded-2xl p-5 shadow-sm">
+        <h2 className="text-base font-semibold text-[var(--text)] mb-4">
+          Режим игры
+        </h2>
         <div className="grid grid-cols-2 gap-3">
           {MODES.map((mode) => (
             <button
               key={mode}
-              className="flex items-center gap-3 p-4 bg-[var(--card)] border border-[var(--card-border)] rounded-2xl cursor-pointer transition-all duration-150 hover:-translate-y-px hover:shadow-lg active:scale-[0.985]"
+              className="flex flex-col items-center gap-3 p-5 bg-[var(--card)] border border-[var(--card-border)] rounded-xl cursor-pointer transition-all duration-200 hover:border-[var(--accent)] hover:shadow-md active:scale-[0.98] group"
               type="button"
               onClick={() => onStartGame(mode)}
             >
-              <span className="w-10 h-10 flex items-center justify-center bg-black/[0.04] rounded-xl text-[var(--text)]">
+              <span className="w-12 h-12 flex items-center justify-center bg-[var(--accent-soft)] rounded-xl text-[var(--accent)] transition-transform duration-200 group-hover:scale-110">
                 {MODE_ICONS[mode]}
               </span>
-              <span className="text-[0.9375rem] font-medium">
+              <span className="text-sm font-semibold text-center">
                 {MODE_LABELS[mode]}
               </span>
             </button>

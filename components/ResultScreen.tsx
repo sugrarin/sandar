@@ -114,72 +114,89 @@ export function ResultScreen({
   }, [isPerfect]);
 
   return (
-    <section className="flex flex-col">
+    <section className="flex flex-col w-full">
       {isPerfect && (
         <canvas ref={canvasRef} className="confetti" aria-hidden="true" />
       )}
 
-      <section className="bg-[var(--card)] backdrop-blur-[10px] border border-[var(--card-border)] rounded-[1.25rem] p-4 mb-4">
-        <div className="text-center py-6 px-4">
-          <p className="text-sm text-[var(--text-muted)] uppercase tracking-wider">
-            Готово
-          </p>
-          <div className="flex items-center justify-between mt-1 mb-4">
-            <h2 className="text-[clamp(1.5rem,6vw,2rem)] font-semibold">
-              Результат
-            </h2>
+      <section className="bg-[var(--card)] backdrop-blur-xl border border-[var(--card-border)] rounded-2xl p-6 shadow-sm">
+        <div className="text-center py-4">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm text-[var(--text-muted)] uppercase tracking-widest font-semibold">
+              Раунд завершён
+            </span>
             <button
-              className="w-8 h-8 flex items-center justify-center bg-transparent border-none rounded-lg cursor-pointer transition-colors duration-150 hover:bg-black/5"
+              className="w-10 h-10 flex items-center justify-center bg-black/[0.03] border-none rounded-xl cursor-pointer transition-all duration-200 hover:bg-black/[0.08] active:scale-95"
               onClick={onReturnHome}
               aria-label="Вернуться на главную"
             >
-              <X className="w-5 h-5 text-[var(--text-muted)]" strokeWidth={2} />
+              <X
+                className="w-5 h-5 text-[var(--text-muted)]"
+                strokeWidth={2.5}
+              />
             </button>
           </div>
-          <p className="text-[clamp(3rem,15vw,5rem)] font-semibold tabular-nums text-[var(--accent)]">
-            {score}&thinsp;/&thinsp;{total}
-          </p>
+          <div className="mb-6">
+            <p className="text-[clamp(4rem,18vw,6rem)] font-bold tabular-nums text-[var(--accent)] leading-none">
+              {score}
+              <span className="text-[var(--text-muted)] text-[0.5em]">
+                /{total}
+              </span>
+            </p>
+            <p className="text-base text-[var(--text-muted)] mt-2 font-medium">
+              {score === total
+                ? "Идеально! 🎉"
+                : score >= total * 0.8
+                  ? "Отлично! 👏"
+                  : score >= total * 0.5
+                    ? "Хорошо! 💪"
+                    : "Продолжай тренироваться! 🌱"}
+            </p>
+          </div>
         </div>
 
-        <div className="flex flex-col gap-3 mb-6">
+        <div className="flex flex-col gap-3 mb-8">
           <button
-            className="w-full flex items-center justify-center gap-2 p-4 bg-[var(--card)] border border-[var(--card-border)] rounded-2xl cursor-pointer transition-all duration-150 hover:-translate-y-px hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none"
+            className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-[var(--accent)] text-white border-none rounded-xl cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none font-semibold text-base"
             onClick={onReview}
             disabled={!hasMistakes}
           >
-            <Search className="w-5 h-5 text-[var(--text)]" strokeWidth={2} />
-            <span className="text-[0.9375rem] font-medium">
-              {hasMistakes ? "Разобрать ошибки" : "Ошибок нет"}
-            </span>
+            <Search className="w-5 h-5" strokeWidth={2.5} />
+            <span>Разобрать ошибки</span>
           </button>
 
           <button
-            className="w-full flex items-center justify-center gap-2 p-4 bg-[var(--card)] border border-[var(--card-border)] rounded-2xl cursor-pointer transition-all duration-150 hover:-translate-y-px hover:shadow-lg active:scale-[0.985]"
+            className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-[var(--card)] border-2 border-[var(--card-border)] rounded-xl cursor-pointer transition-all duration-200 hover:border-[var(--accent)] hover:shadow-md active:scale-[0.98] font-semibold text-base"
             onClick={onReplay}
           >
-            <RefreshCw className="w-5 h-5 text-[var(--text)]" strokeWidth={2} />
-            <span className="text-[0.9375rem] font-medium">Еще раунд</span>
+            <RefreshCw
+              className="w-5 h-5 text-[var(--accent)]"
+              strokeWidth={2.5}
+            />
+            <span>Ещё раунд</span>
           </button>
         </div>
 
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-lg font-semibold">Новый раунд</h3>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          {MODES.map((mode) => (
-            <button
-              key={mode}
-              className="flex items-center gap-3 p-4 bg-[var(--card)] border border-[var(--card-border)] rounded-2xl cursor-pointer transition-all duration-150 hover:-translate-y-px hover:shadow-lg active:scale-[0.985]"
-              onClick={() => onStartGame(mode)}
-            >
-              <span className="w-10 h-10 flex items-center justify-center bg-black/[0.04] rounded-xl text-[var(--text)]">
-                {MODE_ICONS[mode]}
-              </span>
-              <span className="text-[0.9375rem] font-medium">
-                {MODE_LABELS[mode]}
-              </span>
-            </button>
-          ))}
+        <div className="border-t border-[var(--card-border)] pt-5">
+          <h3 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-4">
+            Новый раунд
+          </h3>
+          <div className="grid grid-cols-2 gap-3">
+            {MODES.map((mode) => (
+              <button
+                key={mode}
+                className="flex items-center gap-3 p-4 bg-black/[0.02] border border-[var(--card-border)] rounded-xl cursor-pointer transition-all duration-200 hover:border-[var(--accent)] hover:bg-[var(--accent-soft)] active:scale-[0.98] group"
+                onClick={() => onStartGame(mode)}
+              >
+                <span className="w-10 h-10 flex items-center justify-center bg-[var(--accent-soft)] rounded-lg text-[var(--accent)] transition-transform duration-200 group-hover:scale-110">
+                  {MODE_ICONS[mode]}
+                </span>
+                <span className="text-sm font-semibold">
+                  {MODE_LABELS[mode]}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
       </section>
     </section>

@@ -81,55 +81,55 @@ export function GameScreen({
       : `${DIFFICULTIES[difficulty].emoji} ${DIFFICULTIES[difficulty].label}`;
 
   return (
-    <section className="flex flex-col">
-      <section className="flex flex-col gap-6 bg-[var(--card)] backdrop-blur-[10px] border border-[var(--card-border)] rounded-[1.25rem] p-5">
-        <div className="flex flex-col gap-3">
+    <section className="flex flex-col w-full">
+      <section className="flex flex-col gap-8 bg-[var(--card)] backdrop-blur-xl border border-[var(--card-border)] rounded-2xl p-6 shadow-sm">
+        <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-[var(--text-muted)]">
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--accent-soft)] text-[var(--accent)] text-sm font-semibold">
               {MODE_LABELS[mode]}
-            </p>
-            <div className="flex items-center gap-3">
-              <p className="text-sm text-[var(--text-muted)] tabular-nums">
-                {currentIndex + 1}
-                {THIN_SPACE}/{THIN_SPACE}
-                {total}
+            </span>
+            <div className="flex items-center gap-4">
+              <p className="text-base text-[var(--text-muted)] tabular-nums font-medium">
+                {currentIndex + 1} / {total}
               </p>
               <button
-                className="w-8 h-8 flex items-center justify-center bg-transparent border-none rounded-lg cursor-pointer transition-colors duration-150 hover:bg-black/5"
+                className="w-10 h-10 flex items-center justify-center bg-black/[0.03] border-none rounded-xl cursor-pointer transition-all duration-200 hover:bg-black/[0.08] active:scale-95"
                 type="button"
                 onClick={onFinish}
                 aria-label="Закончить раунд"
               >
                 <X
                   className="w-5 h-5 text-[var(--text-muted)]"
-                  strokeWidth={2}
+                  strokeWidth={2.5}
                 />
               </button>
             </div>
           </div>
           <div
-            className="h-1 bg-black/[0.08] rounded-sm overflow-hidden"
+            className="h-2 bg-black/[0.06] rounded-full overflow-hidden"
             aria-hidden="true"
           >
             <div
-              className="h-full bg-[var(--accent)] rounded-sm transition-all duration-300"
-              style={{ width: `${Math.max(progress, 8)}%` }}
+              className="h-full bg-[var(--accent)] rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${Math.max(progress, 5)}%` }}
             />
           </div>
         </div>
 
-        <div className="text-center py-8 px-4">
-          <p className="text-sm text-[var(--text-muted)] mb-2">{subtitle}</p>
-          <h2 className="text-[clamp(2.5rem,12vw,4rem)] font-semibold tabular-nums">
+        <div className="text-center py-6">
+          <p className="text-base text-[var(--text-muted)] mb-3 font-medium">
+            {subtitle}
+          </p>
+          <h2 className="text-[clamp(3rem,15vw,5rem)] font-bold tabular-nums tracking-tight">
             {task.question}
           </h2>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-4">
           {task.options.map((option) => (
             <button
               key={option}
-              className={`p-5 bg-[var(--card)] border border-[var(--card-border)] rounded-2xl font-medium text-[clamp(1.25rem,5vw,1.75rem)] text-[var(--text)] cursor-pointer transition-all duration-150 tabular-nums hover:-translate-y-px hover:shadow-lg active:scale-[0.985] ${getButtonClass(option)}`}
+              className={`py-6 px-4 bg-[var(--card)] border-2 border-[var(--card-border)] rounded-xl font-bold text-[clamp(1.5rem,6vw,2.25rem)] text-[var(--text)] cursor-pointer transition-all duration-200 tabular-nums hover:border-[var(--accent)] hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${getButtonClass(option)}`}
               type="button"
               onClick={() => handleClick(option)}
               disabled={

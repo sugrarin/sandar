@@ -50,8 +50,8 @@ export default function RootLayout({
           href="/apple-touch-icon.png"
         />
       </head>
-      <body className="min-h-screen flex flex-col p-4 sm:max-w-[480px] sm:mx-auto sm:py-8 sm:px-5">
-        {children}
+      <body className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6">
+        <div className="w-full max-w-[440px] mx-auto">{children}</div>
       </body>
     </html>
   );

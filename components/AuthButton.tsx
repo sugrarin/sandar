@@ -67,16 +67,20 @@ export function AuthButton({ onClick }: AuthButtonProps) {
   return (
     <div ref={menuRef} className="relative">
       <button
-        className={`fixed top-4 right-4 w-10 h-10 rounded-full border border-[var(--card-border)] bg-[var(--card)] flex items-center justify-center cursor-pointer transition-all duration-150 z-50 ${
-          user ? "bg-[var(--accent-soft)] border-[var(--accent)]" : ""
+        className={`fixed top-4 right-4 w-11 h-11 rounded-full border-2 border-[var(--card-border)] bg-[var(--card)] flex items-center justify-center cursor-pointer transition-all duration-200 z-50 shadow-sm hover:shadow-md active:scale-95 ${
+          user
+            ? "bg-[var(--accent-soft)] border-[var(--accent)]"
+            : "hover:border-[var(--accent)]"
         }`}
         onClick={handleClick}
         aria-label="Аккаунт"
       >
         {initials ? (
-          <span className="text-xs font-semibold">{initials}</span>
+          <span className="text-xs font-bold text-[var(--accent)]">
+            {initials}
+          </span>
         ) : (
-          <User className="w-5 h-5" strokeWidth={1.5} />
+          <User className="w-5 h-5 text-[var(--text-muted)]" strokeWidth={2} />
         )}
       </button>
 
