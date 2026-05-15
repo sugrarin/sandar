@@ -1,84 +1,85 @@
-import { createClient } from './supabase/client';
-import type { SessionAnswer, GameMode, Difficulty } from '@/types';
+import { createClient } from "./supabase/client";
+import type { SessionAnswer, GameMode, Difficulty } from "@/types";
 
 interface SessionData {
+  sourceMode: GameMode;
   mode: GameMode;
   difficulty: Difficulty;
-  totalQuestions: number;
-  correctAnswers: number;
-  wrongAnswers: number;
-  durationSeconds: number;
-  answers: SessionAnswer[];
+  score: number;
+  total: number;
+  mistakes: {
+    question: string;
+    answer: number;
+    options: number[];
+    operation: GameMode;
+    left: number;
+    right: number;
+  }[];
+  finishedAt: number;
 }
 
-export async function saveSession(sessionData: SessionData): Promise<{ success: boolean; error?: string }> {
+export async function saveSession(
+  sessionData: SessionData,
+): Promise<{ success: boolean; error?: string }> {
   const supabase = createClient();
 
   // Check if user is authenticated
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
     // Store locally for later sync
-    const pendingSessions = JSON.parse(localStorage.getItem('pendingSessions') || '[]');
+    const pendingSessions = JSON.parse(
+      localStorage.getItem("pendingSessions") || "[]",
+    );
     pendingSessions.push({
       ...sessionData,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
-    localStorage.setItem('pendingSessions', JSON.stringify(pendingSessions));
+    localStorage.setItem("pendingSessions", JSON.stringify(pendingSessions));
     return { success: true };
   }
 
   try {
     // Insert session
-    const { data: session, error: sessionError } = await supabase
-      .from('sessions')
-      .insert({
-        user_id: user.id,
-        mode: sessionData.mode,
-        difficulty: sessionData.difficulty,
-        total_questions: sessionData.totalQuestions,
-        correct_answers: sessionData.correctAnswers,
-        wrong_answers: sessionData.wrongAnswers,
-        duration_seconds: sessionData.durationSeconds,
-        completed_at: new Date().toISOString()
-      })
-      .select('id')
-      .single();
+    const wrongCount = sessionData.mistakes.length;
+    const correctCount = sessionData.score;
+    const totalCount = sessionData.total;
+
+    const { error: sessionError } = await supabase.from("sessions").insert({
+      user_id: user.id,
+      mode: sessionData.mode,
+      difficulty: sessionData.difficulty,
+      total_questions: totalCount,
+      correct_answers: correctCount,
+      wrong_answers: wrongCount,
+      completed_at: new Date(sessionData.finishedAt).toISOString(),
+    });
 
     if (sessionError) throw sessionError;
 
-    // Insert answers if any
-    if (sessionData.answers.length > 0) {
-      const answersData = sessionData.answers.map(answer => ({
-        session_id: session.id,
-        question: answer.question,
-        correct_answer: answer.correctAnswer,
-        user_answer: answer.userAnswer,
-        is_correct: answer.isCorrect,
-        time_spent_seconds: answer.timeSpentSeconds || 0
-      }));
-
-      const { error: answersError } = await supabase
-        .from('session_answers')
-        .insert(answersData);
-
-      if (answersError) throw answersError;
-    }
-
     return { success: true };
   } catch (error) {
-    console.error('Failed to save session:', error);
-    return { success: false, error: 'Failed to save session' };
+    console.error("Failed to save session:", error);
+    return { success: false, error: "Failed to save session" };
   }
 }
 
-export async function syncPendingSessions(): Promise<{ synced: number; failed: number }> {
+export async function syncPendingSessions(): Promise<{
+  synced: number;
+  failed: number;
+}> {
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) return { synced: 0, failed: 0 };
 
-  const pendingSessions = JSON.parse(localStorage.getItem('pendingSessions') || '[]');
+  const pendingSessions = JSON.parse(
+    localStorage.getItem("pendingSessions") || "[]",
+  );
   if (pendingSessions.length === 0) return { synced: 0, failed: 0 };
 
   let synced = 0;
@@ -93,20 +94,22 @@ export async function syncPendingSessions(): Promise<{ synced: number; failed: n
     }
   }
 
-  localStorage.setItem('pendingSessions', JSON.stringify(failed));
+  localStorage.setItem("pendingSessions", JSON.stringify(failed));
   return { synced, failed: failed.length };
 }
 
 export async function getUserStats() {
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) return null;
 
   const { data, error } = await supabase
-    .from('user_stats')
-    .select('*')
-    .eq('user_id', user.id)
+    .from("user_stats")
+    .select("*")
+    .eq("user_id", user.id)
     .single();
 
   if (error) return null;
@@ -115,14 +118,16 @@ export async function getUserStats() {
 
 export async function getModeStats() {
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) return [];
 
   const { data, error } = await supabase
-    .from('mode_stats')
-    .select('*')
-    .eq('user_id', user.id);
+    .from("mode_stats")
+    .select("*")
+    .eq("user_id", user.id);
 
   if (error) return [];
   return data || [];
@@ -130,15 +135,17 @@ export async function getModeStats() {
 
 export async function getRecentSessions(limit = 10) {
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) return [];
 
   const { data, error } = await supabase
-    .from('sessions')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
+    .from("sessions")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
     .limit(limit);
 
   if (error) return [];
