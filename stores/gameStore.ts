@@ -378,7 +378,7 @@ export const useGameStore = create<GameState>()(
           activeRound: null,
         });
 
-        return { duration };
+        return { type: "finished" as const, duration };
       },
 
       returnHome: () => {
