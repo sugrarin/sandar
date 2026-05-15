@@ -8,7 +8,9 @@
 - **React 18** (Hooks, Client Components для интерактива)
 - **TypeScript** — строгая типизация
 - **Zustand** — state management для игрового стейта
-- **CSS Modules** — нативные CSS переменные для тем
+- **Кастомный CSS** (`app/globals.css`) — BEM-классы + CSS переменные для тем (light/dark)
+- **Lucide React** — иконки (Plus, Minus, X, Divide, Grid3X3, Dices, Search, RefreshCw, User, LogOut, Mail, ShieldCheck, ArrowLeft)
+- **Geist** — кастомный шрифт (Regular + ExtraBold) из `public/fonts/`
 
 ### Backend / Infrastructure
 
@@ -40,6 +42,8 @@
 - [x] Автосинхронизация накопленных сессий после логина
 - [x] Responsive дизайн, мобильная оптимизация
 - [x] Конфетти при идеальном результате
+- [x] Light/Dark тема через `prefers-color-scheme`
+- [x] Lucide-иконки во всех режимах (эмодзи только для уровней сложности)
 
 ### Архитектура
 
@@ -123,12 +127,12 @@ app/
   api/
     sessions/      # POST/GET сессий
     stats/         # GET статистики
-  globals.css      # CSS переменные, стили
-  layout.tsx     # Root layout
-  page.tsx       # Главная (игра)
+  globals.css      # Кастомные стили + CSS переменные (BEM)
+  layout.tsx       # Root layout
+  page.tsx         # Главная (игра)
 components/
   AuthButton.tsx   # Кнопка пользователя + меню
-  AuthModal.tsx    # Модалка входа
+  AuthModal.tsx    # Модалка входа (OTP)
   GameScreen.tsx   # Экран игры
   HomeScreen.tsx   # Выбор сложности/режима
   ResultScreen.tsx # Результаты + confetti
@@ -138,10 +142,15 @@ lib/
     client.ts      # Browser client
     server.ts      # Server client (API routes)
 middleware.ts      # Edge auth middleware
+public/
+  fonts/           # Geist-Regular.woff2, Geist-ExtraBold.woff2
+  favicon/         # Иконки приложения
 stores/
   gameStore.ts     # Zustand store (игра)
 types/
   index.ts         # TypeScript типы
+schema.sql         # SQL миграция Supabase (таблицы, RLS)
+AGENTS.md          # Правила для AI-ассистентов
 ```
 
 ---
