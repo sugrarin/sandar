@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 interface AuthModalProps {
   onClose: () => void;
 }
 
 export function AuthModal({ onClose }: AuthModalProps) {
-  const [step, setStep] = useState<'email' | 'code'>('email');
-  const [email, setEmail] = useState('');
-  const [code, setCode] = useState('');
+  const [step, setStep] = useState<"email" | "code">("email");
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,6 +25,7 @@ export function AuthModal({ onClose }: AuthModalProps) {
       email: email.trim(),
       options: {
         shouldCreateUser: true,
+        emailRedirectTo: undefined,
       },
     });
 
@@ -33,7 +34,7 @@ export function AuthModal({ onClose }: AuthModalProps) {
     if (error) {
       setError(error.message);
     } else {
-      setStep('code');
+      setStep("code");
     }
   };
 
@@ -45,13 +46,13 @@ export function AuthModal({ onClose }: AuthModalProps) {
     const { error } = await supabase.auth.verifyOtp({
       email: email.trim(),
       token: code.trim(),
-      type: 'email',
+      type: "email",
     });
 
     setLoading(false);
 
     if (error) {
-      setError('Неверный или устаревший код');
+      setError("Неверный или устаревший код");
     } else {
       onClose();
     }
@@ -60,10 +61,12 @@ export function AuthModal({ onClose }: AuthModalProps) {
   return (
     <div className="auth-modal-overlay" onClick={onClose}>
       <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
-        {step === 'email' ? (
+        {step === "email" ? (
           <>
             <h2 className="auth-modal__title">Вход в аккаунт</h2>
-            <p className="auth-modal__subtitle">Введите email, чтобы получить код</p>
+            <p className="auth-modal__subtitle">
+              Введите email, чтобы получить код
+            </p>
             <form onSubmit={sendCode}>
               <input
                 type="email"
@@ -74,8 +77,12 @@ export function AuthModal({ onClose }: AuthModalProps) {
                 required
                 autoFocus
               />
-              <button type="submit" className="auth-modal__button" disabled={loading}>
-                {loading ? 'Отправка...' : 'Получить код'}
+              <button
+                type="submit"
+                className="auth-modal__button"
+                disabled={loading}
+              >
+                {loading ? "Отправка..." : "Получить код"}
               </button>
             </form>
           </>
@@ -97,13 +104,23 @@ export function AuthModal({ onClose }: AuthModalProps) {
                 autoFocus
                 required
               />
-              <button type="submit" className="auth-modal__button" disabled={loading}>
-                {loading ? 'Проверка...' : 'Войти'}
+              <button
+                type="submit"
+                className="auth-modal__button"
+                disabled={loading}
+              >
+                {loading ? "Проверка..." : "Войти"}
               </button>
               <button
                 type="button"
-                style={{ marginTop: '0.75rem', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-                onClick={() => setStep('email')}
+                style={{
+                  marginTop: "0.75rem",
+                  background: "transparent",
+                  border: "none",
+                  color: "var(--text-muted)",
+                  cursor: "pointer",
+                }}
+                onClick={() => setStep("email")}
               >
                 Изменить email
               </button>
