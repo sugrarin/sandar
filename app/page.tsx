@@ -96,7 +96,9 @@ export default function Home() {
 
   return (
     <>
-      <AuthButton onClick={() => setAuthModalOpen(true)} />
+      <header className="site-header">
+        <AuthButton onClick={() => setAuthModalOpen(true)} />
+      </header>
 
       <main className="app">
         {currentScreen === "home" && (
