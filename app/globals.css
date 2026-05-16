@@ -733,6 +733,250 @@ button {
   background: var(--danger-soft);
 }
 
+/* ==================== Achievements ==================== */
+
+.achv-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
+.achv-summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--button-neutral-border);
+  border-radius: var(--radius-md);
+  background: var(--button-neutral);
+}
+
+.achv-summary__label {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+.achv-summary__value {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-main);
+  font-variant-numeric: tabular-nums;
+}
+
+.achv-summary__total {
+  color: var(--text-soft);
+  font-weight: 400;
+}
+
+.achv-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+}
+
+.achv {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--button-neutral-border);
+  border-radius: var(--radius-md);
+  background: var(--button-neutral);
+  opacity: 0.55;
+  transition: opacity var(--transition);
+}
+
+.achv--unlocked {
+  opacity: 1;
+  border-color: rgba(31, 138, 112, 0.4);
+  background: linear-gradient(
+    135deg,
+    rgba(31, 138, 112, 0.08),
+    rgba(31, 138, 112, 0.02)
+  );
+}
+
+.achv__icon {
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 999px;
+  background: rgba(22, 21, 21, 0.06);
+  color: var(--text-soft);
+  flex-shrink: 0;
+}
+
+.achv__icon svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.achv--unlocked .achv__icon {
+  background: var(--accent);
+  color: #fff;
+}
+
+.achv__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.achv__title {
+  margin: 0 0 0.15rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.achv__desc {
+  margin: 0 0 0.4rem;
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  line-height: 1.35;
+}
+
+.achv__progress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.achv__progress-track {
+  flex: 1;
+  height: 0.35rem;
+  background: rgba(22, 21, 21, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.achv__progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+  border-radius: inherit;
+  transition: width var(--transition);
+}
+
+.achv__progress-text {
+  font-size: 0.7rem;
+  color: var(--text-soft);
+  font-variant-numeric: tabular-nums;
+  min-width: 2.5rem;
+  text-align: right;
+}
+
+@media (prefers-color-scheme: dark) {
+  .achv__icon {
+    background: rgba(255, 255, 255, 0.07);
+  }
+  .achv__progress-track {
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+
+/* ==================== Achievement toast ==================== */
+
+.achv-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--safe-bottom) + 1rem);
+  transform: translateX(-50%);
+  z-index: 200;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  width: min(22rem, calc(100% - 2rem));
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-lg);
+  background: var(--bg-strong);
+  border: 1px solid rgba(31, 138, 112, 0.45);
+  box-shadow:
+    0 18px 36px rgba(27, 25, 18, 0.18),
+    0 0 0 1px rgba(31, 138, 112, 0.1);
+  cursor: pointer;
+  animation: achv-toast-in 260ms ease-out;
+}
+
+@keyframes achv-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 16px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.achv-toast__icon {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.achv-toast__icon svg {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.achv-toast__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.achv-toast__eyebrow {
+  margin: 0 0 0.15rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.achv-toast__title {
+  margin: 0 0 0.15rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.achv-toast__desc {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  line-height: 1.35;
+}
+
+.achv-toast__close {
+  display: grid;
+  place-items: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-soft);
+  flex-shrink: 0;
+}
+
+.achv-toast__close svg {
+  width: 1rem;
+  height: 1rem;
+}
+
 /* ==================== Accuracy chart ==================== */
 
 .acc-chart-wrapper {

@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useStatsStore } from "@/stores/statsStore";
 import { ActivityHeatmap } from "@/components/ActivityHeatmap";
 import { AccuracyChart } from "@/components/AccuracyChart";
+import { Achievements } from "@/components/Achievements";
 import { MODE_LABELS, type Difficulty } from "@/types";
 
 interface ProfileScreenProps {
@@ -182,6 +183,11 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
               ))}
             </ul>
           )}
+
+          <div className="panel__header panel__header--tight">
+            <h2 className="panel__title">Достижения</h2>
+          </div>
+          <Achievements />
         </>
       )}
 

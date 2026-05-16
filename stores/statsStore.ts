@@ -2,7 +2,31 @@
 
 import { create } from "zustand";
 import { createClient } from "@/lib/supabase/client";
+import { computeUnlockedCodes } from "@/lib/achievements";
 import type { GameMode, Difficulty } from "@/types";
+
+const SEEN_KEY = "achievements:seen";
+
+function loadSeen(): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  try {
+    const raw = window.localStorage.getItem(SEEN_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw) as string[];
+    return new Set(parsed);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveSeen(seen: Set<string>) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(SEEN_KEY, JSON.stringify(Array.from(seen)));
+  } catch {
+    /* ignore */
+  }
+}
 
 export interface AccountUser {
   id: string;
@@ -54,10 +78,12 @@ interface StatsState {
   error: string | null;
   lastFetchedAt: number | null;
   activityFetchedAt: number | null;
+  newAchievements: string[];
   fetchUser: () => Promise<AccountUser | null>;
   fetchStats: (force?: boolean) => Promise<void>;
   fetchActivity: (force?: boolean) => Promise<void>;
   loadAll: (force?: boolean) => Promise<void>;
+  dismissAchievement: (code: string) => void;
   reset: () => void;
 }
 
@@ -74,6 +100,11 @@ export const useStatsStore = create<StatsState>((set, get) => ({
   error: null,
   lastFetchedAt: null,
   activityFetchedAt: null,
+  newAchievements: [],
+
+  dismissAchievement: (code) => {
+    set({ newAchievements: get().newAchievements.filter((c) => c !== code) });
+  },
 
   fetchUser: async () => {
     const supabase = createClient();
@@ -134,12 +165,37 @@ export const useStatsStore = create<StatsState>((set, get) => ({
         throw new Error("Не удалось загрузить статистику");
       }
       const data = await res.json();
+      const nextUserStats = data.userStats || null;
+      const nextModeStats = data.modeStats || [];
+
+      // Detect newly unlocked achievements
+      const unlocked = computeUnlockedCodes({
+        userStats: nextUserStats,
+        modeStats: nextModeStats,
+      });
+      const seen = loadSeen();
+      const isFirstEverLoad = seen.size === 0;
+      const fresh: string[] = [];
+      for (const code of unlocked) {
+        if (!seen.has(code)) {
+          if (!isFirstEverLoad) fresh.push(code);
+          seen.add(code);
+        }
+      }
+      // Always persist; mark a sentinel so future loads aren't treated as first
+      if (isFirstEverLoad) seen.add("__bootstrap__");
+      saveSeen(seen);
+
       set({
-        userStats: data.userStats || null,
-        modeStats: data.modeStats || [],
+        userStats: nextUserStats,
+        modeStats: nextModeStats,
         loading: false,
         lastFetchedAt: Date.now(),
         error: null,
+        newAchievements:
+          fresh.length > 0
+            ? [...get().newAchievements, ...fresh]
+            : get().newAchievements,
       });
     } catch (e) {
       set({
@@ -196,6 +252,7 @@ export const useStatsStore = create<StatsState>((set, get) => ({
       error: null,
       loading: false,
       activityLoading: false,
+      newAchievements: [],
     });
   },
 }));

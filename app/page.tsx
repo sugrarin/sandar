@@ -8,6 +8,7 @@ import { ResultScreen } from "@/components/ResultScreen";
 import { AuthButton } from "@/components/AuthButton";
 import { AuthModal } from "@/components/AuthModal";
 import { ProfileScreen } from "@/components/ProfileScreen";
+import { AchievementToast } from "@/components/AchievementToast";
 import { saveSession } from "@/lib/session";
 import { useStatsStore } from "@/stores/statsStore";
 import { createClient } from "@/lib/supabase/client";
@@ -203,6 +204,7 @@ export default function Home() {
       </main>
 
       {authModalOpen && <AuthModal onClose={() => setAuthModalOpen(false)} />}
+      <AchievementToast />
     </>
   );
 }
