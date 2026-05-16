@@ -1044,7 +1044,7 @@ button {
   justify-content: stretch;
   background: rgba(22, 21, 21, 0.06);
   border-radius: 3px;
-  overflow: hidden;
+  position: relative;
 }
 
 .acc-chart__bar {
@@ -1130,6 +1130,7 @@ button {
   border-radius: 3px;
   background: var(--heatmap-l0, rgba(22, 21, 21, 0.07));
   transition: background var(--transition);
+  position: relative;
 }
 
 .heatmap__cell--l0 {
@@ -1392,4 +1393,51 @@ button {
   font-size: 0.85rem;
   font-weight: 500;
   border-radius: var(--radius-sm);
+}
+
+/* ==================== Cell tooltip ==================== */
+
+[data-tt-top]:hover::before,
+[data-tt-top]:hover::after {
+  position: absolute;
+  left: 50%;
+  pointer-events: none;
+  z-index: 20;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+[data-tt-top]:hover::before {
+  content: attr(data-tt-top) "\A" attr(data-tt-bot);
+  white-space: pre;
+  bottom: calc(100% + 8px);
+  padding: 0.4rem 0.6rem;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  font-weight: 500;
+  border-radius: 6px;
+  text-align: center;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  font-variant-numeric: tabular-nums;
+}
+
+[data-tt-top]:hover::after {
+  content: "";
+  bottom: calc(100% + 3px);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #1a1a1a;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-tt-top]:hover::before {
+    background: #2a2a2a;
+  }
+  [data-tt-top]:hover::after {
+    border-top-color: #2a2a2a;
+  }
 }

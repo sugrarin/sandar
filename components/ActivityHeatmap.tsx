@@ -33,6 +33,10 @@ function isoDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
+function formatDate(d: Date): string {
+  return `${d.getUTCDate()} ${MONTH_LABELS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
+
 function level(sessions: number): number {
   if (sessions <= 0) return 0;
   if (sessions === 1) return 1;
@@ -72,7 +76,8 @@ export function ActivityHeatmap({ data, loading }: ActivityHeatmapProps) {
     date: Date;
     key: string;
     level: number;
-    tooltip: string;
+    ttTop: string;
+    ttBot: string;
     isFuture: boolean;
   }[][] = [];
 
@@ -89,18 +94,20 @@ export function ActivityHeatmap({ data, loading }: ActivityHeatmapProps) {
         cell && cell.questions > 0
           ? `${Math.round((cell.correct / cell.questions) * 100)}%`
           : null;
-      const tooltip = isFuture
+      const ttTop = isFuture
         ? ""
         : sessions === 0
-          ? `${key} — без активности`
-          : `${key} — ${sessions} тренир., ${cell?.questions ?? 0} вопросов${
-              accuracy ? `, ${accuracy} точности` : ""
+          ? "Без активности"
+          : `${sessions} трен., ${cell?.questions ?? 0} вопр.${
+              accuracy ? `, ${accuracy}` : ""
             }`;
+      const ttBot = isFuture ? "" : formatDate(date);
       week.push({
         date,
         key,
         level: isFuture ? 0 : level(sessions),
-        tooltip,
+        ttTop,
+        ttBot,
         isFuture,
       });
     }
@@ -163,7 +170,8 @@ export function ActivityHeatmap({ data, loading }: ActivityHeatmapProps) {
                   className={`heatmap__cell heatmap__cell--l${cell.level}${
                     cell.isFuture ? " heatmap__cell--future" : ""
                   }`}
-                  title={cell.tooltip}
+                  data-tt-top={cell.ttTop || undefined}
+                  data-tt-bot={cell.ttBot || undefined}
                 />
               ))}
             </div>

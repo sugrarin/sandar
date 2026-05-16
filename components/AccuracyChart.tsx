@@ -9,6 +9,32 @@ interface AccuracyChartProps {
 
 const WEEKS = 26;
 const DAY_MS = 86_400_000;
+const MONTHS = [
+  "янв",
+  "фев",
+  "мар",
+  "апр",
+  "май",
+  "июн",
+  "июл",
+  "авг",
+  "сен",
+  "окт",
+  "ноя",
+  "дек",
+];
+
+function fmt(d: Date): string {
+  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
+
+function fmtRange(a: Date, b: Date): string {
+  const sameYear = a.getUTCFullYear() === b.getUTCFullYear();
+  const left = sameYear
+    ? `${a.getUTCDate()} ${MONTHS[a.getUTCMonth()]}`
+    : fmt(a);
+  return `${left} – ${fmt(b)}`;
+}
 
 export function AccuracyChart({ data, loading }: AccuracyChartProps) {
   const today = new Date();
@@ -28,9 +54,7 @@ export function AccuracyChart({ data, loading }: AccuracyChartProps) {
     for (const d of data.days) {
       const date = new Date(d.date);
       date.setUTCHours(0, 0, 0, 0);
-      const diff = Math.floor(
-        (date.getTime() - gridStart.getTime()) / DAY_MS,
-      );
+      const diff = Math.floor((date.getTime() - gridStart.getTime()) / DAY_MS);
       const idx = Math.floor(diff / 7);
       if (idx >= 0 && idx < WEEKS) {
         buckets[idx].correct += d.correct;
@@ -59,23 +83,24 @@ export function AccuracyChart({ data, loading }: AccuracyChartProps) {
         aria-label="Точность по неделям"
       >
         {buckets.map((b, i) => {
-          const accuracy =
-            b.questions > 0 ? b.correct / b.questions : null;
+          const accuracy = b.questions > 0 ? b.correct / b.questions : null;
           const weekStart = new Date(gridStart);
           weekStart.setUTCDate(gridStart.getUTCDate() + i * 7);
           const weekEnd = new Date(weekStart);
           weekEnd.setUTCDate(weekStart.getUTCDate() + 6);
-          const tooltip =
+          const ttTop =
             accuracy !== null
-              ? `${weekStart.toISOString().slice(0, 10)} — ${weekEnd
-                  .toISOString()
-                  .slice(0, 10)}: ${Math.round(
-                  accuracy * 100,
-                )}% (${b.correct}/${b.questions})`
-              : `${weekStart.toISOString().slice(0, 10)} — без активности`;
+              ? `${Math.round(accuracy * 100)}% точности (${b.correct}/${b.questions})`
+              : "Без активности";
+          const ttBot = fmtRange(weekStart, weekEnd);
 
           return (
-            <div key={i} className="acc-chart__col" title={tooltip}>
+            <div
+              key={i}
+              className="acc-chart__col"
+              data-tt-top={ttTop}
+              data-tt-bot={ttBot}
+            >
               {accuracy !== null && (
                 <div
                   className="acc-chart__bar"
