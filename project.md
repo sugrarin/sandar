@@ -11,6 +11,7 @@
 - **Кастомный CSS** (`app/globals.css`) — BEM-классы + CSS переменные для тем (light/dark)
 - **Lucide React** — иконки (Plus, Minus, X, Divide, Grid3X3, Dices, Search, RefreshCw, User, LogOut, Mail, ShieldCheck, ArrowLeft)
 - **Geist** — кастомный шрифт (Regular + ExtraBold) из `public/fonts/`
+- Почта noreply@auth.sandar.kz для отправки OTP кодов через Supabase, SMTP в Resend.com
 
 ### Backend / Infrastructure
 
@@ -59,7 +60,7 @@
 
 ### Фаза 1: Статистика и аналитика
 
-- [ ] Страница `/profile` с данными пользователя, графиками прогресса
+- [ ] Раздел `/profile` с данными пользователя, графиками прогресса
 - [ ] Тепловая карта активности (GitHub-style)
 - [ ] График точности по дням/неделям
 - [ ] Статистика по режимам

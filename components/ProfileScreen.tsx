@@ -3,31 +3,12 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, LogOut } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { MODE_LABELS, type GameMode, type Difficulty } from "@/types";
+import { useStatsStore } from "@/stores/statsStore";
+import { MODE_LABELS, type Difficulty } from "@/types";
 
 interface ProfileScreenProps {
   onClose: () => void;
   onLoggedOut: () => void;
-}
-
-interface UserStatsRow {
-  total_sessions: number;
-  total_questions: number;
-  total_correct: number;
-  total_wrong: number;
-  current_streak: number;
-  best_streak: number;
-  total_time_seconds?: number;
-  last_session_at?: string | null;
-}
-
-interface ModeStatsRow {
-  mode: GameMode;
-  difficulty: Difficulty;
-  sessions_count: number;
-  questions_count: number;
-  correct_count: number;
-  wrong_count: number;
 }
 
 const DIFFICULTY_LABELS: Record<Difficulty, string> = {
@@ -46,51 +27,35 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
   const supabase = createClient();
   const [email, setEmail] = useState<string | null>(null);
   const [memberSince, setMemberSince] = useState<string | null>(null);
-  const [userStats, setUserStats] = useState<UserStatsRow | null>(null);
-  const [modeStats, setModeStats] = useState<ModeStatsRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
+
+  const userStats = useStatsStore((s) => s.userStats);
+  const modeStats = useStatsStore((s) => s.modeStats);
+  const loading = useStatsStore((s) => s.loading);
+  const error = useStatsStore((s) => s.error);
+  const lastFetchedAt = useStatsStore((s) => s.lastFetchedAt);
+  const fetchStats = useStatsStore((s) => s.fetchStats);
 
   useEffect(() => {
     let cancelled = false;
 
-    const load = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
+    supabase.auth.getUser().then(({ data: { user } }) => {
       if (cancelled) return;
-
       if (!user) {
         onLoggedOut();
         return;
       }
-
       setEmail(user.email ?? null);
       setMemberSince(user.created_at ?? null);
+      fetchStats();
+    });
 
-      try {
-        const res = await fetch("/api/stats", { cache: "no-store" });
-        if (!res.ok) throw new Error("Не удалось загрузить статистику");
-        const data = await res.json();
-        if (cancelled) return;
-        setUserStats(data.userStats || null);
-        setModeStats(data.modeStats || []);
-      } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : "Ошибка загрузки");
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    load();
     return () => {
       cancelled = true;
     };
   }, []);
+
+  const showSkeleton = loading && lastFetchedAt === null;
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -116,10 +81,7 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
       </header>
 
       <section className="panel panel--soft profile-user">
-        <div
-          className="profile-user__avatar"
-          aria-hidden="true"
-        >
+        <div className="profile-user__avatar" aria-hidden="true">
           {email ? email.slice(0, 2).toUpperCase() : "—"}
         </div>
         <div className="profile-user__info">
@@ -137,9 +99,9 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
         </div>
       </section>
 
-      {loading ? (
+      {showSkeleton ? (
         <p className="profile-empty">Загружаем статистику…</p>
-      ) : error ? (
+      ) : error && lastFetchedAt === null ? (
         <p className="profile-empty profile-empty--error">{error}</p>
       ) : (
         <>

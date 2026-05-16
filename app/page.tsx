@@ -9,6 +9,8 @@ import { AuthButton } from "@/components/AuthButton";
 import { AuthModal } from "@/components/AuthModal";
 import { ProfileScreen } from "@/components/ProfileScreen";
 import { saveSession } from "@/lib/session";
+import { useStatsStore } from "@/stores/statsStore";
+import { createClient } from "@/lib/supabase/client";
 import type { GameMode, Difficulty } from "@/types";
 
 type Screen = "home" | "game" | "result" | "profile";
@@ -33,6 +35,29 @@ export default function Home() {
     getCurrentTask,
   } = useGameStore();
 
+  // Background prefetch of stats on auth changes
+  useEffect(() => {
+    const supabase = createClient();
+    const { fetchStats, reset } = useStatsStore.getState();
+
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) fetchStats();
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT" || !session?.user) {
+        reset();
+      } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        useStatsStore.getState().invalidate();
+        fetchStats(true);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   // Handle screen transitions
   useEffect(() => {
     if (currentScreen === "profile") return;
@@ -56,6 +81,16 @@ export default function Home() {
     setCurrentScreen("home");
   };
 
+  const persistSession = (session: Parameters<typeof saveSession>[0]) => {
+    saveSession(session)
+      .then((res) => {
+        if (res.success) {
+          useStatsStore.getState().fetchStats(true);
+        }
+      })
+      .catch(console.error);
+  };
+
   const onSelectDifficulty = (difficulty: Difficulty) => {
     setDifficulty(difficulty);
   };
@@ -75,7 +110,7 @@ export default function Home() {
             // Save session to backend if user is logged in
             const round = useGameStore.getState().lastSession;
             if (round) {
-              saveSession(round).catch(console.error);
+              persistSession(round);
             }
           }
         },
@@ -89,7 +124,7 @@ export default function Home() {
     if (result) {
       const round = useGameStore.getState().lastSession;
       if (round) {
-        saveSession(round).catch(console.error);
+        persistSession(round);
       }
     }
   };
@@ -149,7 +184,7 @@ export default function Home() {
               if (result && result.type === "finished") {
                 const session = useGameStore.getState().lastSession;
                 if (session) {
-                  saveSession(session).catch(console.error);
+                  persistSession(session);
                 }
               }
             }}
