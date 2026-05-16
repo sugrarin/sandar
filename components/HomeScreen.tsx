@@ -53,8 +53,8 @@ export function HomeScreen({
   return (
     <section className="screen screen--active">
       <header className="hero">
-        <p className="hero__eyebrow">Math trainer</p>
-        <h1 className="hero__title">Тренажёр счёта в уме</h1>
+        <p className="hero__eyebrow">Sandar</p>
+        <h1 className="hero__title">Тренажёр счёта</h1>
       </header>
 
       <section className="panel panel--soft">

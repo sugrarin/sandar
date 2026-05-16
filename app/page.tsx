@@ -7,13 +7,15 @@ import { GameScreen } from "@/components/GameScreen";
 import { ResultScreen } from "@/components/ResultScreen";
 import { AuthButton } from "@/components/AuthButton";
 import { AuthModal } from "@/components/AuthModal";
+import { ProfileScreen } from "@/components/ProfileScreen";
 import { saveSession } from "@/lib/session";
 import type { GameMode, Difficulty } from "@/types";
 
-type Screen = "home" | "game" | "result";
+type Screen = "home" | "game" | "result" | "profile";
 
 export default function Home() {
   const [currentScreen, setCurrentScreen] = useState<Screen>("home");
+  const [prevScreen, setPrevScreen] = useState<Screen>("home");
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
   const {
@@ -33,12 +35,26 @@ export default function Home() {
 
   // Handle screen transitions
   useEffect(() => {
+    if (currentScreen === "profile") return;
     if (activeRound) {
       setCurrentScreen("game");
     } else if (lastSession && currentScreen === "game") {
       setCurrentScreen("result");
     }
   }, [activeRound, lastSession, currentScreen]);
+
+  const openProfile = () => {
+    setPrevScreen(currentScreen === "profile" ? "home" : currentScreen);
+    setCurrentScreen("profile");
+  };
+
+  const closeProfile = () => {
+    setCurrentScreen(prevScreen);
+  };
+
+  const handleLoggedOut = () => {
+    setCurrentScreen("home");
+  };
 
   const onSelectDifficulty = (difficulty: Difficulty) => {
     setDifficulty(difficulty);
@@ -97,10 +113,18 @@ export default function Home() {
   return (
     <>
       <header className="site-header">
-        <AuthButton onClick={() => setAuthModalOpen(true)} />
+        <AuthButton
+          onLoginClick={() => setAuthModalOpen(true)}
+          onProfileClick={openProfile}
+          active={currentScreen === "profile"}
+        />
       </header>
 
       <main className="app">
+        {currentScreen === "profile" && (
+          <ProfileScreen onClose={closeProfile} onLoggedOut={handleLoggedOut} />
+        )}
+
         {currentScreen === "home" && (
           <HomeScreen
             difficulty={settings.difficulty}
