@@ -733,6 +733,76 @@ button {
   background: var(--danger-soft);
 }
 
+/* ==================== Accuracy chart ==================== */
+
+.acc-chart-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+  padding: 0.85rem;
+  border: 1px solid var(--button-neutral-border);
+  border-radius: var(--radius-md);
+  background: var(--button-neutral);
+}
+
+.acc-chart-summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.acc-chart-summary__label {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+.acc-chart-summary__value {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.acc-chart {
+  display: grid;
+  grid-template-columns: repeat(26, 1fr);
+  align-items: end;
+  gap: 2px;
+  height: 72px;
+}
+
+.acc-chart__col {
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: stretch;
+  background: rgba(22, 21, 21, 0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.acc-chart__bar {
+  width: 100%;
+  background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+  border-radius: 3px;
+  transition: height var(--transition);
+}
+
+.acc-chart--loading .acc-chart__col {
+  animation: heatmap-pulse 1.4s ease-in-out infinite;
+}
+
+@media (prefers-color-scheme: dark) {
+  .acc-chart__col {
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
 /* ==================== Activity heatmap ==================== */
 
 .heatmap {

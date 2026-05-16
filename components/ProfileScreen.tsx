@@ -5,6 +5,7 @@ import { ArrowLeft, LogOut } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useStatsStore } from "@/stores/statsStore";
 import { ActivityHeatmap } from "@/components/ActivityHeatmap";
+import { AccuracyChart } from "@/components/AccuracyChart";
 import { MODE_LABELS, type Difficulty } from "@/types";
 
 interface ProfileScreenProps {
@@ -144,6 +145,11 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
             <h2 className="panel__title">Активность</h2>
           </div>
           <ActivityHeatmap data={activity} loading={activityLoading} />
+
+          <div className="panel__header panel__header--tight">
+            <h2 className="panel__title">Точность по неделям</h2>
+          </div>
+          <AccuracyChart data={activity} loading={activityLoading} />
 
           <div className="panel__header panel__header--tight">
             <h2 className="panel__title">По режимам</h2>
