@@ -38,10 +38,13 @@ export default function Home() {
   // Background prefetch of stats on auth changes
   useEffect(() => {
     const supabase = createClient();
-    const { fetchStats, reset } = useStatsStore.getState();
+    const { fetchStats, fetchActivity, reset } = useStatsStore.getState();
 
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) fetchStats();
+      if (user) {
+        fetchStats();
+        fetchActivity();
+      }
     });
 
     const {
@@ -50,8 +53,10 @@ export default function Home() {
       if (event === "SIGNED_OUT" || !session?.user) {
         reset();
       } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-        useStatsStore.getState().invalidate();
-        fetchStats(true);
+        const store = useStatsStore.getState();
+        store.invalidate();
+        store.fetchStats(true);
+        store.fetchActivity(true);
       }
     });
 
@@ -85,7 +90,9 @@ export default function Home() {
     saveSession(session)
       .then((res) => {
         if (res.success) {
-          useStatsStore.getState().fetchStats(true);
+          const store = useStatsStore.getState();
+          store.fetchStats(true);
+          store.fetchActivity(true);
         }
       })
       .catch(console.error);

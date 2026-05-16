@@ -23,13 +23,30 @@ export interface ModeStatsRow {
   wrong_count: number;
 }
 
+export interface ActivityDay {
+  date: string;
+  sessions: number;
+  questions: number;
+  correct: number;
+}
+
+export interface ActivityData {
+  since: string;
+  weeks: number;
+  days: ActivityDay[];
+}
+
 interface StatsState {
   userStats: UserStatsRow | null;
   modeStats: ModeStatsRow[];
+  activity: ActivityData | null;
   loading: boolean;
+  activityLoading: boolean;
   error: string | null;
   lastFetchedAt: number | null;
+  activityFetchedAt: number | null;
   fetchStats: (force?: boolean) => Promise<void>;
+  fetchActivity: (force?: boolean) => Promise<void>;
   invalidate: () => void;
   reset: () => void;
 }
@@ -39,18 +56,17 @@ const TTL_MS = 60_000;
 export const useStatsStore = create<StatsState>((set, get) => ({
   userStats: null,
   modeStats: [],
+  activity: null,
   loading: false,
+  activityLoading: false,
   error: null,
   lastFetchedAt: null,
+  activityFetchedAt: null,
 
   fetchStats: async (force = false) => {
     const { lastFetchedAt, loading } = get();
     if (loading) return;
-    if (
-      !force &&
-      lastFetchedAt &&
-      Date.now() - lastFetchedAt < TTL_MS
-    ) {
+    if (!force && lastFetchedAt && Date.now() - lastFetchedAt < TTL_MS) {
       return;
     }
 
@@ -86,17 +102,54 @@ export const useStatsStore = create<StatsState>((set, get) => ({
     }
   },
 
+  fetchActivity: async (force = false) => {
+    const { activityFetchedAt, activityLoading } = get();
+    if (activityLoading) return;
+    if (
+      !force &&
+      activityFetchedAt &&
+      Date.now() - activityFetchedAt < TTL_MS
+    ) {
+      return;
+    }
+
+    set({ activityLoading: true });
+    try {
+      const res = await fetch("/api/activity", { cache: "no-store" });
+      if (res.status === 401) {
+        set({
+          activity: null,
+          activityLoading: false,
+          activityFetchedAt: Date.now(),
+        });
+        return;
+      }
+      if (!res.ok) throw new Error("Не удалось загрузить активность");
+      const data = (await res.json()) as ActivityData;
+      set({
+        activity: data,
+        activityLoading: false,
+        activityFetchedAt: Date.now(),
+      });
+    } catch {
+      set({ activityLoading: false });
+    }
+  },
+
   invalidate: () => {
-    set({ lastFetchedAt: null });
+    set({ lastFetchedAt: null, activityFetchedAt: null });
   },
 
   reset: () => {
     set({
       userStats: null,
       modeStats: [],
+      activity: null,
       lastFetchedAt: null,
+      activityFetchedAt: null,
       error: null,
       loading: false,
+      activityLoading: false,
     });
   },
 }));

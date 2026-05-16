@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, LogOut } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useStatsStore } from "@/stores/statsStore";
+import { ActivityHeatmap } from "@/components/ActivityHeatmap";
 import { MODE_LABELS, type Difficulty } from "@/types";
 
 interface ProfileScreenProps {
@@ -31,10 +32,13 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
 
   const userStats = useStatsStore((s) => s.userStats);
   const modeStats = useStatsStore((s) => s.modeStats);
+  const activity = useStatsStore((s) => s.activity);
+  const activityLoading = useStatsStore((s) => s.activityLoading);
   const loading = useStatsStore((s) => s.loading);
   const error = useStatsStore((s) => s.error);
   const lastFetchedAt = useStatsStore((s) => s.lastFetchedAt);
   const fetchStats = useStatsStore((s) => s.fetchStats);
+  const fetchActivity = useStatsStore((s) => s.fetchActivity);
 
   useEffect(() => {
     let cancelled = false;
@@ -48,6 +52,7 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
       setEmail(user.email ?? null);
       setMemberSince(user.created_at ?? null);
       fetchStats();
+      fetchActivity();
     });
 
     return () => {
@@ -142,6 +147,11 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
               </span>
             </div>
           </div>
+
+          <div className="panel__header panel__header--tight">
+            <h2 className="panel__title">Активность</h2>
+          </div>
+          <ActivityHeatmap data={activity} loading={activityLoading} />
 
           <div className="panel__header panel__header--tight">
             <h2 className="panel__title">По режимам</h2>
