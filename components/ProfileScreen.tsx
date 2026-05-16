@@ -7,7 +7,8 @@ import { useStatsStore } from "@/stores/statsStore";
 import { ActivityHeatmap } from "@/components/ActivityHeatmap";
 import { AccuracyChart } from "@/components/AccuracyChart";
 import { Achievements } from "@/components/Achievements";
-import { MODE_LABELS, type Difficulty } from "@/types";
+import { DIFFICULTIES, MODE_LABELS, type Difficulty } from "@/types";
+import { useGameStore } from "@/stores/gameStore";
 
 interface ProfileScreenProps {
   onClose: () => void;
@@ -28,6 +29,9 @@ function formatAccuracy(correct: number, total: number): string {
 
 export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
   const [loggingOut, setLoggingOut] = useState(false);
+  const gameDifficulty = useGameStore((s) => s.settings.difficulty);
+  const [modeDifficulty, setModeDifficulty] =
+    useState<Difficulty>(gameDifficulty);
 
   const user = useStatsStore((s) => s.user);
   const userResolved = useStatsStore((s) => s.userResolved);
@@ -155,34 +159,63 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
           <div className="panel__header panel__header--tight">
             <h2 className="panel__title">По режимам</h2>
           </div>
-          {modeStats.length === 0 ? (
-            <p className="profile-empty">Пока нет данных по режимам</p>
-          ) : (
-            <ul className="mode-stats">
-              {modeStats.map((row) => (
-                <li
-                  key={`${row.mode}-${row.difficulty}`}
-                  className="mode-stats__item"
-                >
-                  <div className="mode-stats__head">
-                    <span className="mode-stats__title">
-                      {MODE_LABELS[row.mode] || row.mode}
-                    </span>
-                    <span className="mode-stats__diff">
-                      {DIFFICULTY_LABELS[row.difficulty] || row.difficulty}
-                    </span>
-                  </div>
-                  <div className="mode-stats__meta">
-                    <span>{row.sessions_count} тренировок</span>
-                    <span>
-                      {formatAccuracy(row.correct_count, row.questions_count)}{" "}
-                      точность
-                    </span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+          <div
+            className="difficulty-picker difficulty-picker--plain"
+            role="tablist"
+            aria-label="Фильтр сложности"
+          >
+            {(Object.keys(DIFFICULTIES) as Difficulty[]).map((key) => (
+              <button
+                key={key}
+                type="button"
+                className={`difficulty-picker__option${
+                  modeDifficulty === key
+                    ? " difficulty-picker__option--active"
+                    : ""
+                }`}
+                onClick={() => setModeDifficulty(key)}
+                role="tab"
+                aria-selected={modeDifficulty === key}
+              >
+                <span className="difficulty-picker__label">
+                  {DIFFICULTY_LABELS[key]}
+                </span>
+              </button>
+            ))}
+          </div>
+          {(() => {
+            const rows = modeStats.filter(
+              (r) => r.difficulty === modeDifficulty,
+            );
+            if (rows.length === 0) {
+              return (
+                <p className="profile-empty">Пока нет данных по режимам</p>
+              );
+            }
+            return (
+              <ul className="mode-stats">
+                {rows.map((row) => (
+                  <li
+                    key={`${row.mode}-${row.difficulty}`}
+                    className="mode-stats__item"
+                  >
+                    <div className="mode-stats__head">
+                      <span className="mode-stats__title">
+                        {MODE_LABELS[row.mode] || row.mode}
+                      </span>
+                    </div>
+                    <div className="mode-stats__meta">
+                      <span>{row.sessions_count} тренировок</span>
+                      <span>
+                        {formatAccuracy(row.correct_count, row.questions_count)}{" "}
+                        точность
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            );
+          })()}
 
           <div className="panel__header panel__header--tight">
             <h2 className="panel__title">Достижения</h2>
