@@ -7,7 +7,7 @@ interface ActivityHeatmapProps {
   loading: boolean;
 }
 
-const WEEKDAYS = ["Пн", "Ср", "Пт"];
+const WEEKDAYS = ["Пн", "Ср", "Пт", "Вс"];
 const MONTH_LABELS = [
   "янв",
   "фев",
@@ -146,6 +146,9 @@ export function ActivityHeatmap({ data, loading }: ActivityHeatmapProps) {
           </span>
           <span className="heatmap__weekday" style={{ gridRow: 5 }}>
             {WEEKDAYS[2]}
+          </span>
+          <span className="heatmap__weekday" style={{ gridRow: 7 }}>
+            {WEEKDAYS[3]}
           </span>
         </div>
         <div
