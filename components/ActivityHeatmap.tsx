@@ -45,14 +45,19 @@ export function ActivityHeatmap({ data, loading }: ActivityHeatmapProps) {
   const weeksCount = data?.weeks ?? 26;
 
   const today = startOfDayUTC(new Date());
-  // Align grid end to the most recent Sunday >= today
-  const dayOfWeek = today.getUTCDay(); // 0 = Sunday
+  // Align grid end to the nearest Sunday >= today (Sunday = last day of ISO week)
+  const dayOfWeek = today.getUTCDay(); // 0 = Sunday, 1 = Monday, ...
+  const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
   const gridEnd = new Date(today);
-  gridEnd.setUTCDate(today.getUTCDate() + (6 - dayOfWeek));
+  gridEnd.setUTCDate(today.getUTCDate() + daysUntilSunday);
+  // gridStart is a Monday
   const gridStart = new Date(gridEnd);
   gridStart.setUTCDate(gridEnd.getUTCDate() - weeksCount * 7 + 1);
 
-  const map = new Map<string, { sessions: number; questions: number; correct: number }>();
+  const map = new Map<
+    string,
+    { sessions: number; questions: number; correct: number }
+  >();
   if (data) {
     for (const d of data.days) {
       map.set(d.date, {
@@ -63,11 +68,16 @@ export function ActivityHeatmap({ data, loading }: ActivityHeatmapProps) {
     }
   }
 
-  const weeks: { date: Date; key: string; level: number; tooltip: string; isFuture: boolean }[][] =
-    [];
+  const weeks: {
+    date: Date;
+    key: string;
+    level: number;
+    tooltip: string;
+    isFuture: boolean;
+  }[][] = [];
 
   for (let w = 0; w < weeksCount; w++) {
-    const week: typeof weeks[number] = [];
+    const week: (typeof weeks)[number] = [];
     for (let day = 0; day < 7; day++) {
       const date = new Date(gridStart);
       date.setUTCDate(gridStart.getUTCDate() + w * 7 + day);
@@ -128,13 +138,13 @@ export function ActivityHeatmap({ data, loading }: ActivityHeatmapProps) {
       </div>
       <div className="heatmap__body">
         <div className="heatmap__weekdays" aria-hidden="true">
-          <span className="heatmap__weekday" style={{ gridRow: 2 }}>
+          <span className="heatmap__weekday" style={{ gridRow: 1 }}>
             {WEEKDAYS[0]}
           </span>
-          <span className="heatmap__weekday" style={{ gridRow: 4 }}>
+          <span className="heatmap__weekday" style={{ gridRow: 3 }}>
             {WEEKDAYS[1]}
           </span>
-          <span className="heatmap__weekday" style={{ gridRow: 6 }}>
+          <span className="heatmap__weekday" style={{ gridRow: 5 }}>
             {WEEKDAYS[2]}
           </span>
         </div>
