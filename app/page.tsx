@@ -35,28 +35,20 @@ export default function Home() {
     getCurrentTask,
   } = useGameStore();
 
-  // Background prefetch of stats on auth changes
+  // Background prefetch of account data on auth changes
   useEffect(() => {
     const supabase = createClient();
-    const { fetchStats, fetchActivity, reset } = useStatsStore.getState();
 
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        fetchStats();
-        fetchActivity();
-      }
-    });
+    useStatsStore.getState().loadAll();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
+      const store = useStatsStore.getState();
       if (event === "SIGNED_OUT" || !session?.user) {
-        reset();
-      } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-        const store = useStatsStore.getState();
-        store.invalidate();
-        store.fetchStats(true);
-        store.fetchActivity(true);
+        store.reset();
+      } else if (event === "SIGNED_IN") {
+        store.loadAll(true);
       }
     });
 
@@ -90,9 +82,7 @@ export default function Home() {
     saveSession(session)
       .then((res) => {
         if (res.success) {
-          const store = useStatsStore.getState();
-          store.fetchStats(true);
-          store.fetchActivity(true);
+          useStatsStore.getState().loadAll(true);
         }
       })
       .catch(console.error);

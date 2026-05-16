@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { User } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { useStatsStore } from "@/stores/statsStore";
 
 interface AuthButtonProps {
   onLoginClick: () => void;
@@ -15,27 +14,7 @@ export function AuthButton({
   onProfileClick,
   active = false,
 }: AuthButtonProps) {
-  const [user, setUser] = useState<{ email?: string } | null>(null);
-  const supabase = createClient();
-
-  useEffect(() => {
-    const getUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setUser(user);
-    };
-
-    getUser();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  const user = useStatsStore((s) => s.user);
 
   const handleClick = () => {
     if (user) {

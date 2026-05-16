@@ -25,45 +25,37 @@ function formatAccuracy(correct: number, total: number): string {
 }
 
 export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
-  const supabase = createClient();
-  const [email, setEmail] = useState<string | null>(null);
-  const [memberSince, setMemberSince] = useState<string | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
 
+  const user = useStatsStore((s) => s.user);
+  const userResolved = useStatsStore((s) => s.userResolved);
   const userStats = useStatsStore((s) => s.userStats);
   const modeStats = useStatsStore((s) => s.modeStats);
   const activity = useStatsStore((s) => s.activity);
   const activityLoading = useStatsStore((s) => s.activityLoading);
   const loading = useStatsStore((s) => s.loading);
   const error = useStatsStore((s) => s.error);
-  const lastFetchedAt = useStatsStore((s) => s.lastFetchedAt);
-  const fetchStats = useStatsStore((s) => s.fetchStats);
-  const fetchActivity = useStatsStore((s) => s.fetchActivity);
+  const loadAll = useStatsStore((s) => s.loadAll);
 
+  // Refresh in background when reopening profile
   useEffect(() => {
-    let cancelled = false;
+    loadAll();
+  }, [loadAll]);
 
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (cancelled) return;
-      if (!user) {
-        onLoggedOut();
-        return;
-      }
-      setEmail(user.email ?? null);
-      setMemberSince(user.created_at ?? null);
-      fetchStats();
-      fetchActivity();
-    });
+  // Redirect to home if user is signed out (after resolution)
+  useEffect(() => {
+    if (userResolved && !user) onLoggedOut();
+  }, [userResolved, user, onLoggedOut]);
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const email = user?.email ?? null;
+  const memberSince = user?.createdAt ?? null;
 
-  const showSkeleton = loading && lastFetchedAt === null;
+  const showStatsSkeleton = loading && userStats === null;
+  const showStatsError = error !== null && userStats === null && !loading;
 
   const handleLogout = async () => {
     setLoggingOut(true);
+    const supabase = createClient();
     await supabase.auth.signOut();
     onLoggedOut();
   };
@@ -104,9 +96,9 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
         </div>
       </section>
 
-      {showSkeleton ? (
+      {showStatsSkeleton ? (
         <p className="profile-empty">Загружаем статистику…</p>
-      ) : error && lastFetchedAt === null ? (
+      ) : showStatsError ? (
         <p className="profile-empty profile-empty--error">{error}</p>
       ) : (
         <>

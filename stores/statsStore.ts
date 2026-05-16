@@ -1,7 +1,14 @@
 "use client";
 
 import { create } from "zustand";
+import { createClient } from "@/lib/supabase/client";
 import type { GameMode, Difficulty } from "@/types";
+
+export interface AccountUser {
+  id: string;
+  email: string | null;
+  createdAt: string | null;
+}
 
 export interface UserStatsRow {
   total_sessions: number;
@@ -37,6 +44,8 @@ export interface ActivityData {
 }
 
 interface StatsState {
+  user: AccountUser | null;
+  userResolved: boolean;
   userStats: UserStatsRow | null;
   modeStats: ModeStatsRow[];
   activity: ActivityData | null;
@@ -45,15 +54,18 @@ interface StatsState {
   error: string | null;
   lastFetchedAt: number | null;
   activityFetchedAt: number | null;
+  fetchUser: () => Promise<AccountUser | null>;
   fetchStats: (force?: boolean) => Promise<void>;
   fetchActivity: (force?: boolean) => Promise<void>;
-  invalidate: () => void;
+  loadAll: (force?: boolean) => Promise<void>;
   reset: () => void;
 }
 
 const TTL_MS = 60_000;
 
 export const useStatsStore = create<StatsState>((set, get) => ({
+  user: null,
+  userResolved: false,
   userStats: null,
   modeStats: [],
   activity: null,
@@ -63,9 +75,44 @@ export const useStatsStore = create<StatsState>((set, get) => ({
   lastFetchedAt: null,
   activityFetchedAt: null,
 
+  fetchUser: async () => {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const account: AccountUser | null = user
+      ? {
+          id: user.id,
+          email: user.email ?? null,
+          createdAt: user.created_at ?? null,
+        }
+      : null;
+    set({ user: account, userResolved: true });
+    return account;
+  },
+
+  loadAll: async (force = false) => {
+    const account = await get().fetchUser();
+    if (!account) {
+      set({
+        userStats: null,
+        modeStats: [],
+        activity: null,
+        lastFetchedAt: null,
+        activityFetchedAt: null,
+        loading: false,
+        activityLoading: false,
+        error: null,
+      });
+      return;
+    }
+    await Promise.all([get().fetchStats(force), get().fetchActivity(force)]);
+  },
+
   fetchStats: async (force = false) => {
-    const { lastFetchedAt, loading } = get();
+    const { lastFetchedAt, loading, user } = get();
     if (loading) return;
+    if (!user) return;
     if (!force && lastFetchedAt && Date.now() - lastFetchedAt < TTL_MS) {
       return;
     }
@@ -103,8 +150,9 @@ export const useStatsStore = create<StatsState>((set, get) => ({
   },
 
   fetchActivity: async (force = false) => {
-    const { activityFetchedAt, activityLoading } = get();
+    const { activityFetchedAt, activityLoading, user } = get();
     if (activityLoading) return;
+    if (!user) return;
     if (
       !force &&
       activityFetchedAt &&
@@ -136,12 +184,10 @@ export const useStatsStore = create<StatsState>((set, get) => ({
     }
   },
 
-  invalidate: () => {
-    set({ lastFetchedAt: null, activityFetchedAt: null });
-  },
-
   reset: () => {
     set({
+      user: null,
+      userResolved: true,
       userStats: null,
       modeStats: [],
       activity: null,
