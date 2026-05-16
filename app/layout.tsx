@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { CellTooltip } from "@/components/CellTooltip";
 
 export const metadata: Metadata = {
   title: "Math Trainer — Тренажёр устного счёта",
@@ -50,7 +51,10 @@ export default function RootLayout({
           href="/apple-touch-icon.png"
         />
       </head>
-      <body className="page">{children}</body>
+      <body className="page">
+        {children}
+        <CellTooltip />
+      </body>
     </html>
   );
 }
