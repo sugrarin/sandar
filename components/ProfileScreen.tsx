@@ -27,6 +27,16 @@ function formatAccuracy(correct: number, total: number): string {
   return `${Math.round((correct / total) * 100)}%`;
 }
 
+function formatDaysStreak(days: number): string {
+  if (days === 1) return "1 день подряд";
+  if (days >= 2 && days <= 4) return `${days} дня подряд`;
+  return `${days} дней подряд`;
+}
+
+function formatXP(xp: number): string {
+  return `${xp} XP`;
+}
+
 export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
   const [loggingOut, setLoggingOut] = useState(false);
   const gameDifficulty = useGameStore((s) => s.settings.difficulty);
@@ -99,21 +109,22 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
               })}
             </p>
           )}
-          <div className="profile-user__badges">
-            <span
-              className="profile-badge profile-badge--streak"
-              title="Серия дней подряд"
-            >
-              <Flame size={14} />
-              <span>{userStats?.streak_days ?? 0}</span>
-            </span>
-            <span className="profile-badge profile-badge--xp" title="Опыт (XP)">
-              <Zap size={14} />
-              <span>{userStats?.total_xp ?? 0}</span>
-            </span>
-          </div>
         </div>
       </section>
+
+      <div className="profile-badges-row">
+        <span
+          className="profile-badge profile-badge--streak"
+          title="Серия дней подряд"
+        >
+          <Flame size={14} />
+          <span>{formatDaysStreak(userStats?.streak_days ?? 0)}</span>
+        </span>
+        <span className="profile-badge profile-badge--xp" title="Опыт (XP)">
+          <Zap size={14} />
+          <span>{formatXP(userStats?.total_xp ?? 0)}</span>
+        </span>
+      </div>
 
       {showStatsSkeleton ? (
         <p className="profile-empty">Загружаем статистику…</p>

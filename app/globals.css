@@ -644,20 +644,22 @@ button {
   color: var(--text-soft);
 }
 
-.profile-user__badges {
+.profile-badges-row {
   display: flex;
   gap: 0.5rem;
-  margin-top: 0.5rem;
+  margin-top: -12px;
+  margin-bottom: 16px;
+  padding-left: 12px;
 }
 
 .profile-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.3rem 0.55rem;
+  padding: 0.35rem 0.7rem;
   border-radius: 999px;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
 
