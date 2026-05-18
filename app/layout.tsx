@@ -14,7 +14,6 @@ export async function generateMetadata(): Promise<Metadata> {
     title,
     description:
       "Тренажёр по математике для устного счёта: сложение, вычитание, умножение и деление.",
-    manifest: "/manifest.json",
     appleWebApp: {
       capable: true,
       statusBarStyle: "default",
