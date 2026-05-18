@@ -66,9 +66,12 @@ CREATE TABLE IF NOT EXISTS user_stats (
     total_correct INTEGER DEFAULT 0,
     total_wrong INTEGER DEFAULT 0,
     total_time_seconds INTEGER DEFAULT 0,
+    total_xp INTEGER DEFAULT 0,
     current_streak INTEGER DEFAULT 0,
     best_streak INTEGER DEFAULT 0,
+    streak_days INTEGER DEFAULT 0,
     last_session_at TIMESTAMP WITH TIME ZONE,
+    last_session_date DATE,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -133,11 +136,23 @@ BEGIN
     -- Обновляем или создаем общую статистику
     INSERT INTO user_stats (
         user_id, total_sessions, total_questions, total_correct, 
-        total_wrong, total_time_seconds, last_session_at, updated_at
+        total_wrong, total_time_seconds, total_xp, current_streak, best_streak, streak_days,
+        last_session_at, last_session_date, updated_at
     )
     VALUES (
         NEW.user_id, 1, NEW.total_questions, NEW.correct_answers,
-        NEW.wrong_answers, COALESCE(NEW.duration_seconds, 0), NEW.created_at, NOW()
+        NEW.wrong_answers, COALESCE(NEW.duration_seconds, 0),
+        NEW.correct_answers * CASE NEW.difficulty
+            WHEN 'easy' THEN 10
+            WHEN 'medium' THEN 15
+            WHEN 'hard' THEN 20
+            WHEN 'brain' THEN 30
+            ELSE 10
+        END,
+        CASE WHEN NEW.correct_answers = NEW.total_questions THEN 1 ELSE 0 END,
+        CASE WHEN NEW.correct_answers = NEW.total_questions THEN 1 ELSE 0 END,
+        1,
+        NEW.created_at, CURRENT_DATE, NOW()
     )
     ON CONFLICT (user_id) DO UPDATE SET
         total_sessions = user_stats.total_sessions + 1,
@@ -145,6 +160,19 @@ BEGIN
         total_correct = user_stats.total_correct + NEW.correct_answers,
         total_wrong = user_stats.total_wrong + NEW.wrong_answers,
         total_time_seconds = user_stats.total_time_seconds + COALESCE(NEW.duration_seconds, 0),
+        total_xp = user_stats.total_xp + 
+            (NEW.correct_answers * CASE NEW.difficulty
+                WHEN 'easy' THEN 10
+                WHEN 'medium' THEN 15
+                WHEN 'hard' THEN 20
+                WHEN 'brain' THEN 30
+                ELSE 10
+            END) +
+            (CASE 
+                WHEN NEW.correct_answers = NEW.total_questions AND user_stats.current_streak > 0 AND (user_stats.current_streak + 1) % 5 = 0 
+                THEN 50 
+                ELSE 0 
+            END),
         current_streak = CASE 
             WHEN NEW.correct_answers = NEW.total_questions THEN user_stats.current_streak + 1
             ELSE 0
@@ -154,7 +182,13 @@ BEGIN
             THEN user_stats.current_streak + 1
             ELSE user_stats.best_streak
         END,
+        streak_days = CASE 
+            WHEN user_stats.last_session_date IS NULL OR user_stats.last_session_date < CURRENT_DATE - INTERVAL '1 day' THEN 1
+            WHEN user_stats.last_session_date = CURRENT_DATE THEN user_stats.streak_days
+            ELSE user_stats.streak_days + 1
+        END,
         last_session_at = NEW.created_at,
+        last_session_date = CURRENT_DATE,
         updated_at = NOW();
 
     -- Обновляем статистику по режиму

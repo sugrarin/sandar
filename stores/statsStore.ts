@@ -39,8 +39,10 @@ export interface UserStatsRow {
   total_questions: number;
   total_correct: number;
   total_wrong: number;
+  total_xp: number;
   current_streak: number;
   best_streak: number;
+  streak_days: number;
   total_time_seconds?: number;
   last_session_at?: string | null;
 }

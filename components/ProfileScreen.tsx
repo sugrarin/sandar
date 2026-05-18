@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft, LogOut } from "lucide-react";
+import { ArrowLeft, LogOut, Flame, Zap } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useStatsStore } from "@/stores/statsStore";
 import { ActivityHeatmap } from "@/components/ActivityHeatmap";
@@ -99,6 +99,19 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
               })}
             </p>
           )}
+          <div className="profile-user__badges">
+            <span
+              className="profile-badge profile-badge--streak"
+              title="Серия дней подряд"
+            >
+              <Flame size={14} />
+              <span>{userStats?.streak_days ?? 0}</span>
+            </span>
+            <span className="profile-badge profile-badge--xp" title="Опыт (XP)">
+              <Zap size={14} />
+              <span>{userStats?.total_xp ?? 0}</span>
+            </span>
+          </div>
         </div>
       </section>
 

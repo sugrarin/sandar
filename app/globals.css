@@ -35,6 +35,8 @@
   --radius-md: 18px;
   --radius-sm: 14px;
   --transition: 180ms ease;
+
+  --font-weight-bold: 900;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -130,7 +132,7 @@ button {
   height: calc(100dvh - var(--header-height) - var(--safe-top));
   margin: 0 auto;
   margin-top: calc(var(--header-height) + var(--safe-top));
-  padding: 0.6rem 1rem 0;
+  padding: 0.6rem 1rem 0.6rem;
   overflow: hidden;
 }
 
@@ -179,6 +181,7 @@ button {
   font-family: var(--font-display);
   font-size: clamp(2rem, 8vw, 3rem);
   line-height: 1.1;
+  font-weight: var(--font-weight-bold);
 }
 
 .panel {
@@ -208,13 +211,14 @@ button {
 }
 
 .panel__header--tight {
-  margin-top: 1.25rem;
+  margin-top: 1.5rem;
 }
 
 .panel__title {
   margin: 0;
   font-size: 0.9rem;
-  font-weight: normal;
+  font-weight: 500;
+  letter-spacing: 0.02em;
 }
 
 .panel__note {
@@ -241,16 +245,16 @@ button {
   border: 0;
   border-radius: var(--radius-lg);
   background: transparent;
-  color: var(--text-soft);
+  /* color: var(--text-soft); */
   transition:
     background var(--transition),
     color var(--transition);
 }
 
 .difficulty-picker__option--active {
-  background: var(--tab-active);
+  background: var(--accent-soft);
   color: var(--text-main);
-  box-shadow: inset 0 0 0 1px var(--button-neutral-border);
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 
 .difficulty-picker__emoji {
@@ -262,7 +266,8 @@ button {
 }
 
 .difficulty-picker--plain .difficulty-picker__option {
-  padding: 0.5rem 0.4rem;
+  padding: 0.8rem 0.4rem;
+  min-height: 1rem;
 }
 
 .difficulty-picker__label {
@@ -322,7 +327,7 @@ button {
 
 .mode-card__title,
 .action-button__label {
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   font-weight: normal;
   letter-spacing: 0.03em;
 }
@@ -428,6 +433,8 @@ button {
   font-size: clamp(2.6rem, 10vw, 4rem);
   line-height: 1;
   letter-spacing: 0.02em;
+  font-feature-settings: "tnum", "calt";
+  font-weight: 800;
 }
 
 .answer-grid {
@@ -449,8 +456,9 @@ button {
 .answer-button__value {
   width: 100%;
   font-size: 1.3rem;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.05em;
+  font-feature-settings: "tnum", "calt";
 }
 
 .answer-button--correct {
@@ -623,6 +631,7 @@ button {
   margin: 0 0 0.2rem;
   font-size: 1rem;
   font-weight: 700;
+  letter-spacing: 0.02em;
   color: var(--text-main);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -633,6 +642,81 @@ button {
   margin: 0;
   font-size: 0.8rem;
   color: var(--text-soft);
+}
+
+.profile-user__badges {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.profile-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.profile-badge--streak {
+  background: linear-gradient(
+    135deg,
+    rgba(231, 111, 81, 0.15),
+    rgba(231, 111, 81, 0.08)
+  );
+  color: #e76f51;
+  border: 1px solid rgba(231, 111, 81, 0.25);
+}
+
+.profile-badge--streak svg {
+  color: #e76f51;
+}
+
+.profile-badge--xp {
+  background: linear-gradient(
+    135deg,
+    rgba(233, 196, 106, 0.18),
+    rgba(233, 196, 106, 0.08)
+  );
+  color: #d4a535;
+  border: 1px solid rgba(233, 196, 106, 0.3);
+}
+
+.profile-badge--xp svg {
+  color: #e9c46a;
+}
+
+@media (prefers-color-scheme: dark) {
+  .profile-badge--streak {
+    background: linear-gradient(
+      135deg,
+      rgba(231, 111, 81, 0.22),
+      rgba(231, 111, 81, 0.1)
+    );
+    color: #f4a261;
+    border-color: rgba(231, 111, 81, 0.35);
+  }
+
+  .profile-badge--streak svg {
+    color: #f4a261;
+  }
+
+  .profile-badge--xp {
+    background: linear-gradient(
+      135deg,
+      rgba(233, 196, 106, 0.22),
+      rgba(233, 196, 106, 0.1)
+    );
+    color: #e9c46a;
+    border-color: rgba(233, 196, 106, 0.4);
+  }
+
+  .profile-badge--xp svg {
+    color: #e9c46a;
+  }
 }
 
 .stat-grid {
@@ -742,13 +826,12 @@ button {
 
 .achv-summary {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  padding: 0.5rem 0.9rem;
-  border: 1px solid var(--button-neutral-border);
-  border-radius: var(--radius-md);
-  background: var(--button-neutral);
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--button-neutral-border);
+  /* background: var(--button-neutral); */
 }
 
 .achv-summary__label {
@@ -1274,6 +1357,7 @@ button {
   font-family: var(--font-display);
   font-size: 1.45rem;
   line-height: 1.2;
+  font-weight: var(--font-weight-bold);
 }
 
 .auth-modal__subtitle {
@@ -1316,6 +1400,7 @@ button {
   text-align: center;
   letter-spacing: 0.4em;
   font-variant-numeric: tabular-nums;
+  text-align: left;
 }
 
 .auth-modal__button {
@@ -1331,7 +1416,6 @@ button {
   color: #fff;
   font-size: 0.95rem;
   font-weight: 700;
-  letter-spacing: 0.03em;
   transition:
     box-shadow var(--transition),
     opacity var(--transition);
