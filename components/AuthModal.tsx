@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { ArrowLeft, X, Mail, ShieldCheck } from "lucide-react";
+import { useTranslations } from "@/lib/translations";
 import { createClient } from "@/lib/supabase/client";
 
 interface AuthModalProps {
@@ -9,6 +10,7 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ onClose }: AuthModalProps) {
+  const t = useTranslations();
   const [step, setStep] = useState<"email" | "code">("email");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -65,7 +67,7 @@ export function AuthModal({ onClose }: AuthModalProps) {
     setLoading(false);
 
     if (error) {
-      setError("Неверный или устаревший код");
+      setError(t("authModal.invalidCode"));
     } else {
       onClose();
     }
@@ -83,7 +85,7 @@ export function AuthModal({ onClose }: AuthModalProps) {
           type="button"
           className="auth-modal__close"
           onClick={onClose}
-          aria-label="Закрыть"
+          aria-label={t("authModal.close")}
         >
           <X aria-hidden="true" />
         </button>
@@ -94,10 +96,8 @@ export function AuthModal({ onClose }: AuthModalProps) {
 
         {step === "email" ? (
           <>
-            <h2 className="auth-modal__title">Вход в аккаунт</h2>
-            <p className="auth-modal__subtitle">
-              Введите email — пришлём 6-значный код для входа
-            </p>
+            <h2 className="auth-modal__title">{t("authModal.signIn")}</h2>
+            <p className="auth-modal__subtitle">{t("authModal.enterEmail")}</p>
             <form className="auth-modal__form" onSubmit={sendCode}>
               <input
                 type="email"
@@ -114,15 +114,15 @@ export function AuthModal({ onClose }: AuthModalProps) {
                 className="auth-modal__button"
                 disabled={loading || !email.trim()}
               >
-                {loading ? "Отправка..." : "Получить код"}
+                {loading ? t("authModal.sending") : t("authModal.getCode")}
               </button>
             </form>
           </>
         ) : (
           <>
-            <h2 className="auth-modal__title">Подтвердите email</h2>
+            <h2 className="auth-modal__title">{t("authModal.verifyEmail")}</h2>
             <p className="auth-modal__subtitle">
-              Код отправлен на <strong>{email}</strong>
+              {t("authModal.codeSentTo")} <strong>{email}</strong>
             </p>
             <form className="auth-modal__form" onSubmit={verifyCode}>
               <input
@@ -144,7 +144,7 @@ export function AuthModal({ onClose }: AuthModalProps) {
                 className="auth-modal__button"
                 disabled={loading || code.length !== 6}
               >
-                {loading ? "Проверка..." : "Войти"}
+                {loading ? t("authModal.verifying") : t("authModal.login")}
               </button>
               <button
                 type="button"
@@ -156,7 +156,7 @@ export function AuthModal({ onClose }: AuthModalProps) {
                 }}
               >
                 <ArrowLeft aria-hidden="true" />
-                Изменить email
+                {t("authModal.changeEmail")}
               </button>
             </form>
           </>

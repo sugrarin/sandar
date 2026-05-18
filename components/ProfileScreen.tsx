@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, LogOut, Flame, Zap } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { useTranslations, useLocale } from "@/lib/translations";
 import { useStatsStore } from "@/stores/statsStore";
 import { ActivityHeatmap } from "@/components/ActivityHeatmap";
 import { AccuracyChart } from "@/components/AccuracyChart";
 import { Achievements } from "@/components/Achievements";
-import { DIFFICULTIES, MODE_LABELS, type Difficulty } from "@/types";
+import { DIFFICULTIES, type Difficulty } from "@/types";
 import { useGameStore } from "@/stores/gameStore";
 
 interface ProfileScreenProps {
@@ -15,29 +16,24 @@ interface ProfileScreenProps {
   onLoggedOut: () => void;
 }
 
-const DIFFICULTY_LABELS: Record<Difficulty, string> = {
-  easy: "Легко",
-  medium: "Средне",
-  hard: "Сложно",
-  brain: "Экстрим",
-};
-
 function formatAccuracy(correct: number, total: number): string {
   if (!total) return "—";
   return `${Math.round((correct / total) * 100)}%`;
 }
 
-function formatDaysStreak(days: number): string {
-  if (days === 1) return "1 день подряд";
-  if (days >= 2 && days <= 4) return `${days} дня подряд`;
-  return `${days} дней подряд`;
+function formatDaysStreak(days: number, t: (key: string) => string): string {
+  if (days === 1) return t("profile.daysStreak.one");
+  if (days >= 2 && days <= 4) return `${days} ${t("profile.daysStreak.few")}`;
+  return `${days} ${t("profile.daysStreak.many")}`;
 }
 
-function formatXP(xp: number): string {
-  return `${xp} XP`;
+function formatXP(xp: number, t: (key: string) => string): string {
+  return `${xp} ${t("profile.xp")}`;
 }
 
 export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
+  const t = useTranslations();
+  const { locale } = useLocale();
   const [loggingOut, setLoggingOut] = useState(false);
   const gameDifficulty = useGameStore((s) => s.settings.difficulty);
   const [modeDifficulty, setModeDifficulty] =
@@ -86,11 +82,11 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
           type="button"
           className="icon-button"
           onClick={onClose}
-          aria-label="Назад"
+          aria-label={t("profile.back")}
         >
           <ArrowLeft aria-hidden="true" />
         </button>
-        <p className="hero__eyebrow">Профиль</p>
+        <p className="hero__eyebrow">{t("profile.title")}</p>
       </header>
 
       <section className="panel panel--soft profile-user">
@@ -101,12 +97,15 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
           <p className="profile-user__email">{email || "—"}</p>
           {memberSince && (
             <p className="profile-user__since">
-              С нами с{" "}
-              {new Date(memberSince).toLocaleDateString("ru-RU", {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              })}
+              {t("profile.memberSince")}{" "}
+              {new Date(memberSince).toLocaleDateString(
+                locale === "kk" ? "kk-KZ" : "ru-RU",
+                {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                },
+              )}
             </p>
           )}
         </div>
@@ -115,55 +114,62 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
       <div className="profile-badges-row">
         <span
           className="profile-badge profile-badge--streak"
-          title="Серия дней подряд"
+          title={t("profile.streakDays")}
         >
           <Flame size={14} />
-          <span>{formatDaysStreak(userStats?.streak_days ?? 0)}</span>
+          <span>{formatDaysStreak(userStats?.streak_days ?? 0, t)}</span>
         </span>
-        <span className="profile-badge profile-badge--xp" title="Опыт (XP)">
+        <span
+          className="profile-badge profile-badge--xp"
+          title={t("profile.xp")}
+        >
           <Zap size={14} />
-          <span>{formatXP(userStats?.total_xp ?? 0)}</span>
+          <span>{formatXP(userStats?.total_xp ?? 0, t)}</span>
         </span>
       </div>
 
       {showStatsSkeleton ? (
-        <p className="profile-empty">Загружаем статистику…</p>
+        <p className="profile-empty">{t("profile.loadingStats")}</p>
       ) : showStatsError ? (
         <p className="profile-empty profile-empty--error">{error}</p>
       ) : (
         <>
           <div className="panel__header panel__header--tight">
-            <h2 className="panel__title">Общая статистика</h2>
+            <h2 className="panel__title">{t("profile.generalStats")}</h2>
           </div>
           <div className="stat-grid">
             <div className="stat-card">
-              <span className="stat-card__label">Тренировок</span>
+              <span className="stat-card__label">{t("profile.sessions")}</span>
               <span className="stat-card__value">
                 {userStats?.total_sessions ?? 0}
               </span>
             </div>
             <div className="stat-card">
-              <span className="stat-card__label">Вопросов</span>
+              <span className="stat-card__label">{t("profile.questions")}</span>
               <span className="stat-card__value">{totalQuestions}</span>
             </div>
             <div className="stat-card">
-              <span className="stat-card__label">Точность</span>
+              <span className="stat-card__label">{t("profile.accuracy")}</span>
               <span className="stat-card__value">
                 {formatAccuracy(totalCorrect, totalQuestions)}
               </span>
             </div>
             <div className="stat-card">
-              <span className="stat-card__label">Верных</span>
+              <span className="stat-card__label">{t("profile.correct")}</span>
               <span className="stat-card__value">{totalCorrect}</span>
             </div>
             <div className="stat-card">
-              <span className="stat-card__label">Текущая серия</span>
+              <span className="stat-card__label">
+                {t("profile.currentStreak")}
+              </span>
               <span className="stat-card__value">
                 {userStats?.current_streak ?? 0}
               </span>
             </div>
             <div className="stat-card">
-              <span className="stat-card__label">Лучшая серия</span>
+              <span className="stat-card__label">
+                {t("profile.bestStreak")}
+              </span>
               <span className="stat-card__value">
                 {userStats?.best_streak ?? 0}
               </span>
@@ -171,22 +177,22 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
           </div>
 
           <div className="panel__header panel__header--tight">
-            <h2 className="panel__title">Активность</h2>
+            <h2 className="panel__title">{t("profile.activity")}</h2>
           </div>
           <ActivityHeatmap data={activity} loading={activityLoading} />
 
           <div className="panel__header panel__header--tight">
-            <h2 className="panel__title">Точность по неделям</h2>
+            <h2 className="panel__title">{t("profile.weeklyAccuracy")}</h2>
           </div>
           <AccuracyChart data={activity} loading={activityLoading} />
 
           <div className="panel__header panel__header--tight">
-            <h2 className="panel__title">По режимам</h2>
+            <h2 className="panel__title">{t("profile.byMode")}</h2>
           </div>
           <div
             className="difficulty-picker difficulty-picker--plain"
             role="tablist"
-            aria-label="Фильтр сложности"
+            aria-label={t("profile.difficultyFilter")}
           >
             {(Object.keys(DIFFICULTIES) as Difficulty[]).map((key) => (
               <button
@@ -202,7 +208,7 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
                 aria-selected={modeDifficulty === key}
               >
                 <span className="difficulty-picker__label">
-                  {DIFFICULTY_LABELS[key]}
+                  {t(`common.${key}`)}
                 </span>
               </button>
             ))}
@@ -212,9 +218,7 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
               (r) => r.difficulty === modeDifficulty,
             );
             if (rows.length === 0) {
-              return (
-                <p className="profile-empty">Пока нет данных по режимам</p>
-              );
+              return <p className="profile-empty">{t("profile.noModeData")}</p>;
             }
             return (
               <ul className="mode-stats">
@@ -225,14 +229,16 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
                   >
                     <div className="mode-stats__head">
                       <span className="mode-stats__title">
-                        {MODE_LABELS[row.mode] || row.mode}
+                        {t(`home.modes.${row.mode}`)}
                       </span>
                     </div>
                     <div className="mode-stats__meta">
-                      <span>{row.sessions_count} тренировок</span>
+                      <span>
+                        {row.sessions_count} {t("profile.sessionsCount")}
+                      </span>
                       <span>
                         {formatAccuracy(row.correct_count, row.questions_count)}{" "}
-                        точность
+                        {t("profile.accuracyLabel")}
                       </span>
                     </div>
                   </li>
@@ -242,7 +248,7 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
           })()}
 
           <div className="panel__header panel__header--tight">
-            <h2 className="panel__title">Достижения</h2>
+            <h2 className="panel__title">{t("profile.achievements")}</h2>
           </div>
           <Achievements />
         </>
@@ -258,7 +264,7 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
           <LogOut strokeWidth={2} />
         </span>
         <span className="action-button__label">
-          {loggingOut ? "Выходим…" : "Выйти"}
+          {loggingOut ? t("profile.loggingOut") : t("profile.logout")}
         </span>
       </button>
     </section>

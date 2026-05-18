@@ -1,10 +1,12 @@
 "use client";
 
 import { Lock } from "lucide-react";
+import { useTranslations } from "@/lib/translations";
 import { ACHIEVEMENTS } from "@/lib/achievements";
 import { useStatsStore } from "@/stores/statsStore";
 
 export function Achievements() {
+  const t = useTranslations();
   const userStats = useStatsStore((s) => s.userStats);
   const modeStats = useStatsStore((s) => s.modeStats);
   const ctx = { userStats, modeStats };
@@ -25,7 +27,9 @@ export function Achievements() {
   return (
     <div className="achv-wrapper">
       <div className="achv-summary">
-        <span className="achv-summary__label">открыто</span>
+        <span className="achv-summary__label">
+          {t("achievements.unlocked")}
+        </span>
         <span className="achv-summary__value">
           {unlockedCount}
           <span className="achv-summary__total"> / {items.length}</span>
@@ -45,8 +49,12 @@ export function Achievements() {
                 {unlocked ? <Icon /> : <Lock />}
               </span>
               <div className="achv__body">
-                <p className="achv__title">{achievement.title}</p>
-                <p className="achv__desc">{achievement.description}</p>
+                <p className="achv__title">
+                  {t(`achievements.items.${achievement.code}.title`)}
+                </p>
+                <p className="achv__desc">
+                  {t(`achievements.items.${achievement.code}.description`)}
+                </p>
                 {showProgress && (
                   <div className="achv__progress">
                     <div className="achv__progress-track">

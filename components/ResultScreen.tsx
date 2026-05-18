@@ -11,7 +11,8 @@ import {
   Search,
   RefreshCw,
 } from "lucide-react";
-import { MODE_LABELS, type GameMode } from "@/types";
+import { useTranslations } from "@/lib/translations";
+import type { GameMode } from "@/types";
 
 interface ResultScreenProps {
   score: number;
@@ -53,6 +54,7 @@ export function ResultScreen({
 }: ResultScreenProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const isPerfect = score === total;
+  const t = useTranslations();
 
   useEffect(() => {
     if (!isPerfect || !canvasRef.current) return;
@@ -121,14 +123,14 @@ export function ResultScreen({
 
       <section className="panel panel--result">
         <div className="result-summary">
-          <p className="result-summary__eyebrow">Готово</p>
+          <p className="result-summary__eyebrow">{t("result.done")}</p>
           <div className="result-summary__title-row">
-            <h2 className="result-summary__title">Результат</h2>
+            <h2 className="result-summary__title">{t("result.title")}</h2>
             <button
               className="icon-button"
               type="button"
               onClick={onReturnHome}
-              aria-label="Вернуться на главную"
+              aria-label={t("result.returnHome")}
             >
               <X aria-hidden="true" />
             </button>
@@ -149,24 +151,24 @@ export function ResultScreen({
               <Search strokeWidth={2} />
             </span>
             <span className="action-button__label">
-              {hasMistakes ? "Разобрать ошибки" : "Ошибок нет"}
+              {hasMistakes
+                ? t("result.reviewMistakes")
+                : t("result.noMistakes")}
             </span>
           </button>
 
-          <button
-            type="button"
-            className="action-button"
-            onClick={onReplay}
-          >
+          <button type="button" className="action-button" onClick={onReplay}>
             <span className="action-button__icon" aria-hidden="true">
               <RefreshCw strokeWidth={2} />
             </span>
-            <span className="action-button__label">Ещё раунд</span>
+            <span className="action-button__label">
+              {t("result.anotherRound")}
+            </span>
           </button>
         </div>
 
         <div className="panel__header panel__header--tight">
-          <h3 className="panel__title">Новый раунд</h3>
+          <h3 className="panel__title">{t("result.newRound")}</h3>
         </div>
         <div className="mode-grid">
           {MODES.map((mode) => (
@@ -179,7 +181,9 @@ export function ResultScreen({
               <span className="mode-card__icon" aria-hidden="true">
                 {MODE_ICONS[mode]}
               </span>
-              <span className="mode-card__title">{MODE_LABELS[mode]}</span>
+              <span className="mode-card__title">
+                {t(`home.modes.${mode}`)}
+              </span>
             </button>
           ))}
         </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "@/lib/translations";
 import type { ActivityData } from "@/stores/statsStore";
 
 interface ActivityHeatmapProps {
@@ -7,21 +8,20 @@ interface ActivityHeatmapProps {
   loading: boolean;
 }
 
-const WEEKDAYS = ["Пн", "Ср", "Пт", "Вс"];
-const MONTH_LABELS = [
-  "янв",
-  "фев",
-  "мар",
-  "апр",
-  "май",
-  "июн",
-  "июл",
-  "авг",
-  "сен",
-  "окт",
-  "ноя",
-  "дек",
-];
+const MONTH_KEYS = [
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "may",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "oct",
+  "nov",
+  "dec",
+] as const;
 
 function startOfDayUTC(d: Date): Date {
   const out = new Date(d);
@@ -33,8 +33,8 @@ function isoDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-function formatDate(d: Date): string {
-  return `${d.getUTCDate()} ${MONTH_LABELS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+function formatDate(d: Date, t: (key: string) => string): string {
+  return `${d.getUTCDate()} ${t(`heatmap.months.${MONTH_KEYS[d.getUTCMonth()]}`)} ${d.getUTCFullYear()}`;
 }
 
 function level(sessions: number): number {
@@ -46,6 +46,7 @@ function level(sessions: number): number {
 }
 
 export function ActivityHeatmap({ data, loading }: ActivityHeatmapProps) {
+  const t = useTranslations();
   const weeksCount = data?.weeks ?? 26;
 
   const today = startOfDayUTC(new Date());
@@ -97,11 +98,11 @@ export function ActivityHeatmap({ data, loading }: ActivityHeatmapProps) {
       const ttTop = isFuture
         ? ""
         : sessions === 0
-          ? "Без активности"
-          : `${sessions} трен., ${cell?.questions ?? 0} вопр.${
+          ? t("heatmap.noActivity")
+          : `${sessions} ${t("heatmap.sessionsShort")}, ${cell?.questions ?? 0} ${t("heatmap.questionsShort")}${
               accuracy ? `, ${accuracy}` : ""
             }`;
-      const ttBot = isFuture ? "" : formatDate(date);
+      const ttBot = isFuture ? "" : formatDate(date, t);
       week.push({
         date,
         key,
@@ -122,13 +123,16 @@ export function ActivityHeatmap({ data, loading }: ActivityHeatmapProps) {
     if (!firstDay) return;
     const m = firstDay.getUTCMonth();
     if (m !== prevMonth) {
-      monthLabels.push({ col: idx, label: MONTH_LABELS[m] });
+      monthLabels.push({
+        col: idx,
+        label: t(`heatmap.months.${MONTH_KEYS[m]}`),
+      });
       prevMonth = m;
     }
   });
 
   return (
-    <div className="heatmap" aria-label="Активность за полгода">
+    <div className="heatmap" aria-label={t("heatmap.label")}>
       <div
         className="heatmap__months"
         style={{ gridTemplateColumns: `repeat(${weeksCount}, 1fr)` }}
@@ -146,16 +150,16 @@ export function ActivityHeatmap({ data, loading }: ActivityHeatmapProps) {
       <div className="heatmap__body">
         <div className="heatmap__weekdays" aria-hidden="true">
           <span className="heatmap__weekday" style={{ gridRow: 1 }}>
-            {WEEKDAYS[0]}
+            {t("heatmap.weekdays.mon")}
           </span>
           <span className="heatmap__weekday" style={{ gridRow: 3 }}>
-            {WEEKDAYS[1]}
+            {t("heatmap.weekdays.wed")}
           </span>
           <span className="heatmap__weekday" style={{ gridRow: 5 }}>
-            {WEEKDAYS[2]}
+            {t("heatmap.weekdays.fri")}
           </span>
           <span className="heatmap__weekday" style={{ gridRow: 7 }}>
-            {WEEKDAYS[3]}
+            {t("heatmap.weekdays.sun")}
           </span>
         </div>
         <div
@@ -179,11 +183,11 @@ export function ActivityHeatmap({ data, loading }: ActivityHeatmapProps) {
         </div>
       </div>
       <div className="heatmap__legend">
-        <span>меньше</span>
+        <span>{t("heatmap.less")}</span>
         {[0, 1, 2, 3, 4].map((l) => (
           <span key={l} className={`heatmap__cell heatmap__cell--l${l}`} />
         ))}
-        <span>больше</span>
+        <span>{t("heatmap.more")}</span>
       </div>
     </div>
   );

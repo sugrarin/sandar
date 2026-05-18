@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "@/lib/translations";
 import type { ActivityData } from "@/stores/statsStore";
 
 interface AccuracyChartProps {
@@ -9,34 +10,35 @@ interface AccuracyChartProps {
 
 const WEEKS = 26;
 const DAY_MS = 86_400_000;
-const MONTHS = [
-  "янв",
-  "фев",
-  "мар",
-  "апр",
-  "май",
-  "июн",
-  "июл",
-  "авг",
-  "сен",
-  "окт",
-  "ноя",
-  "дек",
-];
+const MONTH_KEYS = [
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "may",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "oct",
+  "nov",
+  "dec",
+] as const;
 
-function fmt(d: Date): string {
-  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+function fmt(d: Date, t: (key: string) => string): string {
+  return `${d.getUTCDate()} ${t(`accuracyChart.months.${MONTH_KEYS[d.getUTCMonth()]}`)} ${d.getUTCFullYear()}`;
 }
 
-function fmtRange(a: Date, b: Date): string {
+function fmtRange(a: Date, b: Date, t: (key: string) => string): string {
   const sameYear = a.getUTCFullYear() === b.getUTCFullYear();
   const left = sameYear
-    ? `${a.getUTCDate()} ${MONTHS[a.getUTCMonth()]}`
-    : fmt(a);
-  return `${left} – ${fmt(b)}`;
+    ? `${a.getUTCDate()} ${t(`accuracyChart.months.${MONTH_KEYS[a.getUTCMonth()]}`)}`
+    : fmt(a, t);
+  return `${left} – ${fmt(b, t)}`;
 }
 
 export function AccuracyChart({ data, loading }: AccuracyChartProps) {
+  const t = useTranslations();
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
   const dow = today.getUTCDay();
@@ -73,14 +75,16 @@ export function AccuracyChart({ data, loading }: AccuracyChartProps) {
   return (
     <div className="acc-chart-wrapper">
       <div className="acc-chart-summary">
-        <span className="acc-chart-summary__label">за полгода</span>
+        <span className="acc-chart-summary__label">
+          {t("accuracyChart.halfYear")}
+        </span>
         <span className="acc-chart-summary__value">
           {overall !== null ? `${overall}%` : "—"}
         </span>
       </div>
       <div
         className={`acc-chart${loading && !data ? " acc-chart--loading" : ""}`}
-        aria-label="Точность по неделям"
+        aria-label={t("accuracyChart.label")}
       >
         {buckets.map((b, i) => {
           const accuracy = b.questions > 0 ? b.correct / b.questions : null;
@@ -90,9 +94,9 @@ export function AccuracyChart({ data, loading }: AccuracyChartProps) {
           weekEnd.setUTCDate(weekStart.getUTCDate() + 6);
           const ttTop =
             accuracy !== null
-              ? `${Math.round(accuracy * 100)}% точности (${b.correct}/${b.questions})`
-              : "Без активности";
-          const ttBot = fmtRange(weekStart, weekEnd);
+              ? `${Math.round(accuracy * 100)}% ${t("accuracyChart.accuracy")} (${b.correct}/${b.questions})`
+              : t("accuracyChart.noActivity");
+          const ttBot = fmtRange(weekStart, weekEnd, t);
 
           return (
             <div

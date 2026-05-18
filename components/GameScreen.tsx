@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
+import { useTranslations } from "@/lib/translations";
 import {
-  MODE_LABELS,
   DIFFICULTIES,
   type GameMode,
   type Difficulty,
@@ -38,6 +38,7 @@ export function GameScreen({
   onAdvance,
   onFinish,
 }: GameScreenProps) {
+  const t = useTranslations();
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
 
@@ -71,15 +72,15 @@ export function GameScreen({
 
   const subtitle =
     mode === "review"
-      ? "Ошибки до полного решения"
-      : `${DIFFICULTIES[difficulty].emoji} ${DIFFICULTIES[difficulty].label}`;
+      ? t("game.reviewSubtitle")
+      : `${DIFFICULTIES[difficulty].emoji} ${t(`difficulty.labels.${difficulty}`)}`;
 
   return (
     <section className="screen screen--active">
       <section className="panel panel--game">
         <div className="game-status">
           <div className="game-status__meta">
-            <p className="game-status__mode">{MODE_LABELS[mode]}</p>
+            <p className="game-status__mode">{t(`home.modes.${mode}`)}</p>
             <div className="game-status__side">
               <p className="game-status__counter">
                 {currentIndex + 1}
@@ -90,7 +91,7 @@ export function GameScreen({
                 className="icon-button"
                 type="button"
                 onClick={onFinish}
-                aria-label="Закончить раунд"
+                aria-label={t("game.finishRound")}
               >
                 <X aria-hidden="true" />
               </button>

@@ -2,12 +2,14 @@
 
 import { useEffect } from "react";
 import { X } from "lucide-react";
+import { useTranslations } from "@/lib/translations";
 import { useStatsStore } from "@/stores/statsStore";
 import { getAchievement } from "@/lib/achievements";
 
 const AUTO_DISMISS_MS = 5000;
 
 export function AchievementToast() {
+  const t = useTranslations();
   const queue = useStatsStore((s) => s.newAchievements);
   const dismiss = useStatsStore((s) => s.dismissAchievement);
 
@@ -36,9 +38,15 @@ export function AchievementToast() {
         <Icon />
       </span>
       <div className="achv-toast__body">
-        <p className="achv-toast__eyebrow">Новое достижение</p>
-        <p className="achv-toast__title">{achievement.title}</p>
-        <p className="achv-toast__desc">{achievement.description}</p>
+        <p className="achv-toast__eyebrow">
+          {t("achievements.newAchievement")}
+        </p>
+        <p className="achv-toast__title">
+          {t(`achievements.items.${achievement.code}.title`)}
+        </p>
+        <p className="achv-toast__desc">
+          {t(`achievements.items.${achievement.code}.description`)}
+        </p>
       </div>
       <button
         type="button"
@@ -47,7 +55,7 @@ export function AchievementToast() {
           e.stopPropagation();
           dismiss(current);
         }}
-        aria-label="Закрыть"
+        aria-label={t("achievements.close")}
       >
         <X aria-hidden="true" />
       </button>
