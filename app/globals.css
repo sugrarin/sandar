@@ -117,8 +117,8 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--bg-elevated);
-  border-bottom: 1px solid var(--surface-border);
+  /* background: var(--bg-elevated); */
+  /* border-bottom: 1px solid var(--surface-border); */
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
 }
@@ -1566,11 +1566,10 @@ button {
   margin: 0;
   padding: 0.35rem;
   list-style: none;
-  background: var(--bg-strong);
+  background: var(--bg);
   border: 1px solid var(--surface-border);
   border-radius: var(--radius-md);
   box-shadow: var(--surface-shadow);
-  backdrop-filter: blur(18px);
 }
 
 .language-selector__option {

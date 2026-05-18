@@ -5,8 +5,8 @@ import { ChevronDown } from "lucide-react";
 import { useTranslations, useLocale } from "@/lib/translations";
 
 const languages = [
-  { code: "kk", name: "ҚАЗ", flag: "🇰🇿" },
-  { code: "ru", name: "РУС", flag: "🇷🇺" },
+  { code: "kk", name: "ҚАЗ" },
+  { code: "ru", name: "РУС" },
 ];
 
 export function LanguageSelector() {
