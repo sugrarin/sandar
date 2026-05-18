@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import "./globals.css";
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages } from "next-intl/server";
 import { CellTooltip } from "@/components/CellTooltip";
 
 export const metadata: Metadata = {
@@ -25,13 +26,17 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
+  params: { locale },
 }: {
   children: React.ReactNode;
+  params: { locale: string };
 }) {
+  const messages = await getMessages();
+
   return (
-    <html lang="ru" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -62,8 +67,10 @@ export default function RootLayout({
         />
       </head>
       <body className="page">
-        {children}
-        <CellTooltip />
+        <NextIntlClientProvider messages={messages}>
+          {children}
+          <CellTooltip />
+        </NextIntlClientProvider>
       </body>
     </html>
   );

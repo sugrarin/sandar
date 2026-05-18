@@ -1,6 +1,7 @@
 "use client";
 
 import { User } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useStatsStore } from "@/stores/statsStore";
 
 interface AuthButtonProps {
@@ -14,6 +15,7 @@ export function AuthButton({
   onProfileClick,
   active = false,
 }: AuthButtonProps) {
+  const t = useTranslations();
   const user = useStatsStore((s) => s.user);
 
   const handleClick = () => {
@@ -33,7 +35,7 @@ export function AuthButton({
         active ? " user-button--active" : ""
       }`}
       onClick={handleClick}
-      aria-label={user ? "Профиль" : "Войти"}
+      aria-label={user ? t("auth.profile") : t("auth.login")}
       aria-pressed={active}
     >
       {initials ? (

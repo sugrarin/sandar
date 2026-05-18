@@ -7,6 +7,7 @@ import { GameScreen } from "@/components/GameScreen";
 import { ResultScreen } from "@/components/ResultScreen";
 import { AuthButton } from "@/components/AuthButton";
 import { AuthModal } from "@/components/AuthModal";
+import { LanguageSelector } from "@/components/LanguageSelector";
 import { ProfileScreen } from "@/components/ProfileScreen";
 import { AchievementToast } from "@/components/AchievementToast";
 import { saveSession } from "@/lib/session";
@@ -146,6 +147,7 @@ export default function Home() {
   return (
     <>
       <header className="site-header">
+        <LanguageSelector />
         <AuthButton
           onLoginClick={() => setAuthModalOpen(true)}
           onProfileClick={openProfile}
