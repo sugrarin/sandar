@@ -3,17 +3,25 @@ import { cookies } from "next/headers";
 import { CellTooltip } from "@/components/CellTooltip";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "Math Trainer — Тренажёр устного счёта",
-  description:
-    "Тренажёр по математике для устного счёта: сложение, вычитание, умножение и деление.",
-  manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "Math",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const cookieStore = cookies();
+  const locale = cookieStore.get("locale")?.value || "kk";
+
+  const title =
+    locale === "ru" ? "SANDAR • Тренажёр счёта" : "SANDAR • Есептеу тренажері";
+
+  return {
+    title,
+    description:
+      "Тренажёр по математике для устного счёта: сложение, вычитание, умножение и деление.",
+    manifest: "/manifest.json",
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "default",
+      title: "Math",
+    },
+  };
+}
 
 export const viewport: Viewport = {
   width: "device-width",
