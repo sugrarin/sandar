@@ -143,11 +143,11 @@ BEGIN
         NEW.user_id, 1, NEW.total_questions, NEW.correct_answers,
         NEW.wrong_answers, COALESCE(NEW.duration_seconds, 0),
         NEW.correct_answers * CASE NEW.difficulty
-            WHEN 'easy' THEN 10
-            WHEN 'medium' THEN 15
-            WHEN 'hard' THEN 20
-            WHEN 'brain' THEN 30
-            ELSE 10
+            WHEN 'easy' THEN 1
+            WHEN 'medium' THEN 2
+            WHEN 'hard' THEN 3
+            WHEN 'brain' THEN 5
+            ELSE 1
         END,
         CASE WHEN NEW.correct_answers = NEW.total_questions THEN 1 ELSE 0 END,
         CASE WHEN NEW.correct_answers = NEW.total_questions THEN 1 ELSE 0 END,
@@ -162,11 +162,11 @@ BEGIN
         total_time_seconds = user_stats.total_time_seconds + COALESCE(NEW.duration_seconds, 0),
         total_xp = user_stats.total_xp + 
             (NEW.correct_answers * CASE NEW.difficulty
-                WHEN 'easy' THEN 10
-                WHEN 'medium' THEN 15
-                WHEN 'hard' THEN 20
-                WHEN 'brain' THEN 30
-                ELSE 10
+                WHEN 'easy' THEN 1
+                WHEN 'medium' THEN 2
+                WHEN 'hard' THEN 3
+                WHEN 'brain' THEN 5
+                ELSE 1
             END) +
             (CASE 
                 WHEN NEW.correct_answers = NEW.total_questions AND user_stats.current_streak > 0 AND (user_stats.current_streak + 1) % 5 = 0 

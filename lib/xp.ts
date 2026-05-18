@@ -1,15 +1,15 @@
 /**
  * XP Calculation System for Math Trainer
- * 
+ *
  * Rules:
  * - Base XP per correct answer depends on difficulty:
- *   - easy: 10 XP
- *   - medium: 15 XP
- *   - hard: 20 XP
- *   - brain: 30 XP
+ *   - easy: 1 XP
+ *   - medium: 2 XP
+ *   - hard: 3 XP
+ *   - brain: 5 XP
  * - Streak bonus: +50 XP for every 5th consecutive perfect session
  *   (when all answers in a session are correct)
- * 
+ *
  * This file provides client-side calculation for preview/progress bars.
  * The actual XP is calculated server-side in the database trigger.
  */
@@ -18,10 +18,10 @@ import type { Difficulty } from "@/types";
 
 // XP per correct answer by difficulty
 export const XP_PER_ANSWER: Record<Difficulty, number> = {
-  easy: 10,
-  medium: 15,
-  hard: 20,
-  brain: 30,
+  easy: 1,
+  medium: 2,
+  hard: 3,
+  brain: 5,
 };
 
 // Bonus XP for every 5th consecutive perfect session
@@ -33,7 +33,7 @@ export const STREAK_BONUS_INTERVAL = 5;
  */
 export function calculateBaseXP(
   correctCount: number,
-  difficulty: Difficulty
+  difficulty: Difficulty,
 ): number {
   return correctCount * XP_PER_ANSWER[difficulty];
 }
@@ -45,7 +45,7 @@ export function calculateBaseXP(
  */
 export function shouldAwardStreakBonus(
   isPerfectSession: boolean,
-  currentStreak: number
+  currentStreak: number,
 ): boolean {
   if (!isPerfectSession) return false;
   // currentStreak is streak BEFORE this session, so we check if +1 will be divisible by 5
@@ -59,7 +59,7 @@ export function calculateSessionXP(
   correctCount: number,
   totalCount: number,
   difficulty: Difficulty,
-  currentStreak: number
+  currentStreak: number,
 ): { baseXP: number; bonusXP: number; totalXP: number } {
   const baseXP = calculateBaseXP(correctCount, difficulty);
   const isPerfectSession = correctCount === totalCount;
@@ -82,19 +82,29 @@ export function calculateSessionXP(
  */
 export function calculateStreakDays(
   lastSessionDate: string | null | undefined,
-  currentStreakDays: number
+  currentStreakDays: number,
 ): number {
   if (!lastSessionDate) return 1;
 
   const lastDate = new Date(lastSessionDate);
   const today = new Date();
-  
+
   // Normalize to date only (remove time component)
-  const lastDateOnly = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate());
-  const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  
-  const diffDays = Math.floor((todayOnly.getTime() - lastDateOnly.getTime()) / (1000 * 60 * 60 * 24));
-  
+  const lastDateOnly = new Date(
+    lastDate.getFullYear(),
+    lastDate.getMonth(),
+    lastDate.getDate(),
+  );
+  const todayOnly = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate(),
+  );
+
+  const diffDays = Math.floor(
+    (todayOnly.getTime() - lastDateOnly.getTime()) / (1000 * 60 * 60 * 24),
+  );
+
   if (diffDays === 0) {
     // Already trained today, maintain streak
     return currentStreakDays;
@@ -128,7 +138,7 @@ export function getLevelProgress(totalXP: number): {
   const currentLevelXP = totalXP % XP_PER_LEVEL;
   const xpToNextLevel = XP_PER_LEVEL - currentLevelXP;
   const progressPercent = (currentLevelXP / XP_PER_LEVEL) * 100;
-  
+
   return {
     level,
     currentLevelXP,
