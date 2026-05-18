@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
+import { cookies } from "next/headers";
 import { CellTooltip } from "@/components/CellTooltip";
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Math Trainer — Тренажёр устного счёта",
@@ -29,8 +31,11 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const cookieStore = cookies();
+  const locale = cookieStore.get("locale")?.value || "kk";
+
   return (
-    <html lang="ru" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
