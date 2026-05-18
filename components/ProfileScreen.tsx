@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft, LogOut, Flame, Zap } from "lucide-react";
+import { ArrowLeft, LogOut, Flame, Zap, Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useTranslations, useLocale } from "@/lib/translations";
 import { useStatsStore } from "@/stores/statsStore";
 import { ActivityHeatmap } from "@/components/ActivityHeatmap";
 import { AccuracyChart } from "@/components/AccuracyChart";
 import { Achievements } from "@/components/Achievements";
+import { ProfileEditScreen } from "@/components/ProfileEditScreen";
 import { DIFFICULTIES, type Difficulty } from "@/types";
 import { useGameStore } from "@/stores/gameStore";
 
@@ -38,6 +39,7 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
   const gameDifficulty = useGameStore((s) => s.settings.difficulty);
   const [modeDifficulty, setModeDifficulty] =
     useState<Difficulty>(gameDifficulty);
+  const [isEditing, setIsEditing] = useState(false);
 
   const user = useStatsStore((s) => s.user);
   const userResolved = useStatsStore((s) => s.userResolved);
@@ -61,6 +63,12 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
 
   const email = user?.email ?? null;
   const memberSince = user?.createdAt ?? null;
+  const displayName = user?.displayName;
+  const avatarUrl = user?.avatarUrl;
+
+  if (isEditing) {
+    return <ProfileEditScreen onClose={() => setIsEditing(false)} />;
+  }
 
   const showStatsSkeleton = loading && userStats === null;
   const showStatsError = error !== null && userStats === null && !loading;
@@ -91,10 +99,17 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
 
       <section className="panel panel--soft profile-user">
         <div className="profile-user__avatar" aria-hidden="true">
-          {email ? email.slice(0, 2).toUpperCase() : "—"}
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="" className="profile-user__avatar-img" />
+          ) : (
+            (displayName || email || "?").slice(0, 2).toUpperCase()
+          )}
         </div>
         <div className="profile-user__info">
-          <p className="profile-user__email">{email || "—"}</p>
+          <p className="profile-user__name">{displayName || email || "—"}</p>
+          {displayName && email && (
+            <p className="profile-user__email-secondary">{email}</p>
+          )}
           {memberSince && (
             <p className="profile-user__since">
               {t("profile.memberSince")}{" "}
@@ -109,6 +124,15 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
             </p>
           )}
         </div>
+        <button
+          type="button"
+          className="icon-button profile-user__edit"
+          onClick={() => setIsEditing(true)}
+          aria-label={t("profile.editProfile")}
+          title={t("profile.editProfile")}
+        >
+          <Pencil size={16} />
+        </button>
       </section>
 
       <div className="profile-badges-row">

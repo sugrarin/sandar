@@ -31,6 +31,8 @@ function saveSeen(seen: Set<string>) {
 export interface AccountUser {
   id: string;
   email: string | null;
+  displayName: string | null;
+  avatarUrl: string | null;
   createdAt: string | null;
 }
 
@@ -85,6 +87,10 @@ interface StatsState {
   fetchStats: (force?: boolean) => Promise<void>;
   fetchActivity: (force?: boolean) => Promise<void>;
   loadAll: (force?: boolean) => Promise<void>;
+  updateProfile: (data: {
+    displayName?: string;
+    avatarUrl?: string;
+  }) => Promise<{ success: boolean; error?: string }>;
   dismissAchievement: (code: string) => void;
   reset: () => void;
 }
@@ -113,13 +119,22 @@ export const useStatsStore = create<StatsState>((set, get) => ({
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    const account: AccountUser | null = user
-      ? {
-          id: user.id,
-          email: user.email ?? null,
-          createdAt: user.created_at ?? null,
-        }
-      : null;
+    if (!user) {
+      set({ user: null, userResolved: true });
+      return null;
+    }
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("display_name, avatar_url")
+      .eq("id", user.id)
+      .single();
+    const account: AccountUser = {
+      id: user.id,
+      email: user.email ?? null,
+      displayName: profile?.display_name ?? null,
+      avatarUrl: profile?.avatar_url ?? null,
+      createdAt: user.created_at ?? null,
+    };
     set({ user: account, userResolved: true });
     return account;
   },
@@ -240,6 +255,36 @@ export const useStatsStore = create<StatsState>((set, get) => ({
     } catch {
       set({ activityLoading: false });
     }
+  },
+
+  updateProfile: async ({ displayName, avatarUrl }) => {
+    const user = get().user;
+    if (!user) return { success: false, error: "User not authenticated" };
+
+    const supabase = createClient();
+    const updates: { display_name?: string; avatar_url?: string } = {};
+    if (displayName !== undefined) updates.display_name = displayName;
+    if (avatarUrl !== undefined) updates.avatar_url = avatarUrl;
+
+    const { error } = await supabase
+      .from("profiles")
+      .update(updates)
+      .eq("id", user.id);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    // Update local state
+    set({
+      user: {
+        ...user,
+        displayName: displayName !== undefined ? displayName : user.displayName,
+        avatarUrl: avatarUrl !== undefined ? avatarUrl : user.avatarUrl,
+      },
+    });
+
+    return { success: true };
   },
 
   reset: () => {
