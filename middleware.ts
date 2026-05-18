@@ -1,34 +1,34 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
-import createIntlMiddleware from 'next-intl/middleware';
+import createIntlMiddleware from "next-intl/middleware";
 
 // Custom locale detection with Russian priority
 function getLocale(request: NextRequest): string {
-  const acceptLanguage = request.headers.get('accept-language') || '';
-  
+  const acceptLanguage = request.headers.get("accept-language") || "";
+
   // Russian language has priority
-  if (acceptLanguage.startsWith('ru')) {
-    return 'ru';
+  if (acceptLanguage.startsWith("ru")) {
+    return "ru";
   }
-  
+
   // Default to Kazakh
-  return 'kk';
+  return "kk";
 }
 
 // Create internationalization middleware with custom locale detection
 const intlMiddleware = createIntlMiddleware({
-  locales: ['kk', 'ru'],
-  defaultLocale: 'kk',
-  localePrefix: 'as-needed',
-  localeDetection: false // We'll handle it manually
+  locales: ["kk", "ru"],
+  defaultLocale: "kk",
+  localePrefix: "as-needed",
+  localeDetection: false, // We'll handle it manually
 });
 
 export async function middleware(request: NextRequest) {
   // Get the pathname
   const pathname = request.nextUrl.pathname;
-  
+
   // If pathname doesn't have a locale prefix, redirect with appropriate locale
-  if (!pathname.startsWith('/kk') && !pathname.startsWith('/ru')) {
+  if (!pathname.startsWith("/kk") && !pathname.startsWith("/ru")) {
     const locale = getLocale(request);
     const newUrl = new URL(`/${locale}${pathname}`, request.url);
     return NextResponse.redirect(newUrl);
@@ -36,7 +36,7 @@ export async function middleware(request: NextRequest) {
 
   // Handle internationalization for existing locale prefixes
   const intlResponse = intlMiddleware(request);
-  
+
   // If intl middleware redirected, follow that
   if (intlResponse) {
     return intlResponse;
@@ -64,11 +64,11 @@ export async function middleware(request: NextRequest) {
           response.cookies.set({ name, value, ...options });
         },
         remove(name: string, options: CookieOptions) {
-          request.cookies.set({ name, value, "", ...options });
+          request.cookies.set({ name, value: "", ...options });
           response = NextResponse.next({
             request: { headers: request.headers },
           });
-          response.cookies.set({ name, value, "", ...options });
+          response.cookies.set({ name, value: "", ...options });
         },
       },
     },
