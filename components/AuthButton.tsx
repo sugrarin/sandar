@@ -1,7 +1,7 @@
 "use client";
 
 import { User } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "@/lib/translations";
 import { useStatsStore } from "@/stores/statsStore";
 
 interface AuthButtonProps {

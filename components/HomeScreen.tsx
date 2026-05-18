@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus, Minus, X, Divide, Grid3X3, Dices } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "@/lib/translations";
 import {
   DIFFICULTIES,
   MODE_LABELS,

@@ -10,6 +10,7 @@ import { AuthModal } from "@/components/AuthModal";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { ProfileScreen } from "@/components/ProfileScreen";
 import { AchievementToast } from "@/components/AchievementToast";
+import { TranslationProvider } from "@/lib/translations";
 import { saveSession } from "@/lib/session";
 import { useStatsStore } from "@/stores/statsStore";
 import { createClient } from "@/lib/supabase/client";
@@ -145,7 +146,7 @@ export default function Home() {
   const round = activeRound;
 
   return (
-    <>
+    <TranslationProvider>
       <header className="site-header">
         <LanguageSelector />
         <AuthButton
@@ -207,6 +208,6 @@ export default function Home() {
 
       {authModalOpen && <AuthModal onClose={() => setAuthModalOpen(false)} />}
       <AchievementToast />
-    </>
+    </TranslationProvider>
   );
 }

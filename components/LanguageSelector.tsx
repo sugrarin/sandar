@@ -2,8 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
-import { useRouter, usePathname } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "@/lib/translations";
 
 const languages = [
   { code: "kk", name: "ҚАЗ", flag: "🇰🇿" },
@@ -12,15 +11,12 @@ const languages = [
 
 export function LanguageSelector() {
   const t = useTranslations();
+  const { locale, setLocale } = useLocale();
   const [isOpen, setIsOpen] = useState(false);
-  const router = useRouter();
-  const pathname = usePathname();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Get current locale from pathname
-  const currentLocale = pathname.split("/")[1] || "kk";
   const currentLanguage =
-    languages.find((lang) => lang.code === currentLocale) || languages[0];
+    languages.find((lang) => lang.code === locale) || languages[0];
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -36,10 +32,11 @@ export function LanguageSelector() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleLanguageChange = (localeCode: string) => {
-    const newPath = pathname.replace(/^\/[^\/]*/, `/${localeCode}`);
-    router.push(newPath);
+  const handleLanguageChange = (localeCode: "kk" | "ru") => {
+    setLocale(localeCode);
     setIsOpen(false);
+    // Reload page to apply new language
+    window.location.reload();
   };
 
   return (
@@ -74,13 +71,15 @@ export function LanguageSelector() {
               <button
                 type="button"
                 className={`language-selector__option ${
-                  language.code === currentLocale
+                  language.code === locale
                     ? "language-selector__option--active"
                     : ""
                 }`}
-                onClick={() => handleLanguageChange(language.code)}
+                onClick={() =>
+                  handleLanguageChange(language.code as "kk" | "ru")
+                }
                 role="option"
-                aria-selected={language.code === currentLocale}
+                aria-selected={language.code === locale}
               >
                 <span className="language-selector__flag" aria-hidden="true">
                   {language.flag}

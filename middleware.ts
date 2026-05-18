@@ -1,9 +1,15 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
-import createIntlMiddleware from "next-intl/middleware";
 
 // Custom locale detection with Russian priority
 function getLocale(request: NextRequest): string {
+  // Check if locale is already set in cookie
+  const cookieLocale = request.cookies.get("locale")?.value;
+  if (cookieLocale && ["kk", "ru"].includes(cookieLocale)) {
+    return cookieLocale;
+  }
+
+  // Check Accept-Language header
   const acceptLanguage = request.headers.get("accept-language") || "";
 
   // Russian language has priority
@@ -15,38 +21,26 @@ function getLocale(request: NextRequest): string {
   return "kk";
 }
 
-// Create internationalization middleware with custom locale detection
-const intlMiddleware = createIntlMiddleware({
-  locales: ["kk", "ru"],
-  defaultLocale: "kk",
-  localePrefix: "as-needed",
-  localeDetection: false, // We'll handle it manually
-});
-
 export async function middleware(request: NextRequest) {
-  // Get the pathname
-  const pathname = request.nextUrl.pathname;
-
-  // If pathname doesn't have a locale prefix, redirect with appropriate locale
-  if (!pathname.startsWith("/kk") && !pathname.startsWith("/ru")) {
-    const locale = getLocale(request);
-    const newUrl = new URL(`/${locale}${pathname}`, request.url);
-    return NextResponse.redirect(newUrl);
-  }
-
-  // Handle internationalization for existing locale prefixes
-  const intlResponse = intlMiddleware(request);
-
-  // If intl middleware redirected, follow that
-  if (intlResponse) {
-    return intlResponse;
-  }
-
   let response = NextResponse.next({
     request: {
       headers: request.headers,
     },
   });
+
+  // Set locale cookie if not present
+  const locale = getLocale(request);
+  if (!request.cookies.get("locale")?.value) {
+    response.cookies.set("locale", locale, {
+      maxAge: 365 * 24 * 60 * 60, // 1 year
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+    });
+  }
+
+  // Add locale header for client-side usage
+  response.headers.set("x-locale", locale);
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
