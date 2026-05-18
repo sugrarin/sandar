@@ -50,9 +50,6 @@ export function LanguageSelector() {
         aria-haspopup="listbox"
       >
         <span className="language-selector__current">
-          <span className="language-selector__flag" aria-hidden="true">
-            {currentLanguage.flag}
-          </span>
           <span className="language-selector__name">
             {currentLanguage.name}
           </span>
@@ -81,9 +78,6 @@ export function LanguageSelector() {
                 role="option"
                 aria-selected={language.code === locale}
               >
-                <span className="language-selector__flag" aria-hidden="true">
-                  {language.flag}
-                </span>
                 <span className="language-selector__name">{language.name}</span>
               </button>
             </li>
