@@ -183,15 +183,7 @@ export function ProfileEditScreen({ onClose }: ProfileEditScreenProps) {
         <div className="profile-edit__actions">
           <button
             type="button"
-            className="action-button action-button--secondary"
-            onClick={onClose}
-            disabled={saving}
-          >
-            <span className="action-button__label">{t("profile.cancel")}</span>
-          </button>
-          <button
-            type="button"
-            className="action-button"
+            className="action-button action-button--accent profile-edit__save"
             onClick={handleSave}
             disabled={saving || uploading}
           >
