@@ -10,6 +10,7 @@ import { AuthModal } from "@/components/AuthModal";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { ProfileScreen } from "@/components/ProfileScreen";
 import { AchievementToast } from "@/components/AchievementToast";
+import { HeaderBadges } from "@/components/HeaderBadges";
 import { TranslationProvider } from "@/lib/translations";
 import { saveSession } from "@/lib/session";
 import { useStatsStore } from "@/stores/statsStore";
@@ -149,11 +150,14 @@ export default function Home() {
     <TranslationProvider>
       <header className="site-header">
         <LanguageSelector />
-        <AuthButton
-          onLoginClick={() => setAuthModalOpen(true)}
-          onProfileClick={openProfile}
-          active={currentScreen === "profile"}
-        />
+        <div className="header-right">
+          <HeaderBadges />
+          <AuthButton
+            onLoginClick={() => setAuthModalOpen(true)}
+            onProfileClick={openProfile}
+            active={currentScreen === "profile"}
+          />
+        </div>
       </header>
 
       <main className="app">
