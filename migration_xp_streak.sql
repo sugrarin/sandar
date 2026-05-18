@@ -102,7 +102,8 @@ CREATE TRIGGER on_session_completed
     EXECUTE FUNCTION update_user_stats_after_session();
 
 -- 5. Update user_dashboard view to include new fields
-CREATE OR REPLACE VIEW user_dashboard AS
+DROP VIEW IF EXISTS user_dashboard;
+CREATE VIEW user_dashboard AS
 SELECT
     p.id as user_id,
     p.email,
