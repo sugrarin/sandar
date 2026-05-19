@@ -1838,7 +1838,7 @@ button {
 .profile-edit__input {
   padding: 0.75rem 1rem;
   border: 1px solid var(--surface-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-button);
   background: var(--bg-elevated);
   color: var(--text-main);
   font-size: 0.95rem;
@@ -2089,7 +2089,6 @@ button {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 1rem;
   min-width: 0;
 }
 
@@ -2103,7 +2102,6 @@ button {
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
   color: var(--text-main);
-  text-align: center;
   overflow-wrap: break-word;
   word-break: break-all;
 }
@@ -2112,22 +2110,20 @@ button {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 1rem;
 }
 
 .share-code-input .text-input {
   flex: 1;
-  height: 3rem;
+  height: 2.4rem;
   padding: 0 1rem;
   border: 1px solid var(--button-neutral-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-button);
   background: var(--button-neutral);
   color: var(--text-main);
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: 700;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  text-align: center;
   font-variant-numeric: tabular-nums;
   font-family: var(--font-display);
   transition:

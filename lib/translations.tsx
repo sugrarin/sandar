@@ -464,7 +464,7 @@ const translations: Record<Locale, Translations> = {
       parentTitle: "Собирайте статистику",
       parentDescription:
         "Вы можете просматривать ответы, ошибки и очки ваших детей или учеников. Попросите их открыть общий доступ и продиктовать код или прислать вам ссылку.",
-      enterCode: "Введите код",
+      enterCode: "Код ученика",
       add: "Добавить",
       invalidCode: "Неверный код",
       rateLimitWarning:
