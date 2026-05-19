@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
 import { useTranslations } from "@/lib/translations";
 import {
   DIFFICULTIES,
@@ -87,14 +86,6 @@ export function GameScreen({
                 {THIN_SPACE}/{THIN_SPACE}
                 {total}
               </p>
-              <button
-                className="icon-button"
-                type="button"
-                onClick={onFinish}
-                aria-label={t("game.finishRound")}
-              >
-                <X aria-hidden="true" />
-              </button>
             </div>
           </div>
           <div className="progress" aria-hidden="true">
