@@ -16,6 +16,7 @@ export function Navbar({ onLoginClick }: NavbarProps) {
   const { stack, push, pop, reset } = useNavigation();
 
   const isRoot = stack.length === 1;
+  const canGoBack = stack.length > 2;
   const currentRoute = stack[stack.length - 1];
   const isProfile = currentRoute?.name === "profile";
 
@@ -26,7 +27,7 @@ export function Navbar({ onLoginClick }: NavbarProps) {
   return (
     <header className="site-header">
       <div className="header-left">
-        {!isRoot && (
+        {canGoBack && (
           <button
             type="button"
             className="icon-button"
