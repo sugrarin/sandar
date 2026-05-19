@@ -11,6 +11,7 @@ import { DIFFICULTIES, type Difficulty } from "@/types";
 interface StudentStatsViewProps {
   studentId: string;
   onUnlink: (accessId: string) => void;
+  activatedAt?: string;
 }
 
 function formatAccuracy(correct: number, total: number): string {
@@ -31,6 +32,7 @@ function formatXP(xp: number, t: (key: string) => string): string {
 export function StudentStatsView({
   studentId,
   onUnlink,
+  activatedAt,
 }: StudentStatsViewProps) {
   const t = useTranslations();
   const { locale } = useLocale();
@@ -119,7 +121,7 @@ export function StudentStatsView({
   const displayName = student.display_name;
   const email = student.email;
   const avatarUrl = student.avatar_url;
-  const memberSince = student.created_at;
+  const accessDate = activatedAt || student.created_at;
 
   const totalQuestions = userStats?.total_questions ?? 0;
   const totalCorrect = userStats?.total_correct ?? 0;
@@ -139,15 +141,14 @@ export function StudentStatsView({
           {displayName && email && (
             <p className="profile-user__email-secondary">{email}</p>
           )}
-          {memberSince && (
+          {accessDate && (
             <p className="profile-user__since">
-              {t("profile.memberSince")}{" "}
-              {new Date(memberSince).toLocaleDateString(
+              {t("share.accessSince")}{" "}
+              {new Date(accessDate).toLocaleDateString(
                 locale === "kk" ? "kk-KZ" : "ru-RU",
                 {
                   day: "numeric",
                   month: "long",
-                  year: "numeric",
                 },
               )}
             </p>

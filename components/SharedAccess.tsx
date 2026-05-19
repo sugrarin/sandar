@@ -201,6 +201,9 @@ export function SharedAccess({
         </header>
         <StudentStatsView
           studentId={selectedStudent}
+          activatedAt={
+            students.find((s) => s.student_id === selectedStudent)?.activated_at
+          }
           onUnlink={(accessId: string) => {
             handleUnlinkStudent(accessId);
             setSelectedStudent(null);
