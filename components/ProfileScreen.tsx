@@ -288,13 +288,11 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
         className="panel panel--soft info-card info-card--clickable"
         onClick={() => setSharedAccessOpen(true)}
       >
-        <div className="info-card__icon">
+        <span className="info-card__icon">
           <Share2 size={24} />
-        </div>
-        <div className="info-card__content">
-          <h3 className="info-card__title">{t("share.title")}</h3>
-          <p className="info-card__description">{t("share.description")}</p>
-        </div>
+        </span>
+        <h3 className="info-card__title">{t("share.title")}</h3>
+        <p className="info-card__description">{t("share.description")}</p>
         <button
           type="button"
           className="action-button action-button--small"
