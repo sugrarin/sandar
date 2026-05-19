@@ -213,12 +213,34 @@ export function StudentStatsView({
       <div className="panel__header panel__header--tight">
         <h2 className="panel__title">{t("profile.activity")}</h2>
       </div>
-      <ActivityHeatmap data={activity as any} loading={false} />
+      <ActivityHeatmap
+        data={
+          activity.length > 0
+            ? {
+                since: activity[activity.length - 1]?.date ?? "",
+                weeks: 26,
+                days: activity,
+              }
+            : null
+        }
+        loading={false}
+      />
 
       <div className="panel__header panel__header--tight">
         <h2 className="panel__title">{t("profile.weeklyAccuracy")}</h2>
       </div>
-      <AccuracyChart data={activity as any} loading={false} />
+      <AccuracyChart
+        data={
+          activity.length > 0
+            ? {
+                since: activity[activity.length - 1]?.date ?? "",
+                weeks: 26,
+                days: activity,
+              }
+            : null
+        }
+        loading={false}
+      />
 
       <div className="panel__header panel__header--tight">
         <h2 className="panel__title">{t("profile.byMode")}</h2>
