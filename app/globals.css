@@ -612,7 +612,12 @@ button {
   gap: 0.5rem;
 }
 
+.language-selector {
+  justify-self: start;
+}
+
 .header-badges {
+  justify-self: center;
   display: flex;
   align-items: center;
   gap: 0.375rem;
@@ -652,6 +657,7 @@ button {
 /* ==================== Auth components ==================== */
 
 .user-button {
+  justify-self: end;
   display: inline-grid;
   place-items: center;
   width: 2.5rem;

@@ -36,43 +36,45 @@ export function Navbar({ onLoginClick }: NavbarProps) {
 
   return (
     <header className="site-header">
-      <div className="header-left">
-        {canGoBack && (
-          <button
-            type="button"
-            className="icon-button"
-            onClick={pop}
-            aria-label={t("profile.back")}
-          >
-            <ArrowLeft aria-hidden="true" />
-          </button>
-        )}
-      </div>
+      {isRoot ? (
+        <>
+          <LanguageSelector />
+          <HeaderBadges />
+          <AuthButton
+            onLoginClick={onLoginClick}
+            onProfileClick={handleProfileClick}
+            active={isProfile}
+          />
+        </>
+      ) : (
+        <>
+          <div className="header-left">
+            {canGoBack && (
+              <button
+                type="button"
+                className="icon-button"
+                onClick={pop}
+                aria-label={t("profile.back")}
+              >
+                <ArrowLeft aria-hidden="true" />
+              </button>
+            )}
+          </div>
 
-      {title && <h1 className="header-center">{title}</h1>}
+          {title && <h1 className="header-center">{title}</h1>}
 
-      <div className="header-right">
-        {isRoot ? (
-          <>
-            <LanguageSelector />
-            <HeaderBadges />
-            <AuthButton
-              onLoginClick={onLoginClick}
-              onProfileClick={handleProfileClick}
-              active={isProfile}
-            />
-          </>
-        ) : (
-          <button
-            type="button"
-            className="icon-button"
-            onClick={reset}
-            aria-label={t("common.close")}
-          >
-            <X aria-hidden="true" />
-          </button>
-        )}
-      </div>
+          <div className="header-right">
+            <button
+              type="button"
+              className="icon-button"
+              onClick={reset}
+              aria-label={t("common.close")}
+            >
+              <X aria-hidden="true" />
+            </button>
+          </div>
+        </>
+      )}
     </header>
   );
 }
