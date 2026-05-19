@@ -31,8 +31,6 @@ export function SharedAccess({
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [rateLimit, setRateLimit] = useState<any>(null);
-  const [timer, setTimer] = useState<number | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<string | null>(
     viewStudentId || null,
   );
@@ -44,7 +42,6 @@ export function SharedAccess({
       fetchViewers();
     } else {
       fetchStudents();
-      fetchRateLimit();
     }
   }, [tab]);
 
@@ -63,16 +60,6 @@ export function SharedAccess({
       setTab("parent");
     }
   }, [viewStudentId]);
-
-  // Timer countdown for rate limit
-  useEffect(() => {
-    if (timer !== null && timer > 0) {
-      const interval = setInterval(() => {
-        setTimer(timer - 1);
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [timer]);
 
   const fetchShareCode = async () => {
     try {
@@ -107,25 +94,6 @@ export function SharedAccess({
       }
     } catch (err) {
       console.error("Failed to fetch students:", err);
-    }
-  };
-
-  const fetchRateLimit = async () => {
-    try {
-      const res = await fetch("/api/share/rate-limit");
-      const data = await res.json();
-      setRateLimit(data);
-
-      if (data.locked_until) {
-        const lockedUntil = new Date(data.locked_until);
-        const now = new Date();
-        const diff = Math.floor((lockedUntil.getTime() - now.getTime()) / 1000);
-        if (diff > 0) {
-          setTimer(diff);
-        }
-      }
-    } catch (err) {
-      console.error("Failed to fetch rate limit:", err);
     }
   };
 
@@ -164,28 +132,8 @@ export function SharedAccess({
       if (res.ok) {
         setInputCode("");
         fetchStudents();
-        fetchRateLimit();
-      } else if (
-        data.error === "locked_minute" ||
-        data.error === "locked_day"
-      ) {
-        const lockedUntil = new Date(data.locked_until);
-        const now = new Date();
-        const diff = Math.floor((lockedUntil.getTime() - now.getTime()) / 1000);
-        setTimer(diff);
-        setError(
-          data.error === "locked_day"
-            ? t("share.lockedDay")
-            : t("share.lockedMinute"),
-        );
-      } else if (
-        data.error === "invalid_code" &&
-        rateLimit?.failed_attempts >= 2
-      ) {
-        setError(t("share.rateLimitWarning"));
       } else {
         setError(t("share.invalidCode"));
-        fetchRateLimit();
       }
     } catch (err) {
       setError(t("share.invalidCode"));
@@ -234,12 +182,6 @@ export function SharedAccess({
 
   const handleCloseStudentView = () => {
     setSelectedStudent(null);
-  };
-
-  const formatTimer = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   // If a student is selected for viewing, show their stats
@@ -354,21 +296,18 @@ export function SharedAccess({
                 onChange={(e) => setInputCode(e.target.value.toUpperCase())}
                 placeholder={t("share.enterCode")}
                 maxLength={8}
-                disabled={timer !== null || loading}
+                disabled={loading}
                 className="text-input"
               />
               <AccentButton
                 onClick={() => handleActivateCode()}
-                disabled={!inputCode || timer !== null || loading}
+                disabled={!inputCode || loading}
               >
                 <Plus size={16} />
                 <span>{t("share.add")}</span>
               </AccentButton>
             </div>
             {error && <p className="error-message">{error}</p>}
-            {timer !== null && (
-              <p className="timer-message">{formatTimer(timer)}</p>
-            )}
           </div>
 
           <div className="panel__header panel__header--tight">

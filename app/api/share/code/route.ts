@@ -13,7 +13,6 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get or create share code using the database function
     const { data, error } = await supabase.rpc("get_or_create_share_code", {
       p_user_id: user.id,
     });

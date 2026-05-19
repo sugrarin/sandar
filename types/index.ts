@@ -142,11 +142,3 @@ export interface ShareAccess {
   activated_at: string;
   is_active: boolean;
 }
-
-export interface ShareRateLimit {
-  id: string;
-  user_id: string;
-  failed_attempts: number;
-  locked_until: string | null;
-  last_attempt_at: string;
-}
