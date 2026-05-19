@@ -12,6 +12,7 @@ import { AccentButton } from "@/components/AccentButton";
 import { ProfileEditScreen } from "@/components/ProfileEditScreen";
 import { SharedAccess } from "@/components/SharedAccess";
 import { SegmentedControl } from "@/components/SegmentedControl";
+import { useSearchParams } from "next/navigation";
 import { DIFFICULTIES, type Difficulty } from "@/types";
 import { useGameStore } from "@/stores/gameStore";
 
@@ -75,7 +76,7 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
   }
 
   if (sharedAccessOpen) {
-    return <SharedAccess onClose={() => setSharedAccessOpen(false)} />;
+    return <SharedAccess onClose={() => setSharedAccessOpen(false)} initialCode={sharedCode} />;
   }
 
   const showStatsSkeleton = loading && userStats === null;

@@ -41,7 +41,21 @@ export async function GET(
       .single();
 
     if (statsError) {
-      return NextResponse.json({ error: "Stats not found" }, { status: 404 });
+      // Return default stats if the student has no sessions yet
+      return NextResponse.json({
+        total_sessions: 0,
+        total_questions: 0,
+        total_correct: 0,
+        total_wrong: 0,
+        total_time_seconds: 0,
+        total_xp: 0,
+        current_streak: 0,
+        best_streak: 0,
+        streak_days: 0,
+        last_session_at: null,
+        last_session_date: null,
+        updated_at: null,
+      });
     }
 
     return NextResponse.json(stats);
