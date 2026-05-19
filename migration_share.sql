@@ -39,6 +39,17 @@ CREATE INDEX IF NOT EXISTS idx_share_codes_code ON share_codes(code);
 CREATE INDEX IF NOT EXISTS idx_share_access_share_code_id ON share_access(share_code_id);
 CREATE INDEX IF NOT EXISTS idx_share_access_viewer_id ON share_access(viewer_id);
 
+-- Drop existing functions with changed signatures
+DROP FUNCTION IF EXISTS public.handle_new_share_access();
+DROP FUNCTION IF EXISTS get_or_create_share_code(UUID);
+DROP FUNCTION IF EXISTS validate_share_code(TEXT);
+DROP FUNCTION IF EXISTS get_owner_share_access(UUID);
+DROP FUNCTION IF EXISTS get_viewed_students(UUID);
+DROP FUNCTION IF EXISTS revoke_access_by_owner(UUID, UUID);
+DROP FUNCTION IF EXISTS check_rate_limit(UUID);
+DROP FUNCTION IF EXISTS record_failed_attempt(UUID);
+DROP FUNCTION IF EXISTS reset_rate_limit(UUID);
+
 -- Trigger to auto-fill viewer profile data on insert
 CREATE OR REPLACE FUNCTION public.handle_new_share_access()
 RETURNS TRIGGER AS $$
