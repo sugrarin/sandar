@@ -226,6 +226,7 @@ const translations: Record<Locale, Translations> = {
       copyLink: "Сілтемені көшіру",
       codeCopied: "Код көшірілді!",
       noViewers: "Әлі ешкім қарамайды",
+      viewersTitle: "Қараушылар",
       revokeAccess: "Қатынауды кері қайтару",
       parentTitle: "Статистика жинаңыз",
       parentDescription:
@@ -237,6 +238,7 @@ const translations: Record<Locale, Translations> = {
       lockedMinute: "Тым көп әрекет. 1 минут күтіңіз.",
       lockedDay: "Тым көп әрекет. 1 күн күтіңіз.",
       noStudents: "Әлі ешкім байланбаған",
+      linkedStudents: "Байланған оқушылар",
       unlink: "Байланысты үзу",
       revokeConfirm:
         "Бұл пайдаланушының статистикасын көру құқығын шынымен кері қайтарғыңыз келе ме?",
@@ -457,6 +459,7 @@ const translations: Record<Locale, Translations> = {
       copyLink: "Скопировать ссылку",
       codeCopied: "Ссылка скопирована!",
       noViewers: "Пока никто не просматривает",
+      viewersTitle: "Просматривают",
       revokeAccess: "Отозвать доступ",
       parentTitle: "Собирайте статистику",
       parentDescription:
@@ -469,6 +472,7 @@ const translations: Record<Locale, Translations> = {
       lockedMinute: "Слишком много попыток. Подождите 1 минуту.",
       lockedDay: "Слишком много попыток. Подождите 1 день.",
       noStudents: "Пока никто не привязан",
+      linkedStudents: "Привязанные ученики",
       unlink: "Отвязать",
       revokeConfirm:
         "Вы действительно хотите отозвать доступ этого пользователя к вашей статистике?",

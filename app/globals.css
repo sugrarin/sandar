@@ -670,6 +670,7 @@ button {
 
 .profile-user__info {
   min-width: 0;
+  flex: 1;
 }
 
 .profile-user__email {
@@ -1837,6 +1838,24 @@ button {
 
 /* ==================== Shared Access ==================== */
 
+.action-button--small {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-md);
+  min-height: auto;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.profile-card .action-button--small {
+  padding: 0.6rem 0.9rem;
+  font-size: 0.8rem;
+  min-height: auto;
+}
+
 .profile-card {
   display: flex;
   align-items: center;
@@ -1921,18 +1940,22 @@ button {
   align-items: center;
   gap: 0.75rem;
   padding: 1rem;
+  min-width: 0;
 }
 
 .share-code {
   flex: 1;
+  min-width: 0;
   font-family: var(--font-display);
   font-size: 1.5rem;
   font-weight: 700;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
   color: var(--text-main);
   text-align: center;
+  overflow-wrap: break-word;
+  word-break: break-all;
 }
 
 .share-code-input {

@@ -127,10 +127,20 @@ export function SharedAccess({
     }
   };
 
-  const handleCopyLink = () => {
+  const handleCopyLink = async () => {
     const link = `${window.location.origin}/share?code=${code}`;
-    navigator.clipboard.writeText(link);
-    setCopied(true);
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+    } catch {
+      const textarea = document.createElement("textarea");
+      textarea.value = link;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      setCopied(true);
+    }
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -329,7 +339,9 @@ export function SharedAccess({
 
           <div className="panel__header panel__header--tight">
             <h2 className="panel__title">
-              {viewers.length > 0 ? t("share.noViewers") : t("share.noViewers")}
+              {viewers.length > 0
+                ? t("share.viewersTitle")
+                : t("share.noViewers")}
             </h2>
           </div>
 
@@ -390,7 +402,7 @@ export function SharedAccess({
           <div className="panel__header panel__header--tight">
             <h2 className="panel__title">
               {students.length > 0
-                ? "Привязанные ученики"
+                ? t("share.linkedStudents")
                 : t("share.noStudents")}
             </h2>
           </div>

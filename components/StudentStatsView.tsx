@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft, LogOut, Flame, Zap, X } from "lucide-react";
+import { ArrowLeft, Flame, Zap, X } from "lucide-react";
 import { useTranslations, useLocale } from "@/lib/translations";
 import { ActivityHeatmap } from "@/components/ActivityHeatmap";
 import { AccuracyChart } from "@/components/AccuracyChart";
-import { Achievements } from "@/components/Achievements";
 import { DIFFICULTIES, type Difficulty } from "@/types";
 
 interface StudentStatsViewProps {
@@ -268,11 +267,6 @@ export function StudentStatsView({
           </ul>
         );
       })()}
-
-      <div className="panel__header panel__header--tight">
-        <h2 className="panel__title">{t("profile.achievements")}</h2>
-      </div>
-      <Achievements />
 
       <button
         type="button"

@@ -128,6 +128,9 @@ $$ LANGUAGE plpgsql;
 -- Function to get or create share code for a user
 CREATE OR REPLACE FUNCTION get_or_create_share_code(p_user_id UUID)
 RETURNS TABLE (code TEXT, created_at TIMESTAMP WITH TIME ZONE) AS $$
+DECLARE
+    v_code TEXT;
+    v_created_at TIMESTAMP WITH TIME ZONE;
 BEGIN
     -- Try to get existing active code
     RETURN QUERY
@@ -135,16 +138,23 @@ BEGIN
     FROM share_codes sc
     WHERE sc.user_id = p_user_id AND sc.is_active = TRUE
     LIMIT 1;
-    
+
     -- If no code found, create one
     IF NOT FOUND THEN
-        INSERT INTO share_codes (user_id, code)
-        VALUES (p_user_id, generate_share_code())
-        ON CONFLICT (user_id) DO UPDATE SET
-            code = generate_share_code(),
-            is_active = TRUE,
-            created_at = NOW()
-        RETURNING share_codes.code, share_codes.created_at;
+        LOOP
+            v_code := generate_share_code();
+            BEGIN
+                INSERT INTO share_codes (user_id, code)
+                VALUES (p_user_id, v_code)
+                RETURNING share_codes.code, share_codes.created_at
+                INTO v_code, v_created_at;
+                EXIT;
+            EXCEPTION WHEN unique_violation THEN
+                -- retry with a new code
+                CONTINUE;
+            END;
+        END LOOP;
+        RETURN QUERY SELECT v_code, v_created_at;
     END IF;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

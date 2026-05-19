@@ -1,3 +1,5 @@
+"use client";
+
 import { useTranslations, useLocale } from "@/lib/translations";
 
 interface ProfileUserProps {
@@ -22,13 +24,14 @@ export function ProfileUser({
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return t("profile.memberSince") + " " + date.toLocaleDateString(
-      locale === "kk" ? "kk-KZ" : "ru-RU",
-      {
+    return (
+      t("profile.memberSince") +
+      " " +
+      date.toLocaleDateString(locale === "kk" ? "kk-KZ" : "ru-RU", {
         day: "numeric",
         month: "long",
         year: "numeric",
-      },
+      })
     );
   };
 
@@ -49,9 +52,7 @@ export function ProfileUser({
         {displayName && email && (
           <p className="profile-user__email-secondary">{email}</p>
         )}
-        {date && (
-          <p className="profile-user__since">{formatDate(date)}</p>
-        )}
+        {date && <p className="profile-user__since">{formatDate(date)}</p>}
       </div>
       {action && <div className="profile-user__action">{action}</div>}
     </div>
