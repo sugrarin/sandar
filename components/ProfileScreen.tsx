@@ -11,6 +11,7 @@ import { Achievements } from "@/components/Achievements";
 import { AccentButton } from "@/components/AccentButton";
 import { ProfileEditScreen } from "@/components/ProfileEditScreen";
 import { SharedAccess } from "@/components/SharedAccess";
+import { SegmentedControl } from "@/components/SegmentedControl";
 import { DIFFICULTIES, type Difficulty } from "@/types";
 import { useGameStore } from "@/stores/gameStore";
 
@@ -220,30 +221,15 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
           <div className="panel__header panel__header--tight">
             <h2 className="panel__title">{t("profile.byMode")}</h2>
           </div>
-          <div
-            className="difficulty-picker difficulty-picker--plain"
-            role="tablist"
-            aria-label={t("profile.difficultyFilter")}
-          >
-            {(Object.keys(DIFFICULTIES) as Difficulty[]).map((key) => (
-              <button
-                key={key}
-                type="button"
-                className={`difficulty-picker__option${
-                  modeDifficulty === key
-                    ? " difficulty-picker__option--active"
-                    : ""
-                }`}
-                onClick={() => setModeDifficulty(key)}
-                role="tab"
-                aria-selected={modeDifficulty === key}
-              >
-                <span className="difficulty-picker__label">
-                  {t(`common.${key}`)}
-                </span>
-              </button>
-            ))}
-          </div>
+          <SegmentedControl<Difficulty>
+            items={(Object.keys(DIFFICULTIES) as Difficulty[]).map((key) => ({
+              value: key,
+              label: t(`common.${key}`),
+            }))}
+            value={modeDifficulty}
+            onChange={setModeDifficulty}
+            ariaLabel={t("profile.difficultyFilter")}
+          />
           {(() => {
             const rows = modeStats.filter(
               (r) => r.difficulty === modeDifficulty,

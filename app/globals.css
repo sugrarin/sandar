@@ -277,6 +277,53 @@ button {
   letter-spacing: 0.03em;
 }
 
+/* ==================== Segmented Control ==================== */
+
+.segmented-control {
+  display: grid;
+  grid-template-columns: repeat(var(--segment-count, 2), 1fr);
+  gap: 0.35rem;
+  padding: 0.25rem;
+  background: var(--tab-background);
+  border-radius: calc(var(--radius-lg) + 0.25rem);
+  margin-bottom: 0.6rem;
+}
+
+.segmented-control__item {
+  display: grid;
+  place-items: center;
+  gap: 0.25rem;
+  min-height: 1rem;
+  padding: 0.8rem 0.4rem;
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: transparent;
+  transition:
+    background var(--transition),
+    color var(--transition);
+}
+
+.segmented-control__item--active {
+  background: var(--accent-soft);
+  color: var(--text-main);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.segmented-control__icon {
+  font-size: 1.25rem;
+}
+
+.segmented-control__label {
+  font-size: 0.8rem;
+  font-weight: normal;
+  letter-spacing: 0.03em;
+}
+
+.segmented-control__item:focus-visible {
+  outline: 3px solid rgba(31, 138, 112, 0.28);
+  outline-offset: 3px;
+}
+
 .mode-grid,
 .action-stack {
   display: grid;

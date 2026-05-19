@@ -6,6 +6,7 @@ import { useTranslations } from "@/lib/translations";
 import { AccentButton } from "@/components/AccentButton";
 import { ProfileUser } from "@/components/ProfileUser";
 import { StudentStatsView } from "@/components/StudentStatsView";
+import { SegmentedControl } from "@/components/SegmentedControl";
 import type { ShareAccess } from "@/types";
 
 interface SharedAccessProps {
@@ -281,38 +282,15 @@ export function SharedAccess({
         <p className="hero__eyebrow">{t("share.title")}</p>
       </header>
 
-      <div
-        className="difficulty-picker difficulty-picker--plain"
-        role="tablist"
-        aria-label="Share access tabs"
-      >
-        <button
-          type="button"
-          className={`difficulty-picker__option${
-            tab === "student" ? " difficulty-picker__option--active" : ""
-          }`}
-          onClick={() => setTab("student")}
-          role="tab"
-          aria-selected={tab === "student"}
-        >
-          <span className="difficulty-picker__label">
-            {t("share.studentTab")}
-          </span>
-        </button>
-        <button
-          type="button"
-          className={`difficulty-picker__option${
-            tab === "parent" ? " difficulty-picker__option--active" : ""
-          }`}
-          onClick={() => setTab("parent")}
-          role="tab"
-          aria-selected={tab === "parent"}
-        >
-          <span className="difficulty-picker__label">
-            {t("share.parentTab")}
-          </span>
-        </button>
-      </div>
+      <SegmentedControl
+        items={[
+          { value: "student", label: t("share.studentTab") },
+          { value: "parent", label: t("share.parentTab") },
+        ]}
+        value={tab}
+        onChange={setTab}
+        ariaLabel="Share access tabs"
+      />
 
       {tab === "student" ? (
         <>
