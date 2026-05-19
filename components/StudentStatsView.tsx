@@ -52,37 +52,47 @@ export function StudentStatsView({
     setError(null);
 
     try {
-      // Fetch student profile and stats
-      const [profileRes, statsRes, modeRes, activityRes, accessRes] =
-        await Promise.all([
-          fetch(`/api/share/student/${studentId}/profile`),
-          fetch(`/api/share/student/${studentId}/stats`),
-          fetch(`/api/share/student/${studentId}/mode-stats`),
-          fetch(`/api/share/student/${studentId}/activity`),
-          fetch(`/api/share/student/${studentId}/access-id`),
-        ]);
+      const [profileRes, statsRes] = await Promise.all([
+        fetch(`/api/share/student/${studentId}/profile`),
+        fetch(`/api/share/student/${studentId}/stats`),
+      ]);
 
-      if (!profileRes.ok || !statsRes.ok) {
-        throw new Error("Failed to fetch student data");
+      if (!profileRes.ok) {
+        const data = await profileRes.json().catch(() => ({}));
+        throw new Error(data.error || `Profile error ${profileRes.status}`);
+      }
+      if (!statsRes.ok) {
+        const data = await statsRes.json().catch(() => ({}));
+        throw new Error(data.error || `Stats error ${statsRes.status}`);
       }
 
-      const [profileData, statsData, modeData, activityData, accessData] =
-        await Promise.all([
-          profileRes.json(),
-          statsRes.json(),
-          modeRes.json(),
-          activityRes.json(),
-          accessRes.json(),
-        ]);
+      const profileData = await profileRes.json();
+      const statsData = await statsRes.json();
+
+      const [modeRes, activityRes, accessRes] = await Promise.allSettled([
+        fetch(`/api/share/student/${studentId}/mode-stats`),
+        fetch(`/api/share/student/${studentId}/activity`),
+        fetch(`/api/share/student/${studentId}/access-id`),
+      ]);
 
       setStudent(profileData);
       setUserStats(statsData);
-      setModeStats(modeData.mode_stats || []);
-      setActivity(activityData.activity || []);
-      setAccessId(accessData.access_id);
-    } catch (err) {
+
+      if (modeRes.status === "fulfilled" && modeRes.value.ok) {
+        const modeData = await modeRes.value.json();
+        setModeStats(modeData.mode_stats || []);
+      }
+      if (activityRes.status === "fulfilled" && activityRes.value.ok) {
+        const activityData = await activityRes.value.json();
+        setActivity(activityData.activity || []);
+      }
+      if (accessRes.status === "fulfilled" && accessRes.value.ok) {
+        const accessData = await accessRes.value.json();
+        setAccessId(accessData.access_id || null);
+      }
+    } catch (err: any) {
       console.error("Failed to fetch student stats:", err);
-      setError("Failed to load student statistics");
+      setError(err?.message || "Failed to load student statistics");
     } finally {
       setLoading(false);
     }
@@ -256,16 +266,18 @@ export function StudentStatsView({
         );
       })()}
 
-      <button
-        type="button"
-        className="action-button profile-logout"
-        onClick={handleUnlink}
-      >
-        <span className="action-button__icon" aria-hidden="true">
-          <X strokeWidth={2} />
-        </span>
-        <span className="action-button__label">{t("share.unlink")}</span>
-      </button>
+      {accessId && (
+        <button
+          type="button"
+          className="action-button profile-logout"
+          onClick={handleUnlink}
+        >
+          <span className="action-button__icon" aria-hidden="true">
+            <X strokeWidth={2} />
+          </span>
+          <span className="action-button__label">{t("share.unlink")}</span>
+        </button>
+      )}
     </>
   );
 }

@@ -24,8 +24,15 @@ export async function GET(
       { p_viewer_id: user.id, p_student_id: studentId },
     );
 
+    if (accessError) {
+      console.error("check_student_access error:", accessError);
+      return NextResponse.json(
+        { error: "Access check failed" },
+        { status: 500 },
+      );
+    }
+
     if (
-      accessError ||
       !accessCheck ||
       accessCheck.length === 0 ||
       !accessCheck[0].has_access
