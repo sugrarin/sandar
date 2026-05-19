@@ -117,14 +117,20 @@ export function StudentStatsView({
   };
 
   if (loading) {
-    return <p className="profile-empty">{t("profile.loadingStats")}</p>;
+    return (
+      <section className="screen screen--active">
+        <p className="profile-empty">{t("profile.loadingStats")}</p>
+      </section>
+    );
   }
 
   if (error || !student) {
     return (
-      <p className="profile-empty profile-empty--error">
-        {error || "Student not found"}
-      </p>
+      <section className="screen screen--active">
+        <p className="profile-empty profile-empty--error">
+          {error || "Student not found"}
+        </p>
+      </section>
     );
   }
 
@@ -137,7 +143,7 @@ export function StudentStatsView({
   const totalCorrect = userStats?.total_correct ?? 0;
 
   return (
-    <>
+    <section className="screen screen--active">
       <section className="panel panel--soft profile-user">
         <div className="profile-user__avatar" aria-hidden="true">
           {avatarUrl ? (
@@ -311,6 +317,6 @@ export function StudentStatsView({
           <span className="action-button__label">{t("share.unlink")}</span>
         </button>
       )}
-    </>
+    </section>
   );
 }
