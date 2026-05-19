@@ -20,16 +20,6 @@ export function Navbar({ onLoginClick }: NavbarProps) {
   const currentRoute = stack[stack.length - 1];
   const isProfile = currentRoute?.name === "profile";
 
-  const routeTitle: Record<string, string> = {
-    profile: t("profile.title"),
-    profileEdit: t("profile.editProfile"),
-    share: t("share.title"),
-    studentStats: t("share.linkedStudents"),
-    game: t("game.title"),
-    result: t("result.title"),
-  };
-  const title = !isRoot ? routeTitle[currentRoute?.name ?? ""] : null;
-
   const handleProfileClick = () => {
     push({ name: "profile" });
   };
@@ -39,12 +29,14 @@ export function Navbar({ onLoginClick }: NavbarProps) {
       {isRoot ? (
         <>
           <LanguageSelector />
-          <HeaderBadges />
-          <AuthButton
-            onLoginClick={onLoginClick}
-            onProfileClick={handleProfileClick}
-            active={isProfile}
-          />
+          <div className="header-right">
+            <HeaderBadges />
+            <AuthButton
+              onLoginClick={onLoginClick}
+              onProfileClick={handleProfileClick}
+              active={isProfile}
+            />
+          </div>
         </>
       ) : (
         <>
@@ -60,9 +52,6 @@ export function Navbar({ onLoginClick }: NavbarProps) {
               </button>
             )}
           </div>
-
-          {title && <h1 className="header-center">{title}</h1>}
-
           <div className="header-right">
             <button
               type="button"
