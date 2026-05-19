@@ -64,6 +64,8 @@ export async function POST(request: Request) {
       { p_code: code },
     );
 
+    console.log("Share code validation:", { code, shareCode, codeError });
+
     if (codeError || !shareCode || shareCode.length === 0) {
       // Record failed attempt
       await supabase.rpc("record_failed_attempt", { p_user_id: user.id });

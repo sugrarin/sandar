@@ -7,7 +7,7 @@ import { SharedAccess } from "@/components/SharedAccess";
 import { AuthButton } from "@/components/AuthButton";
 import { HeaderBadges } from "@/components/HeaderBadges";
 import { LanguageSelector } from "@/components/LanguageSelector";
-import { TranslationProvider } from "@/lib/translations";
+import { TranslationProvider, useTranslations } from "@/lib/translations";
 import { createClient } from "@/lib/supabase/client";
 import { useStatsStore } from "@/stores/statsStore";
 
@@ -15,18 +15,21 @@ export default function SharePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const code = searchParams.get("code");
+  const t = useTranslations();
   const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     setMounted(true);
-    
+
     const checkAuth = async () => {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       setUser(user);
     };
-    
+
     checkAuth();
     useStatsStore.getState().loadAll();
   }, []);
@@ -55,11 +58,17 @@ export default function SharePage() {
 
       <main className="app">
         {!user ? (
-          <HomeScreen
-            difficulty="easy"
-            onSelectDifficulty={() => {}}
-            onStartGame={() => {}}
-          />
+          <div className="panel">
+            <h2 className="panel__title">{t("share.authRequired")}</h2>
+            <p className="panel__description">
+              {t("share.authRequiredDescription")}
+            </p>
+            <AuthButton
+              onLoginClick={() => {}}
+              onProfileClick={() => {}}
+              active={false}
+            />
+          </div>
         ) : (
           <SharedAccess onClose={handleClose} initialCode={code || undefined} />
         )}
