@@ -181,6 +181,7 @@ function AppContent() {
             onAdvance={() => {
               const result = advanceRound();
               if (result && result.type === "finished") {
+                replace({ name: "result" });
                 const session = useGameStore.getState().lastSession;
                 if (session) {
                   persistSession(session);
