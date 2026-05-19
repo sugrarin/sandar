@@ -4,16 +4,22 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, Copy, X, ChevronRight, Plus } from "lucide-react";
 import { useTranslations } from "@/lib/translations";
 import { ProfileUser } from "@/components/ProfileUser";
+import { StudentStatsView } from "@/components/StudentStatsView";
 import type { ShareAccess } from "@/types";
 
 interface SharedAccessProps {
   onClose: () => void;
   initialCode?: string;
+  viewStudentId?: string;
 }
 
 type Tab = "student" | "parent";
 
-export function SharedAccess({ onClose, initialCode }: SharedAccessProps) {
+export function SharedAccess({
+  onClose,
+  initialCode,
+  viewStudentId,
+}: SharedAccessProps) {
   const t = useTranslations();
   const [tab, setTab] = useState<Tab>(initialCode ? "parent" : "student");
   const [code, setCode] = useState("");
@@ -25,6 +31,9 @@ export function SharedAccess({ onClose, initialCode }: SharedAccessProps) {
   const [error, setError] = useState("");
   const [rateLimit, setRateLimit] = useState<any>(null);
   const [timer, setTimer] = useState<number | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<string | null>(
+    viewStudentId || null,
+  );
 
   // Fetch share code and viewers when student tab is active
   useEffect(() => {
@@ -44,6 +53,14 @@ export function SharedAccess({ onClose, initialCode }: SharedAccessProps) {
       handleActivateCode(initialCode);
     }
   }, [initialCode]);
+
+  // Auto-select student if viewStudentId is provided
+  useEffect(() => {
+    if (viewStudentId) {
+      setSelectedStudent(viewStudentId);
+      setTab("parent");
+    }
+  }, [viewStudentId]);
 
   // Timer countdown for rate limit
   useEffect(() => {
@@ -96,7 +113,7 @@ export function SharedAccess({ onClose, initialCode }: SharedAccessProps) {
       const res = await fetch("/api/share/rate-limit");
       const data = await res.json();
       setRateLimit(data);
-      
+
       if (data.locked_until) {
         const lockedUntil = new Date(data.locked_until);
         const now = new Date();
@@ -136,13 +153,23 @@ export function SharedAccess({ onClose, initialCode }: SharedAccessProps) {
         setInputCode("");
         fetchStudents();
         fetchRateLimit();
-      } else if (data.error === "locked_minute" || data.error === "locked_day") {
+      } else if (
+        data.error === "locked_minute" ||
+        data.error === "locked_day"
+      ) {
         const lockedUntil = new Date(data.locked_until);
         const now = new Date();
         const diff = Math.floor((lockedUntil.getTime() - now.getTime()) / 1000);
         setTimer(diff);
-        setError(data.error === "locked_day" ? t("share.lockedDay") : t("share.lockedMinute"));
-      } else if (data.error === "invalid_code" && rateLimit?.failed_attempts >= 2) {
+        setError(
+          data.error === "locked_day"
+            ? t("share.lockedDay")
+            : t("share.lockedMinute"),
+        );
+      } else if (
+        data.error === "invalid_code" &&
+        rateLimit?.failed_attempts >= 2
+      ) {
         setError(t("share.rateLimitWarning"));
       } else {
         setError(t("share.invalidCode"));
@@ -189,11 +216,45 @@ export function SharedAccess({ onClose, initialCode }: SharedAccessProps) {
     }
   };
 
+  const handleViewStudent = (studentId: string) => {
+    setSelectedStudent(studentId);
+  };
+
+  const handleCloseStudentView = () => {
+    setSelectedStudent(null);
+  };
+
   const formatTimer = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
+
+  // If a student is selected for viewing, show their stats
+  if (selectedStudent) {
+    return (
+      <section className="screen screen--active">
+        <header className="profile-header">
+          <button
+            type="button"
+            className="icon-button"
+            onClick={handleCloseStudentView}
+            aria-label={t("profile.back")}
+          >
+            <ArrowLeft aria-hidden="true" />
+          </button>
+          <p className="hero__eyebrow">{t("profile.title")}</p>
+        </header>
+        <StudentStatsView
+          studentId={selectedStudent}
+          onUnlink={(accessId: string) => {
+            handleUnlinkStudent(accessId);
+            setSelectedStudent(null);
+          }}
+        />
+      </section>
+    );
+  }
 
   return (
     <section className="screen screen--active">
@@ -223,7 +284,9 @@ export function SharedAccess({ onClose, initialCode }: SharedAccessProps) {
           role="tab"
           aria-selected={tab === "student"}
         >
-          <span className="difficulty-picker__label">{t("share.studentTab")}</span>
+          <span className="difficulty-picker__label">
+            {t("share.studentTab")}
+          </span>
         </button>
         <button
           type="button"
@@ -234,7 +297,9 @@ export function SharedAccess({ onClose, initialCode }: SharedAccessProps) {
           role="tab"
           aria-selected={tab === "parent"}
         >
-          <span className="difficulty-picker__label">{t("share.parentTab")}</span>
+          <span className="difficulty-picker__label">
+            {t("share.parentTab")}
+          </span>
         </button>
       </div>
 
@@ -255,7 +320,9 @@ export function SharedAccess({ onClose, initialCode }: SharedAccessProps) {
                 disabled={!code}
               >
                 <Copy size={16} />
-                <span>{copied ? t("share.codeCopied") : t("share.copyLink")}</span>
+                <span>
+                  {copied ? t("share.codeCopied") : t("share.copyLink")}
+                </span>
               </button>
             </div>
           </div>
@@ -316,15 +383,15 @@ export function SharedAccess({ onClose, initialCode }: SharedAccessProps) {
             </div>
             {error && <p className="error-message">{error}</p>}
             {timer !== null && (
-              <p className="timer-message">
-                {formatTimer(timer)}
-              </p>
+              <p className="timer-message">{formatTimer(timer)}</p>
             )}
           </div>
 
           <div className="panel__header panel__header--tight">
             <h2 className="panel__title">
-              {students.length > 0 ? "Привязанные ученики" : t("share.noStudents")}
+              {students.length > 0
+                ? "Привязанные ученики"
+                : t("share.noStudents")}
             </h2>
           </div>
 
@@ -335,16 +402,8 @@ export function SharedAccess({ onClose, initialCode }: SharedAccessProps) {
               displayName={student.student_display_name}
               email={student.student_email}
               date={student.activated_at}
-              action={
-                <button
-                  type="button"
-                  className="icon-button"
-                  onClick={() => handleUnlinkStudent(student.id)}
-                  title={t("share.unlink")}
-                >
-                  <X size={16} />
-                </button>
-              }
+              onClick={() => handleViewStudent(student.student_id)}
+              action={<ChevronRight size={16} />}
             />
           ))}
         </>
