@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { ArrowLeft, Upload, User } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useTranslations } from "@/lib/translations";
+import { AccentButton } from "@/components/AccentButton";
 import { useStatsStore } from "@/stores/statsStore";
 
 interface ProfileEditScreenProps {
@@ -181,16 +182,14 @@ export function ProfileEditScreen({ onClose }: ProfileEditScreenProps) {
 
         {/* Actions */}
         <div className="profile-edit__actions">
-          <button
+          <AccentButton
             type="button"
-            className="action-button action-button--accent profile-edit__save"
+            className="profile-edit__save"
             onClick={handleSave}
             disabled={saving || uploading}
           >
-            <span className="action-button__label">
-              {saving ? t("profile.saving") : t("profile.save")}
-            </span>
-          </button>
+            {saving ? t("profile.saving") : t("profile.save")}
+          </AccentButton>
         </div>
       </div>
     </section>

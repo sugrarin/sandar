@@ -34,6 +34,7 @@
   --radius-lg: 24px;
   --radius-md: 18px;
   --radius-sm: 14px;
+  --radius-button: 6px;
   --transition: 180ms ease;
 
   --font-weight-bold: 900;
@@ -1848,6 +1849,34 @@ button {
   min-height: auto;
   font-size: 0.85rem;
   white-space: nowrap;
+}
+
+/* ── Accent button ─────────────────────────────────────── */
+
+.accent-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: var(--radius-button);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity var(--transition);
+  white-space: nowrap;
+}
+
+.accent-button:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.accent-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .profile-card .action-button--small {

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, Copy, X, ChevronRight, Plus } from "lucide-react";
 import { useTranslations } from "@/lib/translations";
+import { AccentButton } from "@/components/AccentButton";
 import { ProfileUser } from "@/components/ProfileUser";
 import { StudentStatsView } from "@/components/StudentStatsView";
 import type { ShareAccess } from "@/types";
@@ -323,17 +324,12 @@ export function SharedAccess({
           <div className="panel panel--soft">
             <div className="share-code-display">
               <span className="share-code">{code}</span>
-              <button
-                type="button"
-                className="action-button action-button--small"
-                onClick={handleCopyLink}
-                disabled={!code}
-              >
+              <AccentButton onClick={handleCopyLink} disabled={!code}>
                 <Copy size={16} />
                 <span>
                   {copied ? t("share.codeCopied") : t("share.copyLink")}
                 </span>
-              </button>
+              </AccentButton>
             </div>
           </div>
 
@@ -383,15 +379,13 @@ export function SharedAccess({
                 disabled={timer !== null || loading}
                 className="text-input"
               />
-              <button
-                type="button"
-                className="action-button action-button--small"
+              <AccentButton
                 onClick={() => handleActivateCode()}
                 disabled={!inputCode || timer !== null || loading}
               >
                 <Plus size={16} />
                 <span>{t("share.add")}</span>
-              </button>
+              </AccentButton>
             </div>
             {error && <p className="error-message">{error}</p>}
             {timer !== null && (

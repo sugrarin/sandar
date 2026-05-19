@@ -8,6 +8,7 @@ import { useStatsStore } from "@/stores/statsStore";
 import { ActivityHeatmap } from "@/components/ActivityHeatmap";
 import { AccuracyChart } from "@/components/AccuracyChart";
 import { Achievements } from "@/components/Achievements";
+import { AccentButton } from "@/components/AccentButton";
 import { ProfileEditScreen } from "@/components/ProfileEditScreen";
 import { SharedAccess } from "@/components/SharedAccess";
 import { DIFFICULTIES, type Difficulty } from "@/types";
@@ -293,16 +294,14 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
         </span>
         <h3 className="info-card__title">{t("share.title")}</h3>
         <p className="info-card__description">{t("share.description")}</p>
-        <button
-          type="button"
-          className="action-button action-button--small"
+        <AccentButton
           onClick={(e) => {
             e.stopPropagation();
             setSharedAccessOpen(true);
           }}
         >
           {t("share.open")}
-        </button>
+        </AccentButton>
       </div>
 
       <button
