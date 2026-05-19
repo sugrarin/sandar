@@ -124,17 +124,7 @@ export function ResultScreen({
       <section className="panel panel--result">
         <div className="result-summary">
           <p className="result-summary__eyebrow">{t("result.done")}</p>
-          <div className="result-summary__title-row">
-            <h2 className="result-summary__title">{t("result.title")}</h2>
-            <button
-              className="icon-button"
-              type="button"
-              onClick={onReturnHome}
-              aria-label={t("result.returnHome")}
-            >
-              <X aria-hidden="true" />
-            </button>
-          </div>
+          <h2 className="result-summary__title">{t("result.title")}</h2>
           <p className="result-summary__score">
             {score}&thinsp;/&thinsp;{total}
           </p>
