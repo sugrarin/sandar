@@ -19,29 +19,18 @@ export async function GET(
     const { studentId } = params;
 
     // Check if the current user has access to view this student's stats
-    const { data: access, error: accessError } = await supabase
-      .from("share_access")
-      .select("id, share_code_id")
-      .eq("viewer_id", user.id)
-      .eq("is_active", true)
-      .single();
+    const { data: accessCheck, error: accessError } = await supabase.rpc(
+      "check_student_access",
+      { p_viewer_id: user.id, p_student_id: studentId },
+    );
 
-    if (accessError) {
-      // Check if the user is trying to view their own stats
-      if (studentId !== user.id) {
-        return NextResponse.json({ error: "Access denied" }, { status: 403 });
-      }
-    } else {
-      // Verify the access is for this student
-      const { data: shareCode } = await supabase
-        .from("share_codes")
-        .select("user_id")
-        .eq("id", access.share_code_id)
-        .single();
-
-      if (!shareCode || shareCode.user_id !== studentId) {
-        return NextResponse.json({ error: "Access denied" }, { status: 403 });
-      }
+    if (
+      accessError ||
+      !accessCheck ||
+      accessCheck.length === 0 ||
+      !accessCheck[0].has_access
+    ) {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
     // Fetch student profile

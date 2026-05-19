@@ -3,11 +3,14 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   request: Request,
-  { params }: { params: { studentId: string } }
+  { params }: { params: { studentId: string } },
 ) {
   try {
     const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -15,25 +18,18 @@ export async function GET(
 
     const { studentId } = params;
 
-    // Check access
-    const { data: access } = await supabase
-      .from("share_access")
-      .select("share_code_id")
-      .eq("viewer_id", user.id)
-      .eq("is_active", true)
-      .single();
+    // Check access using security definer function
+    const { data: accessCheck, error: accessError } = await supabase.rpc(
+      "check_student_access",
+      { p_viewer_id: user.id, p_student_id: studentId },
+    );
 
-    if (access) {
-      const { data: shareCode } = await supabase
-        .from("share_codes")
-        .select("user_id")
-        .eq("id", access.share_code_id)
-        .single();
-
-      if (!shareCode || shareCode.user_id !== studentId) {
-        return NextResponse.json({ error: "Access denied" }, { status: 403 });
-      }
-    } else if (studentId !== user.id) {
+    if (
+      accessError ||
+      !accessCheck ||
+      accessCheck.length === 0 ||
+      !accessCheck[0].has_access
+    ) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
@@ -50,6 +46,9 @@ export async function GET(
     return NextResponse.json({ mode_stats: modeStats || [] });
   } catch (error) {
     console.error("Error in student mode stats API:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
