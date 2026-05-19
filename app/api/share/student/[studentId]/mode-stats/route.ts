@@ -40,17 +40,14 @@ export async function GET(
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    // Fetch mode stats
-    const { data: modeStats, error: modeStatsError } = await supabase
-      .from("mode_stats")
-      .select("*")
-      .eq("user_id", studentId);
+    const { data: modeStats, error: modeStatsError } = await supabase.rpc(
+      "get_student_mode_stats",
+      { p_student_id: studentId },
+    );
 
-    if (modeStatsError) {
-      return NextResponse.json({ mode_stats: [] });
-    }
-
-    return NextResponse.json({ mode_stats: modeStats || [] });
+    return NextResponse.json({
+      mode_stats: modeStatsError || !modeStats ? [] : modeStats,
+    });
   } catch (error) {
     console.error("Error in student mode stats API:", error);
     return NextResponse.json(

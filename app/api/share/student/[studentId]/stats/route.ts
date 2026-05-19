@@ -40,15 +40,12 @@ export async function GET(
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    // Fetch student stats
-    const { data: stats, error: statsError } = await supabase
-      .from("user_stats")
-      .select("*")
-      .eq("user_id", studentId)
-      .single();
+    const { data: stats, error: statsError } = await supabase.rpc(
+      "get_student_stats",
+      { p_student_id: studentId },
+    );
 
-    if (statsError) {
-      // Return default stats if the student has no sessions yet
+    if (statsError || !stats || stats.length === 0) {
       return NextResponse.json({
         total_sessions: 0,
         total_questions: 0,
@@ -65,7 +62,7 @@ export async function GET(
       });
     }
 
-    return NextResponse.json(stats);
+    return NextResponse.json(stats[0]);
   } catch (error) {
     console.error("Error in student stats API:", error);
     return NextResponse.json(

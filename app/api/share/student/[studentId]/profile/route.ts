@@ -18,7 +18,6 @@ export async function GET(
 
     const { studentId } = params;
 
-    // Check if the current user has access to view this student's stats
     const { data: accessCheck, error: accessError } = await supabase.rpc(
       "check_student_access",
       { p_viewer_id: user.id, p_student_id: studentId },
@@ -40,18 +39,16 @@ export async function GET(
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    // Fetch student profile
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", studentId)
-      .single();
+    const { data: profile, error: profileError } = await supabase.rpc(
+      "get_student_profile",
+      { p_student_id: studentId },
+    );
 
-    if (profileError || !profile) {
+    if (profileError || !profile || profile.length === 0) {
       return NextResponse.json({ error: "Student not found" }, { status: 404 });
     }
 
-    return NextResponse.json(profile);
+    return NextResponse.json(profile[0]);
   } catch (error) {
     console.error("Error in student profile API:", error);
     return NextResponse.json(

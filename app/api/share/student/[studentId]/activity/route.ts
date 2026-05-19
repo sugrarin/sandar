@@ -40,24 +40,17 @@ export async function GET(
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    // Fetch activity data (sessions grouped by date)
-    const { data: sessions, error: sessionsError } = await supabase
-      .from("sessions")
-      .select("created_at, total_questions, correct_answers")
-      .eq("user_id", studentId)
-      .order("created_at", { ascending: false })
-      .limit(180);
+    const { data: sessions, error: sessionsError } = await supabase.rpc(
+      "get_student_activity",
+      { p_student_id: studentId },
+    );
 
-    if (sessionsError) {
-      return NextResponse.json({ activity: [] });
-    }
-
-    // Process activity data into the format expected by ActivityHeatmap
-    const activityData = (sessions || []).map((session: any) => ({
-      date: session.created_at,
+    const rows = sessionsError || !sessions ? [] : sessions;
+    const activityData = rows.map((s: any) => ({
+      date: s.created_at,
       sessions: 1,
-      questions: session.total_questions,
-      correct: session.correct_answers,
+      questions: s.total_questions,
+      correct: s.correct_answers,
     }));
 
     return NextResponse.json({ activity: activityData });
