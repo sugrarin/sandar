@@ -55,6 +55,7 @@ const translations: Record<Locale, Translations> = {
       login: "Кіру",
     },
     game: {
+      title: "Ойын",
       reviewSubtitle: "Қателерді толық шешкенше",
       finishRound: "Раундты аяқтау",
     },
@@ -292,6 +293,7 @@ const translations: Record<Locale, Translations> = {
       login: "Войти",
     },
     game: {
+      title: "Игра",
       reviewSubtitle: "Ошибки до полного решения",
       finishRound: "Закончить раунд",
     },

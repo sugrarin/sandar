@@ -588,6 +588,20 @@ button {
   }
 }
 
+.header-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 60%;
+  margin: 0;
+}
+
 /* ==================== Header right group ==================== */
 
 .header-right {
