@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft, LogOut, Flame, Zap, Pencil } from "lucide-react";
+import { ArrowLeft, LogOut, Flame, Zap, Pencil, Share2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useTranslations, useLocale } from "@/lib/translations";
 import { useStatsStore } from "@/stores/statsStore";
@@ -9,6 +9,7 @@ import { ActivityHeatmap } from "@/components/ActivityHeatmap";
 import { AccuracyChart } from "@/components/AccuracyChart";
 import { Achievements } from "@/components/Achievements";
 import { ProfileEditScreen } from "@/components/ProfileEditScreen";
+import { SharedAccess } from "@/components/SharedAccess";
 import { DIFFICULTIES, type Difficulty } from "@/types";
 import { useGameStore } from "@/stores/gameStore";
 
@@ -36,6 +37,7 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
   const t = useTranslations();
   const { locale } = useLocale();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [sharedAccessOpen, setSharedAccessOpen] = useState(false);
   const gameDifficulty = useGameStore((s) => s.settings.difficulty);
   const [modeDifficulty, setModeDifficulty] =
     useState<Difficulty>(gameDifficulty);
@@ -68,6 +70,10 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
 
   if (isEditing) {
     return <ProfileEditScreen onClose={() => setIsEditing(false)} />;
+  }
+
+  if (sharedAccessOpen) {
+    return <SharedAccess onClose={() => setSharedAccessOpen(false)} />;
   }
 
   const showStatsSkeleton = loading && userStats === null;
@@ -277,6 +283,29 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
           <Achievements />
         </>
       )}
+
+      <div
+        className="panel panel--soft profile-card profile-card--clickable"
+        onClick={() => setSharedAccessOpen(true)}
+      >
+        <div className="profile-card__icon">
+          <Share2 size={24} />
+        </div>
+        <div className="profile-card__content">
+          <h3 className="profile-card__title">{t("share.title")}</h3>
+          <p className="profile-card__description">{t("share.description")}</p>
+        </div>
+        <button
+          type="button"
+          className="action-button action-button--small"
+          onClick={(e) => {
+            e.stopPropagation();
+            setSharedAccessOpen(true);
+          }}
+        >
+          {t("share.open")}
+        </button>
+      </div>
 
       <button
         type="button"
