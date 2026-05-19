@@ -1,16 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft, Flame, Zap, X } from "lucide-react";
+import { Flame, Zap, X } from "lucide-react";
 import { useTranslations, useLocale } from "@/lib/translations";
 import { ActivityHeatmap } from "@/components/ActivityHeatmap";
 import { AccuracyChart } from "@/components/AccuracyChart";
 import { SegmentedControl } from "@/components/SegmentedControl";
+import { useNavigation } from "@/contexts/NavigationContext";
 import { DIFFICULTIES, type Difficulty } from "@/types";
 
 interface StudentStatsViewProps {
   studentId: string;
-  onUnlink: (accessId: string) => void;
   activatedAt?: string;
 }
 
@@ -31,9 +31,9 @@ function formatXP(xp: number, t: (key: string) => string): string {
 
 export function StudentStatsView({
   studentId,
-  onUnlink,
   activatedAt,
 }: StudentStatsViewProps) {
+  const { pop } = useNavigation();
   const t = useTranslations();
   const { locale } = useLocale();
   const [modeDifficulty, setModeDifficulty] = useState<Difficulty>("easy");
@@ -100,9 +100,19 @@ export function StudentStatsView({
     }
   };
 
-  const handleUnlink = () => {
-    if (accessId) {
-      onUnlink(accessId);
+  const handleUnlink = async () => {
+    if (!accessId) return;
+    try {
+      const res = await fetch("/api/share/viewed", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accessId }),
+      });
+      if (res.ok) {
+        pop();
+      }
+    } catch (err) {
+      console.error("Failed to unlink student:", err);
     }
   };
 

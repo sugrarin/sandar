@@ -1,28 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ArrowLeft, Copy, X, ChevronRight, Plus } from "lucide-react";
+import { useEffect, useState, useContext } from "react";
+import { Copy, X, ChevronRight, Plus } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "@/lib/translations";
 import { AccentButton } from "@/components/AccentButton";
 import { ProfileUser } from "@/components/ProfileUser";
-import { StudentStatsView } from "@/components/StudentStatsView";
 import { SegmentedControl } from "@/components/SegmentedControl";
+import { NavigationContext } from "@/contexts/NavigationContext";
 import type { ShareAccess } from "@/types";
 
 interface SharedAccessProps {
-  onClose: () => void;
+  onClose?: () => void;
   initialCode?: string;
-  viewStudentId?: string;
 }
 
 type Tab = "student" | "parent";
 
 export function SharedAccess({
   onClose,
-  initialCode,
-  viewStudentId,
-}: SharedAccessProps) {
+  initialCode: initialCodeProp,
+}: SharedAccessProps = {}) {
   const t = useTranslations();
+  const nav = useContext(NavigationContext);
+  const searchParams = useSearchParams();
+  const initialCode =
+    initialCodeProp ?? (searchParams.get("code") || undefined);
+
   const [tab, setTab] = useState<Tab>(initialCode ? "parent" : "student");
   const [code, setCode] = useState("");
   const [inputCode, setInputCode] = useState(initialCode || "");
@@ -31,9 +35,6 @@ export function SharedAccess({
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [selectedStudent, setSelectedStudent] = useState<string | null>(
-    viewStudentId || null,
-  );
 
   // Fetch share code and viewers when student tab is active
   useEffect(() => {
@@ -52,14 +53,6 @@ export function SharedAccess({
       handleActivateCode(initialCode);
     }
   }, [initialCode]);
-
-  // Auto-select student if viewStudentId is provided
-  useEffect(() => {
-    if (viewStudentId) {
-      setSelectedStudent(viewStudentId);
-      setTab("parent");
-    }
-  }, [viewStudentId]);
 
   const fetchShareCode = async () => {
     try {
@@ -177,56 +170,18 @@ export function SharedAccess({
   };
 
   const handleViewStudent = (studentId: string) => {
-    setSelectedStudent(studentId);
+    const student = students.find((s) => s.student_id === studentId);
+    nav?.push({
+      name: "studentStats",
+      params: {
+        studentId,
+        activatedAt: student?.activated_at,
+      },
+    });
   };
-
-  const handleCloseStudentView = () => {
-    setSelectedStudent(null);
-  };
-
-  // If a student is selected for viewing, show their stats
-  if (selectedStudent) {
-    return (
-      <section className="screen screen--active">
-        <header className="profile-header">
-          <button
-            type="button"
-            className="icon-button"
-            onClick={handleCloseStudentView}
-            aria-label={t("profile.back")}
-          >
-            <ArrowLeft aria-hidden="true" />
-          </button>
-          <p className="hero__eyebrow">{t("profile.title")}</p>
-        </header>
-        <StudentStatsView
-          studentId={selectedStudent}
-          activatedAt={
-            students.find((s) => s.student_id === selectedStudent)?.activated_at
-          }
-          onUnlink={(accessId: string) => {
-            handleUnlinkStudent(accessId);
-            setSelectedStudent(null);
-          }}
-        />
-      </section>
-    );
-  }
 
   return (
     <section className="screen screen--active">
-      <header className="profile-header">
-        <button
-          type="button"
-          className="icon-button"
-          onClick={onClose}
-          aria-label={t("profile.back")}
-        >
-          <ArrowLeft aria-hidden="true" />
-        </button>
-        <p className="hero__eyebrow">{t("share.title")}</p>
-      </header>
-
       <SegmentedControl
         items={[
           { value: "student", label: t("share.studentTab") },

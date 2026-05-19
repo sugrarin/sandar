@@ -5,24 +5,27 @@ import { useGameStore } from "@/stores/gameStore";
 import { HomeScreen } from "@/components/HomeScreen";
 import { GameScreen } from "@/components/GameScreen";
 import { ResultScreen } from "@/components/ResultScreen";
-import { AuthButton } from "@/components/AuthButton";
 import { AuthModal } from "@/components/AuthModal";
-import { LanguageSelector } from "@/components/LanguageSelector";
 import { ProfileScreen } from "@/components/ProfileScreen";
+import { ProfileEditScreen } from "@/components/ProfileEditScreen";
+import { SharedAccess } from "@/components/SharedAccess";
+import { StudentStatsView } from "@/components/StudentStatsView";
 import { AchievementToast } from "@/components/AchievementToast";
-import { HeaderBadges } from "@/components/HeaderBadges";
+import { Navbar } from "@/components/Navbar";
 import { TranslationProvider } from "@/lib/translations";
 import { saveSession } from "@/lib/session";
 import { useStatsStore } from "@/stores/statsStore";
 import { createClient } from "@/lib/supabase/client";
+import {
+  NavigationProvider,
+  useNavigation,
+} from "@/contexts/NavigationContext";
 import type { GameMode, Difficulty } from "@/types";
 
-type Screen = "home" | "game" | "result" | "profile";
-
-export default function Home() {
-  const [currentScreen, setCurrentScreen] = useState<Screen>("home");
-  const [prevScreen, setPrevScreen] = useState<Screen>("home");
+function AppContent() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const { stack, push, replace, reset } = useNavigation();
+  const currentRoute = stack[stack.length - 1];
 
   const {
     settings,
@@ -59,28 +62,12 @@ export default function Home() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Handle screen transitions
+  // Clean up game state when navigating away from game/result via Navbar
   useEffect(() => {
-    if (currentScreen === "profile") return;
-    if (activeRound) {
-      setCurrentScreen("game");
-    } else if (lastSession && currentScreen === "game") {
-      setCurrentScreen("result");
+    if (currentRoute?.name === "home" && activeRound) {
+      returnHome();
     }
-  }, [activeRound, lastSession, currentScreen]);
-
-  const openProfile = () => {
-    setPrevScreen(currentScreen === "profile" ? "home" : currentScreen);
-    setCurrentScreen("profile");
-  };
-
-  const closeProfile = () => {
-    setCurrentScreen(prevScreen);
-  };
-
-  const handleLoggedOut = () => {
-    setCurrentScreen("home");
-  };
+  }, [currentRoute, activeRound, returnHome]);
 
   const persistSession = (session: Parameters<typeof saveSession>[0]) => {
     saveSession(session)
@@ -98,6 +85,11 @@ export default function Home() {
 
   const onStartGame = (mode: GameMode) => {
     startRound(mode);
+    if (currentRoute?.name === "result") {
+      replace({ name: "game" });
+    } else {
+      push({ name: "game" });
+    }
   };
 
   const onAnswer = (selected: number) => {
@@ -108,7 +100,7 @@ export default function Home() {
         () => {
           const advanceResult = advanceRound();
           if (advanceResult.type === "finished") {
-            // Save session to backend if user is logged in
+            replace({ name: "result" });
             const round = useGameStore.getState().lastSession;
             if (round) {
               persistSession(round);
@@ -123,6 +115,7 @@ export default function Home() {
   const onFinishGame = () => {
     const result = finishCurrentRound();
     if (result) {
+      replace({ name: "result" });
       const round = useGameStore.getState().lastSession;
       if (round) {
         persistSession(round);
@@ -132,40 +125,28 @@ export default function Home() {
 
   const onReturnHome = () => {
     returnHome();
-    setCurrentScreen("home");
+    reset();
   };
 
   const onReviewMistakes = () => {
     startReviewRound();
+    replace({ name: "game" });
   };
 
   const onReplay = () => {
     replayCurrentMode();
+    replace({ name: "game" });
   };
 
   const currentTask = getCurrentTask();
   const round = activeRound;
 
   return (
-    <TranslationProvider>
-      <header className="site-header">
-        <LanguageSelector />
-        <div className="header-right">
-          <HeaderBadges />
-          <AuthButton
-            onLoginClick={() => setAuthModalOpen(true)}
-            onProfileClick={openProfile}
-            active={currentScreen === "profile"}
-          />
-        </div>
-      </header>
+    <>
+      <Navbar onLoginClick={() => setAuthModalOpen(true)} />
 
       <main className="app">
-        {currentScreen === "profile" && (
-          <ProfileScreen onClose={closeProfile} onLoggedOut={handleLoggedOut} />
-        )}
-
-        {currentScreen === "home" && (
+        {currentRoute?.name === "home" && (
           <HomeScreen
             difficulty={settings.difficulty}
             onSelectDifficulty={onSelectDifficulty}
@@ -173,7 +154,20 @@ export default function Home() {
           />
         )}
 
-        {currentScreen === "game" && round && currentTask && (
+        {currentRoute?.name === "profile" && <ProfileScreen />}
+
+        {currentRoute?.name === "profileEdit" && <ProfileEditScreen />}
+
+        {currentRoute?.name === "share" && <SharedAccess />}
+
+        {currentRoute?.name === "studentStats" && (
+          <StudentStatsView
+            studentId={currentRoute.params?.studentId as string}
+            activatedAt={currentRoute.params?.activatedAt as string | undefined}
+          />
+        )}
+
+        {currentRoute?.name === "game" && round && currentTask && (
           <GameScreen
             mode={round.mode}
             difficulty={round.difficulty}
@@ -197,7 +191,7 @@ export default function Home() {
           />
         )}
 
-        {currentScreen === "result" && lastSession && (
+        {currentRoute?.name === "result" && lastSession && (
           <ResultScreen
             score={lastSession.score}
             total={lastSession.total}
@@ -212,6 +206,16 @@ export default function Home() {
 
       {authModalOpen && <AuthModal onClose={() => setAuthModalOpen(false)} />}
       <AchievementToast />
-    </TranslationProvider>
+    </>
+  );
+}
+
+export default function Home() {
+  return (
+    <NavigationProvider>
+      <TranslationProvider>
+        <AppContent />
+      </TranslationProvider>
+    </NavigationProvider>
   );
 }

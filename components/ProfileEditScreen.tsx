@@ -1,17 +1,15 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ArrowLeft, Upload, User } from "lucide-react";
+import { Upload, User } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useTranslations } from "@/lib/translations";
 import { AccentButton } from "@/components/AccentButton";
 import { useStatsStore } from "@/stores/statsStore";
+import { useNavigation } from "@/contexts/NavigationContext";
 
-interface ProfileEditScreenProps {
-  onClose: () => void;
-}
-
-export function ProfileEditScreen({ onClose }: ProfileEditScreenProps) {
+export function ProfileEditScreen() {
+  const { pop } = useNavigation();
   const t = useTranslations();
   const user = useStatsStore((s) => s.user);
   const updateProfile = useStatsStore((s) => s.updateProfile);
@@ -86,7 +84,7 @@ export function ProfileEditScreen({ onClose }: ProfileEditScreenProps) {
     setSaving(false);
 
     if (result.success) {
-      onClose();
+      pop();
     } else {
       setError(result.error || "Save failed");
     }
@@ -97,18 +95,6 @@ export function ProfileEditScreen({ onClose }: ProfileEditScreenProps) {
 
   return (
     <section className="screen screen--active">
-      <header className="profile-header">
-        <button
-          type="button"
-          className="icon-button"
-          onClick={onClose}
-          aria-label={t("profile.back")}
-        >
-          <ArrowLeft aria-hidden="true" />
-        </button>
-        <p className="hero__eyebrow">{t("profile.editProfile")}</p>
-      </header>
-
       <div className="profile-edit">
         {/* Avatar Section */}
         <div className="profile-edit__avatar-section">

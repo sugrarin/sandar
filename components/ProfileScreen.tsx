@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft, LogOut, Flame, Zap, Pencil, Share2 } from "lucide-react";
+import { LogOut, Flame, Zap, Pencil, Share2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useTranslations, useLocale } from "@/lib/translations";
 import { useStatsStore } from "@/stores/statsStore";
@@ -9,17 +9,10 @@ import { ActivityHeatmap } from "@/components/ActivityHeatmap";
 import { AccuracyChart } from "@/components/AccuracyChart";
 import { Achievements } from "@/components/Achievements";
 import { AccentButton } from "@/components/AccentButton";
-import { ProfileEditScreen } from "@/components/ProfileEditScreen";
-import { SharedAccess } from "@/components/SharedAccess";
 import { SegmentedControl } from "@/components/SegmentedControl";
-import { useSearchParams } from "next/navigation";
+import { useNavigation } from "@/contexts/NavigationContext";
 import { DIFFICULTIES, type Difficulty } from "@/types";
 import { useGameStore } from "@/stores/gameStore";
-
-interface ProfileScreenProps {
-  onClose: () => void;
-  onLoggedOut: () => void;
-}
 
 function formatAccuracy(correct: number, total: number): string {
   if (!total) return "—";
@@ -36,15 +29,14 @@ function formatXP(xp: number, t: (key: string) => string): string {
   return `${xp} ${t("profile.xp")}`;
 }
 
-export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
+export function ProfileScreen() {
   const t = useTranslations();
   const { locale } = useLocale();
+  const { push, reset } = useNavigation();
   const [loggingOut, setLoggingOut] = useState(false);
-  const [sharedAccessOpen, setSharedAccessOpen] = useState(false);
   const gameDifficulty = useGameStore((s) => s.settings.difficulty);
   const [modeDifficulty, setModeDifficulty] =
     useState<Difficulty>(gameDifficulty);
-  const [isEditing, setIsEditing] = useState(false);
 
   const user = useStatsStore((s) => s.user);
   const userResolved = useStatsStore((s) => s.userResolved);
@@ -56,9 +48,6 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
   const error = useStatsStore((s) => s.error);
   const loadAll = useStatsStore((s) => s.loadAll);
 
-  const searchParams = useSearchParams();
-  const sharedCode = searchParams.get("code") || undefined;
-
   // Refresh in background when reopening profile
   useEffect(() => {
     loadAll();
@@ -66,26 +55,13 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
 
   // Redirect to home if user is signed out (after resolution)
   useEffect(() => {
-    if (userResolved && !user) onLoggedOut();
-  }, [userResolved, user, onLoggedOut]);
+    if (userResolved && !user) reset();
+  }, [userResolved, user, reset]);
 
   const email = user?.email ?? null;
   const memberSince = user?.createdAt ?? null;
   const displayName = user?.displayName;
   const avatarUrl = user?.avatarUrl;
-
-  if (isEditing) {
-    return <ProfileEditScreen onClose={() => setIsEditing(false)} />;
-  }
-
-  if (sharedAccessOpen) {
-    return (
-      <SharedAccess
-        onClose={() => setSharedAccessOpen(false)}
-        initialCode={sharedCode}
-      />
-    );
-  }
 
   const showStatsSkeleton = loading && userStats === null;
   const showStatsError = error !== null && userStats === null && !loading;
@@ -94,7 +70,7 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
     setLoggingOut(true);
     const supabase = createClient();
     await supabase.auth.signOut();
-    onLoggedOut();
+    reset();
   };
 
   const totalQuestions = userStats?.total_questions ?? 0;
@@ -102,18 +78,6 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
 
   return (
     <section className="screen screen--active">
-      <header className="profile-header">
-        <button
-          type="button"
-          className="icon-button"
-          onClick={onClose}
-          aria-label={t("profile.back")}
-        >
-          <ArrowLeft aria-hidden="true" />
-        </button>
-        <p className="hero__eyebrow">{t("profile.title")}</p>
-      </header>
-
       <section className="panel panel--soft profile-user">
         <div className="profile-user__avatar" aria-hidden="true">
           {avatarUrl ? (
@@ -170,7 +134,7 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
         <button
           type="button"
           className="icon-button profile-user__edit"
-          onClick={() => setIsEditing(true)}
+          onClick={() => push({ name: "profileEdit" })}
           aria-label={t("profile.editProfile")}
           title={t("profile.editProfile")}
         >
@@ -308,7 +272,7 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
 
       <div
         className="panel panel--soft info-card info-card--clickable"
-        onClick={() => setSharedAccessOpen(true)}
+        onClick={() => push({ name: "share" })}
       >
         <span className="info-card__icon">
           <Share2 size={24} />
@@ -318,7 +282,7 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
         <AccentButton
           onClick={(e) => {
             e.stopPropagation();
-            setSharedAccessOpen(true);
+            push({ name: "share" });
           }}
         >
           {t("share.open")}
