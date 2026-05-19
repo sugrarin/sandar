@@ -4,61 +4,46 @@ import { NextResponse } from "next/server";
 export async function GET() {
   try {
     const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get all students the current user is viewing
-    const { data: access, error: accessError } = await supabase
-      .from("share_access")
-      .select(`
-        id,
-        share_code_id,
-        activated_at,
-        is_active,
-        share_codes!inner (
-          user_id,
-          profiles!share_codes_user_id_fkey (
-            email,
-            display_name,
-            avatar_url,
-            created_at
-          )
-        )
-      `)
-      .eq("viewer_id", user.id)
-      .eq("is_active", true);
+    // Use security definer function to get viewed students
+    const { data: students, error: accessError } = await supabase.rpc(
+      "get_viewed_students",
+      { p_viewer_id: user.id },
+    );
 
     if (accessError) {
       console.error("Error getting viewed students:", accessError);
-      return NextResponse.json({ error: "Failed to get viewed students" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to get viewed students" },
+        { status: 500 },
+      );
     }
 
-    const formattedStudents = access?.map((a: any) => ({
-      id: a.id,
-      share_code_id: a.share_code_id,
-      student_id: a.share_codes.user_id,
-      student_email: a.share_codes.profiles?.email,
-      student_display_name: a.share_codes.profiles?.display_name,
-      student_avatar_url: a.share_codes.profiles?.avatar_url,
-      student_member_since: a.share_codes.profiles?.created_at,
-      activated_at: a.activated_at,
-      is_active: a.is_active,
-    })) || [];
-
-    return NextResponse.json({ students: formattedStudents });
+    return NextResponse.json({ students: students || [] });
   } catch (error) {
     console.error("Error in share viewed API:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
 export async function DELETE(request: Request) {
   try {
     const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -90,12 +75,18 @@ export async function DELETE(request: Request) {
 
     if (updateError) {
       console.error("Error deactivating access:", updateError);
-      return NextResponse.json({ error: "Failed to deactivate access" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to deactivate access" },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({ message: "Access deactivated" });
   } catch (error) {
     console.error("Error in share viewed DELETE API:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

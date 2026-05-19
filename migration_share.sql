@@ -55,30 +55,9 @@ CREATE POLICY "Users can insert own share codes" ON share_codes
 CREATE POLICY "Users can update own share codes" ON share_codes
     FOR UPDATE USING (auth.uid() = user_id);
 
--- Users can view share codes they've activated (as viewer)
-CREATE POLICY "Users can view activated share codes" ON share_codes
-    FOR SELECT USING (
-        EXISTS (
-            SELECT 1 FROM share_access sa
-            WHERE sa.share_code_id = share_codes.id
-            AND sa.viewer_id = auth.uid()
-            AND sa.is_active = TRUE
-        )
-    );
-
 -- Users can view their own share access records (as viewer)
 CREATE POLICY "Viewers can view their share access" ON share_access
     FOR SELECT USING (auth.uid() = viewer_id);
-
--- Users can view share access for their codes (as owner)
-CREATE POLICY "Owners can view share access for their codes" ON share_access
-    FOR SELECT USING (
-        EXISTS (
-            SELECT 1 FROM share_codes sc
-            WHERE sc.id = share_access.share_code_id
-            AND sc.user_id = auth.uid()
-        )
-    );
 
 -- Users can insert share access (activate a code)
 CREATE POLICY "Users can insert share access" ON share_access
@@ -87,16 +66,6 @@ CREATE POLICY "Users can insert share access" ON share_access
 -- Users can update their own share access (revoke)
 CREATE POLICY "Viewers can update their share access" ON share_access
     FOR UPDATE USING (auth.uid() = viewer_id);
-
--- Owners can revoke access to their codes
-CREATE POLICY "Owners can revoke access to their codes" ON share_access
-    FOR UPDATE USING (
-        EXISTS (
-            SELECT 1 FROM share_codes sc
-            WHERE sc.id = share_access.share_code_id
-            AND sc.user_id = auth.uid()
-        )
-    );
 
 -- Users can view their own rate limit
 CREATE POLICY "Users can view own rate limit" ON share_rate_limit
@@ -240,5 +209,75 @@ BEGIN
     WHERE sc.code = UPPER(p_code)
     AND sc.is_active = TRUE
     LIMIT 1;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to get share access for a code owner (bypasses RLS)
+CREATE OR REPLACE FUNCTION get_owner_share_access(p_owner_id UUID)
+RETURNS TABLE (
+    id UUID,
+    share_code_id UUID,
+    viewer_id UUID,
+    activated_at TIMESTAMP WITH TIME ZONE,
+    is_active BOOLEAN,
+    viewer_display_name TEXT,
+    viewer_email TEXT,
+    viewer_avatar_url TEXT
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        sa.id,
+        sa.share_code_id,
+        sa.viewer_id,
+        sa.activated_at,
+        sa.is_active,
+        p.display_name,
+        p.email,
+        p.avatar_url
+    FROM share_access sa
+    JOIN share_codes sc ON sa.share_code_id = sc.id
+    JOIN profiles p ON sa.viewer_id = p.id
+    WHERE sc.user_id = p_owner_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to get viewed students for a viewer (bypasses RLS)
+CREATE OR REPLACE FUNCTION get_viewed_students(p_viewer_id UUID)
+RETURNS TABLE (
+    id UUID,
+    student_id UUID,
+    student_display_name TEXT,
+    student_email TEXT,
+    student_avatar_url TEXT,
+    activated_at TIMESTAMP WITH TIME ZONE
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        sa.id,
+        sc.user_id AS student_id,
+        p.display_name AS student_display_name,
+        p.email AS student_email,
+        p.avatar_url AS student_avatar_url,
+        sa.activated_at
+    FROM share_access sa
+    JOIN share_codes sc ON sa.share_code_id = sc.id
+    JOIN profiles p ON sc.user_id = p.id
+    WHERE sa.viewer_id = p_viewer_id
+    AND sa.is_active = TRUE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to revoke access by owner (bypasses RLS)
+CREATE OR REPLACE FUNCTION revoke_access_by_owner(p_access_id UUID, p_owner_id UUID)
+RETURNS VOID AS $$
+BEGIN
+    UPDATE share_access
+    SET is_active = FALSE
+    WHERE id = p_access_id
+    AND share_code_id IN (
+        SELECT id FROM share_codes WHERE user_id = p_owner_id
+    );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
