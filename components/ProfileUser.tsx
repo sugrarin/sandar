@@ -24,15 +24,36 @@ export function ProfileUser({
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return (
-      t("profile.memberSince") +
-      " " +
-      date.toLocaleDateString(locale === "kk" ? "kk-KZ" : "ru-RU", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      })
-    );
+    const ruMonths = [
+      "января",
+      "февраля",
+      "марта",
+      "апреля",
+      "мая",
+      "июня",
+      "июля",
+      "августа",
+      "сентября",
+      "октября",
+      "ноября",
+      "декабря",
+    ];
+    const kkMonths = [
+      "қаңтар",
+      "ақпан",
+      "наурыз",
+      "сәуір",
+      "мамыр",
+      "маусым",
+      "шілде",
+      "тамыз",
+      "қыркүйек",
+      "қазан",
+      "қараша",
+      "желтоқсан",
+    ];
+    const months = locale === "kk" ? kkMonths : ruMonths;
+    return `${t("profile.memberSince")} ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
   };
 
   return (

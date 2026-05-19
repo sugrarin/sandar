@@ -127,19 +127,45 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
           {displayName && email && (
             <p className="profile-user__email-secondary">{email}</p>
           )}
-          {memberSince && (
-            <p className="profile-user__since">
-              {t("profile.memberSince")}{" "}
-              {new Date(memberSince).toLocaleDateString(
-                locale === "kk" ? "kk-KZ" : "ru-RU",
-                {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                },
-              )}
-            </p>
-          )}
+          {memberSince &&
+            (() => {
+              const date = new Date(memberSince);
+              const ruMonths = [
+                "января",
+                "февраля",
+                "марта",
+                "апреля",
+                "мая",
+                "июня",
+                "июля",
+                "августа",
+                "сентября",
+                "октября",
+                "ноября",
+                "декабря",
+              ];
+              const kkMonths = [
+                "қаңтар",
+                "ақпан",
+                "наурыз",
+                "сәуір",
+                "мамыр",
+                "маусым",
+                "шілде",
+                "тамыз",
+                "қыркүйек",
+                "қазан",
+                "қараша",
+                "желтоқсан",
+              ];
+              const months = locale === "kk" ? kkMonths : ruMonths;
+              return (
+                <p className="profile-user__since">
+                  {t("profile.memberSince")} {date.getDate()}{" "}
+                  {months[date.getMonth()]} {date.getFullYear()}
+                </p>
+              );
+            })()}
         </div>
         <button
           type="button"

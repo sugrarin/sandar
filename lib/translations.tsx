@@ -306,7 +306,7 @@ const translations: Record<Locale, Translations> = {
     profile: {
       title: "Профиль",
       back: "Назад",
-      memberSince: "С нами с",
+      memberSince: "Зарегистрирован",
       streakDays: "Серия дней подряд",
       xp: "Опыт (XP)",
       loadingStats: "Загружаем статистику…",
