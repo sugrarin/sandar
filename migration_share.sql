@@ -229,3 +229,16 @@ BEGIN
     WHERE user_id = p_user_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to validate a share code (bypasses RLS for code lookup)
+CREATE OR REPLACE FUNCTION validate_share_code(p_code TEXT)
+RETURNS TABLE (id UUID, user_id UUID, is_active BOOLEAN) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT sc.id, sc.user_id, sc.is_active
+    FROM share_codes sc
+    WHERE sc.code = UPPER(p_code)
+    AND sc.is_active = TRUE
+    LIMIT 1;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

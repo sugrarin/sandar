@@ -58,15 +58,13 @@ export async function POST(request: Request) {
       }
     }
 
-    // Find the share code
-    const { data: shareCode, error: codeError } = await supabase
-      .from("share_codes")
-      .select("id, user_id")
-      .eq("code", code.toUpperCase())
-      .eq("is_active", true)
-      .single();
+    // Find the share code using the security definer function
+    const { data: shareCode, error: codeError } = await supabase.rpc(
+      "validate_share_code",
+      { p_code: code },
+    );
 
-    if (codeError || !shareCode) {
+    if (codeError || !shareCode || shareCode.length === 0) {
       // Record failed attempt
       await supabase.rpc("record_failed_attempt", { p_user_id: user.id });
 
@@ -99,7 +97,7 @@ export async function POST(request: Request) {
     }
 
     // Check if user is trying to activate their own code
-    if (shareCode.user_id === user.id) {
+    if (shareCode[0].user_id === user.id) {
       return NextResponse.json(
         { error: "Cannot activate your own code" },
         { status: 400 },
@@ -110,7 +108,7 @@ export async function POST(request: Request) {
     const { data: existingAccess, error: existingError } = await supabase
       .from("share_access")
       .select("id, is_active")
-      .eq("share_code_id", shareCode.id)
+      .eq("share_code_id", shareCode[0].id)
       .eq("viewer_id", user.id)
       .single();
 
@@ -128,7 +126,7 @@ export async function POST(request: Request) {
         await supabase.rpc("reset_rate_limit", { p_user_id: user.id });
         return NextResponse.json({
           message: "Already activated",
-          student_id: shareCode.user_id,
+          student_id: shareCode[0].user_id,
         });
       } else {
         // Reactivate
@@ -148,14 +146,14 @@ export async function POST(request: Request) {
         await supabase.rpc("reset_rate_limit", { p_user_id: user.id });
         return NextResponse.json({
           message: "Access reactivated",
-          student_id: shareCode.user_id,
+          student_id: shareCode[0].user_id,
         });
       }
     }
 
     // Create new access
     const { error: insertError } = await supabase.from("share_access").insert({
-      share_code_id: shareCode.id,
+      share_code_id: shareCode[0].id,
       viewer_id: user.id,
     });
 
@@ -172,7 +170,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       message: "Access activated",
-      student_id: shareCode.user_id,
+      student_id: shareCode[0].user_id,
     });
   } catch (error) {
     console.error("Error in share activate API:", error);
