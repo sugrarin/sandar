@@ -1859,19 +1859,24 @@ button {
   justify-content: center;
   gap: 0.4rem;
   padding: 0.6rem 1rem;
-  border: none;
+  border: 1px solid var(--accent);
   border-radius: var(--radius-button);
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  color: #fff;
+  background: var(--accent-soft);
+  color: var(--accent);
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
-  transition: opacity var(--transition);
+  transition:
+    border-color var(--transition),
+    background var(--transition),
+    color var(--transition);
   white-space: nowrap;
 }
 
 .accent-button:hover:not(:disabled) {
-  opacity: 0.9;
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
 }
 
 .accent-button:disabled {
