@@ -56,6 +56,9 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
   const error = useStatsStore((s) => s.error);
   const loadAll = useStatsStore((s) => s.loadAll);
 
+  const searchParams = useSearchParams();
+  const sharedCode = searchParams.get("code") || undefined;
+
   // Refresh in background when reopening profile
   useEffect(() => {
     loadAll();
@@ -76,7 +79,12 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
   }
 
   if (sharedAccessOpen) {
-    return <SharedAccess onClose={() => setSharedAccessOpen(false)} initialCode={sharedCode} />;
+    return (
+      <SharedAccess
+        onClose={() => setSharedAccessOpen(false)}
+        initialCode={sharedCode}
+      />
+    );
   }
 
   const showStatsSkeleton = loading && userStats === null;
