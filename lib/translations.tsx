@@ -71,6 +71,7 @@ const translations: Record<Locale, Translations> = {
       title: "Профиль",
       back: "Артқа",
       memberSince: "Бізбен бірге",
+      registered: "Тіркелген",
       streakDays: "Күн қатарынан",
       xp: "Тәжірибе (XP)",
       loadingStats: "Статистика жүктелуде…",
@@ -306,7 +307,8 @@ const translations: Record<Locale, Translations> = {
     profile: {
       title: "Профиль",
       back: "Назад",
-      memberSince: "Зарегистрирован",
+      memberSince: "С нами с",
+      registered: "Зарегистрирован",
       streakDays: "Серия дней подряд",
       xp: "Опыт (XP)",
       loadingStats: "Загружаем статистику…",

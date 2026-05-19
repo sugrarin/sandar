@@ -7,6 +7,7 @@ interface ProfileUserProps {
   displayName?: string | null;
   email?: string | null;
   date?: string | null;
+  dateLabel?: string;
   action?: React.ReactNode;
   onClick?: () => void;
 }
@@ -16,13 +17,14 @@ export function ProfileUser({
   displayName,
   email,
   date,
+  dateLabel,
   action,
   onClick,
 }: ProfileUserProps) {
   const t = useTranslations();
   const { locale } = useLocale();
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string, label?: string) => {
     const date = new Date(dateString);
     const ruMonths = [
       "января",
@@ -53,7 +55,7 @@ export function ProfileUser({
       "желтоқсан",
     ];
     const months = locale === "kk" ? kkMonths : ruMonths;
-    return `${t("profile.memberSince")} ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+    return `${label || t("profile.memberSince")} ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
   };
 
   return (
@@ -73,7 +75,9 @@ export function ProfileUser({
         {displayName && email && (
           <p className="profile-user__email-secondary">{email}</p>
         )}
-        {date && <p className="profile-user__since">{formatDate(date)}</p>}
+        {date && (
+          <p className="profile-user__since">{formatDate(date, dateLabel)}</p>
+        )}
       </div>
       {action && <div className="profile-user__action">{action}</div>}
     </div>

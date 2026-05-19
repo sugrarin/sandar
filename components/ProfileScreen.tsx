@@ -161,7 +161,7 @@ export function ProfileScreen({ onClose, onLoggedOut }: ProfileScreenProps) {
               const months = locale === "kk" ? kkMonths : ruMonths;
               return (
                 <p className="profile-user__since">
-                  {t("profile.memberSince")} {date.getDate()}{" "}
+                  {t("profile.registered")} {date.getDate()}{" "}
                   {months[date.getMonth()]} {date.getFullYear()}
                 </p>
               );

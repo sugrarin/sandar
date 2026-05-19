@@ -271,6 +271,7 @@ export function SharedAccess({
               displayName={viewer.viewer_display_name}
               email={viewer.viewer_email}
               date={viewer.activated_at}
+              dateLabel={t("share.accessSince")}
               action={
                 <button
                   type="button"
@@ -328,6 +329,7 @@ export function SharedAccess({
               displayName={student.student_display_name}
               email={student.student_email}
               date={student.activated_at}
+              dateLabel={t("share.accessSince")}
               onClick={() => handleViewStudent(student.student_id)}
               action={<ChevronRight size={16} />}
             />
