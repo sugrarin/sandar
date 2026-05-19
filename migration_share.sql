@@ -133,8 +133,8 @@ DECLARE
     v_created_at TIMESTAMP WITH TIME ZONE;
 BEGIN
     -- Try to get existing active code
-    RETURN QUERY
     SELECT sc.code, sc.created_at
+    INTO v_code, v_created_at
     FROM share_codes sc
     WHERE sc.user_id = p_user_id AND sc.is_active = TRUE
     LIMIT 1;
@@ -154,8 +154,9 @@ BEGIN
                 CONTINUE;
             END;
         END LOOP;
-        RETURN QUERY SELECT v_code, v_created_at;
     END IF;
+
+    RETURN QUERY SELECT v_code, v_created_at;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
