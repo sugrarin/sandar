@@ -59,12 +59,7 @@ export async function generateSummary(
       return { summary: null, error: "Ответ обрезан. Попробуйте обновить." };
     }
 
-    // Extra safety: if text doesn't end with sentence-ending punctuation, it's likely incomplete
     const trimmed = text.trim();
-    if (!/[.!?]$/.test(trimmed)) {
-      return { summary: null, error: "Ответ обрезан. Попробуйте обновить." };
-    }
-
     return { summary: trimmed };
   } catch {
     return { summary: null, error: "Ошибка сети" };
