@@ -7,6 +7,7 @@ import { useTranslations } from "@/lib/translations";
 import { AccentButton } from "@/components/AccentButton";
 import { ProfileUser } from "@/components/ProfileUser";
 import { SegmentedControl } from "@/components/SegmentedControl";
+import { Skeleton } from "@/components/Skeleton";
 import { NavigationContext } from "@/contexts/NavigationContext";
 import type { ShareAccess } from "@/types";
 
@@ -34,6 +35,9 @@ export function SharedAccess({
   const [viewers, setViewers] = useState<ShareAccess[]>([]);
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isGeneratingCode, setIsGeneratingCode] = useState(true);
+  const [isLoadingConnections, setIsLoadingConnections] = useState(true);
+  const [isLoadingStudents, setIsLoadingStudents] = useState(true);
   const [error, setError] = useState("");
 
   // Fetch share code and viewers when student tab is active
@@ -55,6 +59,7 @@ export function SharedAccess({
   }, [initialCode]);
 
   const fetchShareCode = async () => {
+    setIsGeneratingCode(true);
     try {
       const res = await fetch("/api/share/code");
       const data = await res.json();
@@ -63,10 +68,13 @@ export function SharedAccess({
       }
     } catch (err) {
       console.error("Failed to fetch share code:", err);
+    } finally {
+      setIsGeneratingCode(false);
     }
   };
 
   const fetchViewers = async () => {
+    setIsLoadingConnections(true);
     try {
       const res = await fetch("/api/share/access");
       const data = await res.json();
@@ -75,10 +83,13 @@ export function SharedAccess({
       }
     } catch (err) {
       console.error("Failed to fetch viewers:", err);
+    } finally {
+      setIsLoadingConnections(false);
     }
   };
 
   const fetchStudents = async () => {
+    setIsLoadingStudents(true);
     try {
       const res = await fetch("/api/share/viewed");
       const data = await res.json();
@@ -87,6 +98,8 @@ export function SharedAccess({
       }
     } catch (err) {
       console.error("Failed to fetch students:", err);
+    } finally {
+      setIsLoadingStudents(false);
     }
   };
 
@@ -201,7 +214,15 @@ export function SharedAccess({
 
           <div className="panel panel--soft">
             <div className="share-code-display">
-              <span className="share-code">{code}</span>
+              {isGeneratingCode ? (
+                <Skeleton
+                  width="8ch"
+                  height="1.5rem"
+                  radius="var(--radius-button)"
+                />
+              ) : (
+                <span className="share-code">{code}</span>
+              )}
               <AccentButton onClick={handleCopyLink} disabled={!code}>
                 <Copy size={16} />
                 <span>
@@ -213,32 +234,52 @@ export function SharedAccess({
 
           <div className="panel__header panel__header--tight">
             <h2 className="panel__title">
-              {viewers.length > 0
+              {isLoadingConnections
                 ? t("share.viewersTitle")
-                : t("share.noViewers")}
+                : viewers.length > 0
+                  ? t("share.viewersTitle")
+                  : t("share.noViewers")}
             </h2>
           </div>
 
-          {viewers.map((viewer) => (
-            <ProfileUser
-              key={viewer.id}
-              avatarUrl={viewer.viewer_avatar_url}
-              displayName={viewer.viewer_display_name}
-              email={viewer.viewer_email}
-              date={viewer.activated_at}
-              dateLabel={t("share.accessSince")}
-              action={
-                <button
-                  type="button"
-                  className="icon-button"
-                  onClick={() => handleRevokeAccess(viewer.id)}
-                  title={t("share.revokeAccess")}
-                >
-                  <X size={16} />
-                </button>
-              }
-            />
-          ))}
+          {isLoadingConnections
+            ? Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} className="panel panel--soft profile-user">
+                  <Skeleton circle width="3.4rem" />
+                  <div
+                    className="profile-user__info"
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "0.35rem",
+                    }}
+                  >
+                    <Skeleton width="70%" height="1rem" />
+                    <Skeleton width="50%" height="0.85rem" />
+                    <Skeleton width="40%" height="0.8rem" />
+                  </div>
+                </div>
+              ))
+            : viewers.map((viewer) => (
+                <ProfileUser
+                  key={viewer.id}
+                  avatarUrl={viewer.viewer_avatar_url}
+                  displayName={viewer.viewer_display_name}
+                  email={viewer.viewer_email}
+                  date={viewer.activated_at}
+                  dateLabel={t("share.accessSince")}
+                  action={
+                    <button
+                      type="button"
+                      className="icon-button"
+                      onClick={() => handleRevokeAccess(viewer.id)}
+                      title={t("share.revokeAccess")}
+                    >
+                      <X size={16} />
+                    </button>
+                  }
+                />
+              ))}
         </>
       ) : (
         <>
@@ -271,24 +312,47 @@ export function SharedAccess({
 
           <div className="panel__header panel__header--tight">
             <h2 className="panel__title">
-              {students.length > 0
+              {isLoadingStudents
                 ? t("share.linkedStudents")
-                : t("share.noStudents")}
+                : students.length > 0
+                  ? t("share.linkedStudents")
+                  : t("share.noStudents")}
             </h2>
           </div>
 
-          {students.map((student) => (
-            <ProfileUser
-              key={student.id}
-              avatarUrl={student.student_avatar_url}
-              displayName={student.student_display_name}
-              email={student.student_email}
-              date={student.activated_at}
-              dateLabel={t("share.accessSince")}
-              onClick={() => handleViewStudent(student.student_id)}
-              action={<ChevronRight size={16} />}
-            />
-          ))}
+          {isLoadingStudents
+            ? Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} className="panel panel--soft profile-user">
+                  <Skeleton circle width="3.4rem" />
+                  <div
+                    className="profile-user__info"
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "0.35rem",
+                    }}
+                  >
+                    <Skeleton width="70%" height="1rem" />
+                    <Skeleton width="50%" height="0.85rem" />
+                    <Skeleton width="40%" height="0.8rem" />
+                  </div>
+                  <div className="profile-user__action">
+                    <Skeleton circle width="2.35rem" />
+                  </div>
+                </div>
+              ))
+            : students.map((student) => (
+                <ProfileUser
+                  key={student.id}
+                  avatarUrl={student.student_avatar_url}
+                  displayName={student.student_display_name}
+                  email={student.student_email}
+                  date={student.activated_at}
+                  dateLabel={t("share.accessSince")}
+                  onClick={() => handleViewStudent(student.student_id)}
+                  action={<ChevronRight size={16} />}
+                />
+              ))}
         </>
       )}
     </>

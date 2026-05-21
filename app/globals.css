@@ -330,7 +330,7 @@ button {
   display: flex;
   gap: 0;
   border-bottom: 1px solid var(--surface-border);
-  margin-bottom: 0.6rem;
+  margin-bottom: 1.6rem;
 }
 
 .account-segmented-nav__item {
@@ -540,7 +540,7 @@ button {
 .answer-button__value {
   width: 100%;
   font-size: 1.3rem;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.05em;
   font-feature-settings: "tnum", "calt";
 }
@@ -2210,4 +2210,43 @@ button {
   font-size: 0.85rem;
   color: var(--text-soft);
   line-height: 1.4;
+}
+
+/* ==================== Skeleton ==================== */
+
+.skeleton {
+  display: inline-block;
+  background: var(--progress-track);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.skeleton--animated::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--skeleton-shimmer, rgba(255, 255, 255, 0.35)) 50%,
+    transparent 100%
+  );
+  background-size: 300% 100%;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .skeleton--animated::after {
+    --skeleton-shimmer: rgba(255, 255, 255, 0.08);
+  }
 }
