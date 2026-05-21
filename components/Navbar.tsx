@@ -18,10 +18,10 @@ export function Navbar({ onLoginClick }: NavbarProps) {
   const isRoot = stack.length === 1;
   const canGoBack = stack.length > 2;
   const currentRoute = stack[stack.length - 1];
-  const isProfile = currentRoute?.name === "profile";
+  const isAccountRoute = currentRoute?.name?.startsWith("account-");
 
   const handleProfileClick = () => {
-    push({ name: "profile" });
+    push({ name: "account-profile" });
   };
 
   return (
@@ -34,7 +34,7 @@ export function Navbar({ onLoginClick }: NavbarProps) {
             <AuthButton
               onLoginClick={onLoginClick}
               onProfileClick={handleProfileClick}
-              active={isProfile}
+              active={isAccountRoute}
             />
           </div>
         </>

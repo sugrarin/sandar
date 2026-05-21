@@ -181,7 +181,7 @@ export function SharedAccess({
   };
 
   return (
-    <section className="screen screen--active">
+    <>
       <SegmentedControl
         items={[
           { value: "student", label: t("share.studentTab") },
@@ -291,6 +291,6 @@ export function SharedAccess({
           ))}
         </>
       )}
-    </section>
+    </>
   );
 }

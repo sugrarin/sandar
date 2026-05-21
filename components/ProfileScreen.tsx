@@ -32,7 +32,7 @@ function formatXP(xp: number, t: (key: string) => string): string {
 export function ProfileScreen() {
   const t = useTranslations();
   const { locale } = useLocale();
-  const { push, reset } = useNavigation();
+  const { push, replace, reset } = useNavigation();
   const [loggingOut, setLoggingOut] = useState(false);
   const gameDifficulty = useGameStore((s) => s.settings.difficulty);
   const [modeDifficulty, setModeDifficulty] =
@@ -77,7 +77,7 @@ export function ProfileScreen() {
   const totalCorrect = userStats?.total_correct ?? 0;
 
   return (
-    <section className="screen screen--active">
+    <>
       <section className="panel panel--soft profile-user">
         <div className="profile-user__avatar" aria-hidden="true">
           {avatarUrl ? (
@@ -134,7 +134,7 @@ export function ProfileScreen() {
         <button
           type="button"
           className="icon-button profile-user__edit"
-          onClick={() => push({ name: "profileEdit" })}
+          onClick={() => push({ name: "account-profile" })}
           aria-label={t("profile.editProfile")}
           title={t("profile.editProfile")}
         >
@@ -272,7 +272,7 @@ export function ProfileScreen() {
 
       <div
         className="panel panel--soft info-card info-card--clickable"
-        onClick={() => push({ name: "share" })}
+        onClick={() => replace({ name: "account-share" })}
       >
         <span className="info-card__icon">
           <Share2 size={24} />
@@ -282,7 +282,7 @@ export function ProfileScreen() {
         <AccentButton
           onClick={(e) => {
             e.stopPropagation();
-            push({ name: "share" });
+            replace({ name: "account-share" });
           }}
         >
           {t("share.open")}
@@ -302,6 +302,6 @@ export function ProfileScreen() {
           {loggingOut ? t("profile.loggingOut") : t("profile.logout")}
         </span>
       </button>
-    </section>
+    </>
   );
 }

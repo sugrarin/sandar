@@ -324,6 +324,42 @@ button {
   outline-offset: 3px;
 }
 
+/* ==================== Account Segmented Navigation ==================== */
+
+.account-segmented-nav {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--surface-border);
+  margin-bottom: 0.6rem;
+}
+
+.account-segmented-nav__item {
+  flex: 1;
+  padding: 0.6rem 0;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--text-soft);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    color var(--transition),
+    border-color var(--transition);
+}
+
+.account-segmented-nav__item--active {
+  color: var(--text-main);
+  border-bottom-color: var(--accent);
+}
+
+.account-segmented-nav__item:focus-visible {
+  outline: 3px solid rgba(31, 138, 112, 0.28);
+  outline-offset: 3px;
+}
+
 .mode-grid,
 .action-stack {
   display: grid;

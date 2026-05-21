@@ -9,6 +9,7 @@ import { AuthModal } from "@/components/AuthModal";
 import { ProfileScreen } from "@/components/ProfileScreen";
 import { ProfileEditScreen } from "@/components/ProfileEditScreen";
 import { SharedAccess } from "@/components/SharedAccess";
+import { AccountLayout } from "@/components/AccountLayout";
 import { StudentStatsView } from "@/components/StudentStatsView";
 import { AchievementToast } from "@/components/AchievementToast";
 import { Navbar } from "@/components/Navbar";
@@ -154,11 +155,18 @@ function AppContent() {
           />
         )}
 
-        {currentRoute?.name === "profile" && <ProfileScreen />}
+        {(currentRoute?.name === "account-profile" ||
+          currentRoute?.name === "account-share") && (
+          <AccountLayout>
+            {currentRoute.name === "account-profile" ? (
+              <ProfileScreen />
+            ) : (
+              <SharedAccess />
+            )}
+          </AccountLayout>
+        )}
 
         {currentRoute?.name === "profileEdit" && <ProfileEditScreen />}
-
-        {currentRoute?.name === "share" && <SharedAccess />}
 
         {currentRoute?.name === "studentStats" && (
           <StudentStatsView

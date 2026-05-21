@@ -10,9 +10,9 @@ import {
 
 export type RouteName =
   | "home"
-  | "profile"
+  | "account-profile"
+  | "account-share"
   | "profileEdit"
-  | "share"
   | "studentStats"
   | "game"
   | "result";
