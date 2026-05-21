@@ -70,7 +70,12 @@ export default function SharePage() {
             />
           </div>
         ) : (
-          <SharedAccess onClose={handleClose} initialCode={code || undefined} />
+          <section className="screen screen--active">
+            <SharedAccess
+              onClose={handleClose}
+              initialCode={code || undefined}
+            />
+          </section>
         )}
       </main>
     </TranslationProvider>

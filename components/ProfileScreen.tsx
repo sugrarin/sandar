@@ -134,7 +134,7 @@ export function ProfileScreen() {
         <button
           type="button"
           className="icon-button profile-user__edit"
-          onClick={() => push({ name: "account-profile" })}
+          onClick={() => push({ name: "profileEdit" })}
           aria-label={t("profile.editProfile")}
           title={t("profile.editProfile")}
         >
