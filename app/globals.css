@@ -2260,7 +2260,7 @@ button {
 
 /* AI Summary Panel */
 .ai-summary {
-  margin-top: 0.6rem;
+  margin-top: 2rem;
 }
 
 .ai-summary__header {
@@ -2381,6 +2381,8 @@ button {
 
 .ai-summary__content {
   min-height: 1rem;
+  max-height: 200px;
+  overflow: hidden;
 }
 
 .ai-summary__text {

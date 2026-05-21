@@ -46,17 +46,10 @@ export async function generateSummary(
     }
 
     const data = await res.json();
-    const candidate = data?.candidates?.[0];
-    const finishReason = candidate?.finishReason;
-    const text = candidate?.content?.parts?.[0]?.text;
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!text) {
       return { summary: null, error: "Пустой ответ от AI" };
-    }
-
-    // If response was truncated by token limit, reject it
-    if (finishReason === "MAX_TOKENS") {
-      return { summary: null, error: "Ответ обрезан. Попробуйте обновить." };
     }
 
     const trimmed = text.trim();
