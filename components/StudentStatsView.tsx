@@ -7,6 +7,7 @@ import { ActivityHeatmap } from "@/components/ActivityHeatmap";
 import { AccuracyChart } from "@/components/AccuracyChart";
 import { SegmentedControl } from "@/components/SegmentedControl";
 import { useNavigation } from "@/contexts/NavigationContext";
+import { useAccountStore } from "@/stores/accountStore";
 import { DIFFICULTIES, type Difficulty } from "@/types";
 
 interface StudentStatsViewProps {
@@ -37,68 +38,30 @@ export function StudentStatsView({
   const t = useTranslations();
   const { locale } = useLocale();
   const [modeDifficulty, setModeDifficulty] = useState<Difficulty>("easy");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [student, setStudent] = useState<any>(null);
-  const [userStats, setUserStats] = useState<any>(null);
-  const [modeStats, setModeStats] = useState<any[]>([]);
-  const [activity, setActivity] = useState<any[]>([]);
-  const [accessId, setAccessId] = useState<string | null>(null);
 
+  const cacheEntry = useAccountStore(
+    (s) => s.studentStatisticsCache[studentId],
+  );
+  const prefetchStudentStatistics = useAccountStore(
+    (s) => s.prefetchStudentStatistics,
+  );
+
+  // Trigger fetch if not in cache yet (fallback)
   useEffect(() => {
-    fetchStudentStats();
-  }, [studentId]);
-
-  const fetchStudentStats = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const [profileRes, statsRes] = await Promise.all([
-        fetch(`/api/share/student/${studentId}/profile`),
-        fetch(`/api/share/student/${studentId}/stats`),
-      ]);
-
-      if (!profileRes.ok) {
-        const data = await profileRes.json().catch(() => ({}));
-        throw new Error(data.error || `Profile error ${profileRes.status}`);
-      }
-      if (!statsRes.ok) {
-        const data = await statsRes.json().catch(() => ({}));
-        throw new Error(data.error || `Stats error ${statsRes.status}`);
-      }
-
-      const profileData = await profileRes.json();
-      const statsData = await statsRes.json();
-
-      const [modeRes, activityRes, accessRes] = await Promise.allSettled([
-        fetch(`/api/share/student/${studentId}/mode-stats`),
-        fetch(`/api/share/student/${studentId}/activity`),
-        fetch(`/api/share/student/${studentId}/access-id`),
-      ]);
-
-      setStudent(profileData);
-      setUserStats(statsData);
-
-      if (modeRes.status === "fulfilled" && modeRes.value.ok) {
-        const modeData = await modeRes.value.json();
-        setModeStats(modeData.mode_stats || []);
-      }
-      if (activityRes.status === "fulfilled" && activityRes.value.ok) {
-        const activityData = await activityRes.value.json();
-        setActivity(activityData.activity || []);
-      }
-      if (accessRes.status === "fulfilled" && accessRes.value.ok) {
-        const accessData = await accessRes.value.json();
-        setAccessId(accessData.access_id || null);
-      }
-    } catch (err: any) {
-      console.error("Failed to fetch student stats:", err);
-      setError(err?.message || "Failed to load student statistics");
-    } finally {
-      setLoading(false);
+    if (!cacheEntry) {
+      prefetchStudentStatistics(studentId);
     }
-  };
+  }, [studentId, cacheEntry, prefetchStudentStatistics]);
+
+  const loading = !cacheEntry || cacheEntry.status === "loading";
+  const error = cacheEntry?.status === "error" ? cacheEntry.error : null;
+  const data = cacheEntry?.status === "ready" ? cacheEntry.data : null;
+
+  const student = data?.profile;
+  const userStats = data?.userStats;
+  const modeStats = data?.modeStats ?? [];
+  const activity = data?.activity ?? [];
+  const accessId = data?.accessId ?? null;
 
   const handleUnlink = async () => {
     if (!accessId) return;

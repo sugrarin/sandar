@@ -7,6 +7,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
+import { useAccountStore } from "@/stores/accountStore";
 
 export type RouteName =
   | "home"
@@ -49,6 +50,7 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
 
   const reset = useCallback(() => {
     setStack([ROOT_ROUTE]);
+    useAccountStore.getState().clearSession();
   }, []);
 
   const replace = useCallback((route: StackRoute) => {

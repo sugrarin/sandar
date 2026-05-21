@@ -9,7 +9,7 @@ import { ProfileUser } from "@/components/ProfileUser";
 import { SegmentedControl } from "@/components/SegmentedControl";
 import { Skeleton } from "@/components/Skeleton";
 import { NavigationContext } from "@/contexts/NavigationContext";
-import type { ShareAccess } from "@/types";
+import { useAccountStore } from "@/stores/accountStore";
 
 interface SharedAccessProps {
   onClose?: () => void;
@@ -29,26 +29,25 @@ export function SharedAccess({
     initialCodeProp ?? (searchParams.get("code") || undefined);
 
   const [tab, setTab] = useState<Tab>(initialCode ? "parent" : "student");
-  const [code, setCode] = useState("");
   const [inputCode, setInputCode] = useState(initialCode || "");
   const [copied, setCopied] = useState(false);
-  const [viewers, setViewers] = useState<ShareAccess[]>([]);
-  const [students, setStudents] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [isGeneratingCode, setIsGeneratingCode] = useState(true);
-  const [isLoadingConnections, setIsLoadingConnections] = useState(true);
-  const [isLoadingStudents, setIsLoadingStudents] = useState(true);
+  const [activating, setActivating] = useState(false);
   const [error, setError] = useState("");
 
-  // Fetch share code and viewers when student tab is active
+  const shareCode = useAccountStore((s) => s.shareCode);
+  const isGeneratingCode = useAccountStore((s) => s.isGeneratingCode);
+  const viewers = useAccountStore((s) => s.viewers);
+  const isLoadingConnections = useAccountStore((s) => s.isLoadingConnections);
+  const students = useAccountStore((s) => s.students);
+  const isLoadingStudents = useAccountStore((s) => s.isLoadingStudents);
+  const loadAccountSession = useAccountStore((s) => s.loadAccountSession);
+  const refreshConnections = useAccountStore((s) => s.refreshConnections);
+  const refreshStudents = useAccountStore((s) => s.refreshStudents);
+
+  // Load all account session data once on mount
   useEffect(() => {
-    if (tab === "student") {
-      fetchShareCode();
-      fetchViewers();
-    } else {
-      fetchStudents();
-    }
-  }, [tab]);
+    loadAccountSession();
+  }, [loadAccountSession]);
 
   // Auto-activate code if provided
   useEffect(() => {
@@ -58,53 +57,8 @@ export function SharedAccess({
     }
   }, [initialCode]);
 
-  const fetchShareCode = async () => {
-    setIsGeneratingCode(true);
-    try {
-      const res = await fetch("/api/share/code");
-      const data = await res.json();
-      if (data.code) {
-        setCode(data.code);
-      }
-    } catch (err) {
-      console.error("Failed to fetch share code:", err);
-    } finally {
-      setIsGeneratingCode(false);
-    }
-  };
-
-  const fetchViewers = async () => {
-    setIsLoadingConnections(true);
-    try {
-      const res = await fetch("/api/share/access");
-      const data = await res.json();
-      if (data.access) {
-        setViewers(data.access);
-      }
-    } catch (err) {
-      console.error("Failed to fetch viewers:", err);
-    } finally {
-      setIsLoadingConnections(false);
-    }
-  };
-
-  const fetchStudents = async () => {
-    setIsLoadingStudents(true);
-    try {
-      const res = await fetch("/api/share/viewed");
-      const data = await res.json();
-      if (data.students) {
-        setStudents(data.students);
-      }
-    } catch (err) {
-      console.error("Failed to fetch students:", err);
-    } finally {
-      setIsLoadingStudents(false);
-    }
-  };
-
   const handleCopyLink = async () => {
-    const link = `${window.location.origin}/share?code=${code}`;
+    const link = `${window.location.origin}/share?code=${shareCode}`;
     try {
       await navigator.clipboard.writeText(link);
       setCopied(true);
@@ -124,7 +78,7 @@ export function SharedAccess({
     const codeValue = codeToActivate || inputCode;
     if (!codeValue) return;
 
-    setLoading(true);
+    setActivating(true);
     setError("");
 
     try {
@@ -133,18 +87,17 @@ export function SharedAccess({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code: codeValue }),
       });
-      const data = await res.json();
 
       if (res.ok) {
         setInputCode("");
-        fetchStudents();
+        refreshStudents();
       } else {
         setError(t("share.invalidCode"));
       }
     } catch (err) {
       setError(t("share.invalidCode"));
     } finally {
-      setLoading(false);
+      setActivating(false);
     }
   };
 
@@ -158,7 +111,7 @@ export function SharedAccess({
         body: JSON.stringify({ accessId }),
       });
       if (res.ok) {
-        fetchViewers();
+        refreshConnections();
       }
     } catch (err) {
       console.error("Failed to revoke access:", err);
@@ -175,7 +128,7 @@ export function SharedAccess({
         body: JSON.stringify({ accessId }),
       });
       if (res.ok) {
-        fetchStudents();
+        refreshStudents();
       }
     } catch (err) {
       console.error("Failed to unlink student:", err);
@@ -221,9 +174,9 @@ export function SharedAccess({
                   radius="var(--radius-button)"
                 />
               ) : (
-                <span className="share-code">{code}</span>
+                <span className="share-code">{shareCode}</span>
               )}
-              <AccentButton onClick={handleCopyLink} disabled={!code}>
+              <AccentButton onClick={handleCopyLink} disabled={!shareCode}>
                 <Copy size={16} />
                 <span>
                   {copied ? t("share.codeCopied") : t("share.copyLink")}
@@ -296,12 +249,12 @@ export function SharedAccess({
                 onChange={(e) => setInputCode(e.target.value.toUpperCase())}
                 placeholder={t("share.enterCode")}
                 maxLength={8}
-                disabled={loading}
+                disabled={activating}
                 className="text-input"
               />
               <AccentButton
                 onClick={() => handleActivateCode()}
-                disabled={!inputCode || loading}
+                disabled={!inputCode || activating}
               >
                 <Plus size={16} />
                 <span>{t("share.add")}</span>
