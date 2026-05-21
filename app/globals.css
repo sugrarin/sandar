@@ -2260,7 +2260,7 @@ button {
 
 /* AI Summary Panel */
 .ai-summary {
-  margin-top: 2rem;
+  margin: 1.8rem 0;
 }
 
 .ai-summary__header {
