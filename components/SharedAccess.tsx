@@ -28,7 +28,7 @@ export function SharedAccess({
   const initialCode =
     initialCodeProp ?? (searchParams.get("code") || undefined);
 
-  const [tab, setTab] = useState<Tab>(initialCode ? "parent" : "student");
+  const [tab, setTab] = useState<Tab>("parent");
   const [inputCode, setInputCode] = useState(initialCode || "");
   const [copied, setCopied] = useState(false);
   const [activating, setActivating] = useState(false);
@@ -150,15 +150,88 @@ export function SharedAccess({
     <>
       <SegmentedControl
         items={[
-          { value: "student", label: t("share.studentTab") },
           { value: "parent", label: t("share.parentTab") },
+          { value: "student", label: t("share.studentTab") },
         ]}
         value={tab}
         onChange={setTab}
         ariaLabel="Share access tabs"
       />
 
-      {tab === "student" ? (
+      {tab === "parent" ? (
+        <>
+          <div className="panel__header panel__header--tight">
+            <h2 className="panel__title">{t("share.parentTitle")}</h2>
+          </div>
+          <p className="panel__description">{t("share.parentDescription")}</p>
+
+          <div className="panel panel--soft">
+            <div className="share-code-input">
+              <input
+                type="text"
+                value={inputCode}
+                onChange={(e) => setInputCode(e.target.value.toUpperCase())}
+                placeholder={t("share.enterCode")}
+                maxLength={8}
+                disabled={activating}
+                className="text-input"
+              />
+              <AccentButton
+                onClick={() => handleActivateCode()}
+                disabled={!inputCode || activating}
+              >
+                <Plus size={16} />
+                <span>{t("share.add")}</span>
+              </AccentButton>
+            </div>
+            {error && <p className="error-message">{error}</p>}
+          </div>
+
+          <div className="panel__header panel__header--tight">
+            <h2 className="panel__title">
+              {isLoadingStudents
+                ? t("share.linkedStudents")
+                : students.length > 0
+                  ? t("share.linkedStudents")
+                  : t("share.noStudents")}
+            </h2>
+          </div>
+
+          {isLoadingStudents
+            ? Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} className="panel panel--soft profile-user">
+                  <Skeleton circle width="3.4rem" />
+                  <div
+                    className="profile-user__info"
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "0.35rem",
+                    }}
+                  >
+                    <Skeleton width="70%" height="1rem" />
+                    <Skeleton width="50%" height="0.85rem" />
+                    <Skeleton width="40%" height="0.8rem" />
+                  </div>
+                  <div className="profile-user__action">
+                    <Skeleton circle width="2.35rem" />
+                  </div>
+                </div>
+              ))
+            : students.map((student) => (
+                <ProfileUser
+                  key={student.id}
+                  avatarUrl={student.student_avatar_url}
+                  displayName={student.student_display_name}
+                  email={student.student_email}
+                  date={student.activated_at}
+                  dateLabel={t("share.accessSince")}
+                  onClick={() => handleViewStudent(student.student_id)}
+                  action={<ChevronRight size={16} />}
+                />
+              ))}
+        </>
+      ) : (
         <>
           <div className="panel__header panel__header--tight">
             <h2 className="panel__title">{t("share.studentTitle")}</h2>
@@ -231,79 +304,6 @@ export function SharedAccess({
                       <X size={16} />
                     </button>
                   }
-                />
-              ))}
-        </>
-      ) : (
-        <>
-          <div className="panel__header panel__header--tight">
-            <h2 className="panel__title">{t("share.parentTitle")}</h2>
-          </div>
-          <p className="panel__description">{t("share.parentDescription")}</p>
-
-          <div className="panel panel--soft">
-            <div className="share-code-input">
-              <input
-                type="text"
-                value={inputCode}
-                onChange={(e) => setInputCode(e.target.value.toUpperCase())}
-                placeholder={t("share.enterCode")}
-                maxLength={8}
-                disabled={activating}
-                className="text-input"
-              />
-              <AccentButton
-                onClick={() => handleActivateCode()}
-                disabled={!inputCode || activating}
-              >
-                <Plus size={16} />
-                <span>{t("share.add")}</span>
-              </AccentButton>
-            </div>
-            {error && <p className="error-message">{error}</p>}
-          </div>
-
-          <div className="panel__header panel__header--tight">
-            <h2 className="panel__title">
-              {isLoadingStudents
-                ? t("share.linkedStudents")
-                : students.length > 0
-                  ? t("share.linkedStudents")
-                  : t("share.noStudents")}
-            </h2>
-          </div>
-
-          {isLoadingStudents
-            ? Array.from({ length: 2 }).map((_, i) => (
-                <div key={i} className="panel panel--soft profile-user">
-                  <Skeleton circle width="3.4rem" />
-                  <div
-                    className="profile-user__info"
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "0.35rem",
-                    }}
-                  >
-                    <Skeleton width="70%" height="1rem" />
-                    <Skeleton width="50%" height="0.85rem" />
-                    <Skeleton width="40%" height="0.8rem" />
-                  </div>
-                  <div className="profile-user__action">
-                    <Skeleton circle width="2.35rem" />
-                  </div>
-                </div>
-              ))
-            : students.map((student) => (
-                <ProfileUser
-                  key={student.id}
-                  avatarUrl={student.student_avatar_url}
-                  displayName={student.student_display_name}
-                  email={student.student_email}
-                  date={student.activated_at}
-                  dateLabel={t("share.accessSince")}
-                  onClick={() => handleViewStudent(student.student_id)}
-                  action={<ChevronRight size={16} />}
                 />
               ))}
         </>
