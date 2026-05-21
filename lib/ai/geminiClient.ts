@@ -2,7 +2,7 @@ import { SUMMARY_PROMPT, buildUserPrompt } from "./prompts";
 import type { AnalyticsPayload } from "./analyticsPayload";
 
 const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
-const MODEL = "gemma-4-26b-it";
+const MODEL = "gemma-4-26b-a4b-it";
 
 export async function generateSummary(
   apiKey: string,
