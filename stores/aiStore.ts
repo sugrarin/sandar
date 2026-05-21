@@ -2,13 +2,20 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { saveApiKey, removeApiKey, loadApiKey, isApiKeyFormatValid } from "@/lib/ai/apiKeyStorage";
-import { validateApiKey, generateSummary } from "@/lib/ai/geminiClient";
-import { buildAnalyticsPayload, computeStatsHash } from "@/lib/ai/analyticsPayload";
+import {
+  saveApiKey,
+  removeApiKey,
+  loadApiKey,
+  isApiKeyFormatValid,
+} from "@/lib/ai/apiKeyStorage";
+import { generateSummary } from "@/lib/ai/geminiClient";
+import {
+  buildAnalyticsPayload,
+  computeStatsHash,
+} from "@/lib/ai/analyticsPayload";
 
 interface AiStoreState {
   isKeyValid: boolean | null;
-  isValidatingKey: boolean;
   isGeneratingSummary: boolean;
   aiSummary: string | null;
   summaryError: string | null;
@@ -27,7 +34,6 @@ export const useAiStore = create<AiStoreState>()(
   persist(
     (set, get) => ({
       isKeyValid: null,
-      isValidatingKey: false,
       isGeneratingSummary: false,
       aiSummary: null,
       summaryError: null,
@@ -39,25 +45,37 @@ export const useAiStore = create<AiStoreState>()(
           return { success: false, error: "Неверный формат ключа" };
         }
 
-        set({ isValidatingKey: true, summaryError: null });
+        set({ isGeneratingSummary: true, summaryError: null });
 
-        const validation = await validateApiKey(key);
-        if (!validation.valid) {
-          set({ isValidatingKey: false, isKeyValid: false, summaryError: validation.error });
-          return { success: false, error: validation.error };
-        }
-
+        // Save key first so generateAiSummary can pick it up
         const saveResult = await saveApiKey(key);
         if (!saveResult.success) {
-          set({ isValidatingKey: false, summaryError: saveResult.error });
+          set({ isGeneratingSummary: false, summaryError: saveResult.error });
           return { success: false, error: saveResult.error };
         }
 
-        set({ isValidatingKey: false, isKeyValid: true, summaryError: null });
-
-        // Auto-generate summary after successful key validation
+        // Single request: validate + generate in one call
         await get().generateAiSummary();
 
+        const { isKeyValid, summaryError } = get();
+        if (summaryError === "invalid_key") {
+          set({ isKeyValid: false, summaryError: "Неверный API ключ" });
+          return { success: false, error: "Неверный API ключ" };
+        }
+        if (summaryError === "rate_limit") {
+          // Key is valid but rate limited — still mark as connected
+          set({
+            isKeyValid: true,
+            summaryError:
+              "Слишком много запросов. Сводка появится через минуту.",
+          });
+          return { success: true };
+        }
+        if (summaryError) {
+          return { success: false, error: summaryError };
+        }
+
+        set({ isKeyValid: true });
         return { success: true };
       },
 
@@ -90,8 +108,13 @@ export const useAiStore = create<AiStoreState>()(
         const result = await generateSummary(apiKey, payload);
         if (result.error) {
           set({ isGeneratingSummary: false, summaryError: result.error });
-          if (result.error === "Неверный API ключ") {
-            set({ isKeyValid: false });
+          if (result.error === "invalid_key") {
+            set({ isKeyValid: false, summaryError: "Неверный API ключ" });
+          } else if (result.error === "rate_limit") {
+            set({
+              summaryError:
+                "Слишком много запросов. Сводка появится через минуту.",
+            });
           }
           return;
         }
@@ -128,7 +151,11 @@ export const useAiStore = create<AiStoreState>()(
       },
 
       refreshSummary: async () => {
-        set({ aiSummary: null, summaryGeneratedAt: null, statsHashAtGeneration: null });
+        set({
+          aiSummary: null,
+          summaryGeneratedAt: null,
+          statsHashAtGeneration: null,
+        });
         await get().generateAiSummary();
       },
     }),

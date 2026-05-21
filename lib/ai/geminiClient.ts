@@ -2,23 +2,7 @@ import { SUMMARY_PROMPT, buildUserPrompt } from "./prompts";
 import type { AnalyticsPayload } from "./analyticsPayload";
 
 const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
-const MODEL = "gemini-2.0-flash";
-
-export async function validateApiKey(apiKey: string): Promise<{ valid: boolean; error?: string }> {
-  try {
-    const res = await fetch(`${GEMINI_BASE_URL}/models?key=${apiKey}`, {
-      method: "GET",
-    });
-
-    if (res.ok) return { valid: true };
-    if (res.status === 400 || res.status === 403) {
-      return { valid: false, error: "Неверный API ключ" };
-    }
-    return { valid: false, error: "Ошибка проверки ключа" };
-  } catch {
-    return { valid: false, error: "Ошибка сети" };
-  }
-}
+const MODEL = "gemini-2.0-flash-lite";
 
 export async function generateSummary(
   apiKey: string,
@@ -52,10 +36,10 @@ export async function generateSummary(
     );
 
     if (res.status === 400 || res.status === 403) {
-      return { summary: null, error: "Неверный API ключ" };
+      return { summary: null, error: "invalid_key" };
     }
     if (res.status === 429) {
-      return { summary: null, error: "Слишком много запросов, попробуйте позже" };
+      return { summary: null, error: "rate_limit" };
     }
     if (!res.ok) {
       return { summary: null, error: "Сервис недоступен" };

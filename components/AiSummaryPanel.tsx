@@ -16,7 +16,6 @@ export function AiSummaryPanel() {
   const userResolved = useStatsStore((s) => s.userResolved);
 
   const isKeyValid = useAiStore((s) => s.isKeyValid);
-  const isValidatingKey = useAiStore((s) => s.isValidatingKey);
   const isGeneratingSummary = useAiStore((s) => s.isGeneratingSummary);
   const aiSummary = useAiStore((s) => s.aiSummary);
   const summaryError = useAiStore((s) => s.summaryError);
@@ -66,7 +65,10 @@ export function AiSummaryPanel() {
               aria-label={t("aiSummary.refresh")}
               title={t("aiSummary.refresh")}
             >
-              <RefreshCw size={14} className={isGeneratingSummary ? "spin" : ""} />
+              <RefreshCw
+                size={14}
+                className={isGeneratingSummary ? "spin" : ""}
+              />
             </button>
             <button
               type="button"
@@ -83,7 +85,9 @@ export function AiSummaryPanel() {
 
       {showOnboarding && (
         <div className="ai-summary__onboarding">
-          <p className="ai-summary__description">{t("aiSummary.description")}</p>
+          <p className="ai-summary__description">
+            {t("aiSummary.description")}
+          </p>
           <div className="ai-summary__input-row">
             <input
               type="password"
@@ -92,13 +96,15 @@ export function AiSummaryPanel() {
               value={inputKey}
               onChange={(e) => setInputKey(e.target.value)}
               onKeyDown={handleKeyDown}
-              disabled={isValidatingKey}
+              disabled={isGeneratingSummary}
             />
             <AccentButton
               onClick={handleApply}
-              disabled={isValidatingKey || !inputKey.trim()}
+              disabled={isGeneratingSummary || !inputKey.trim()}
             >
-              {isValidatingKey ? t("aiSummary.validating") : t("aiSummary.apply")}
+              {isGeneratingSummary
+                ? t("aiSummary.validating")
+                : t("aiSummary.apply")}
             </AccentButton>
           </div>
           {summaryError && isKeyValid === false && (
