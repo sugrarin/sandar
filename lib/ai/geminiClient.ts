@@ -29,7 +29,7 @@ export async function generateSummary(
           ],
           generationConfig: {
             temperature: 0.7,
-            maxOutputTokens: 512,
+            maxOutputTokens: 1024,
           },
         }),
       },
@@ -46,13 +46,26 @@ export async function generateSummary(
     }
 
     const data = await res.json();
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    const candidate = data?.candidates?.[0];
+    const finishReason = candidate?.finishReason;
+    const text = candidate?.content?.parts?.[0]?.text;
 
     if (!text) {
       return { summary: null, error: "Пустой ответ от AI" };
     }
 
-    return { summary: text.trim() };
+    // If response was truncated by token limit, reject it
+    if (finishReason === "MAX_TOKENS") {
+      return { summary: null, error: "Ответ обрезан. Попробуйте обновить." };
+    }
+
+    // Extra safety: if text doesn't end with sentence-ending punctuation, it's likely incomplete
+    const trimmed = text.trim();
+    if (!/[.!?]$/.test(trimmed)) {
+      return { summary: null, error: "Ответ обрезан. Попробуйте обновить." };
+    }
+
+    return { summary: trimmed };
   } catch {
     return { summary: null, error: "Ошибка сети" };
   }
