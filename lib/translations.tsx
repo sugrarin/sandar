@@ -215,6 +215,16 @@ const translations: Record<Locale, Translations> = {
       accuracy: "дәлдік",
       noActivity: "Белсенділік жоқ",
     },
+    aiSummary: {
+      title: "AI сводка",
+      description:
+        "Тегін Gemini API кілтін қосыңыз, қателеріңіз бен жетістіктеріңіз туралы аналитика алу үшін.",
+      keyPlaceholder: "Gemini API кілтін енгізіңіз",
+      apply: "Қолдану",
+      validating: "Тексерілуде…",
+      refresh: "Жаңарту",
+      removeKey: "Кілтті жою",
+    },
     share: {
       title: "Ортақ қатынау",
       description:
@@ -453,6 +463,16 @@ const translations: Record<Locale, Translations> = {
       label: "Точность по неделям",
       accuracy: "точности",
       noActivity: "Без активности",
+    },
+    aiSummary: {
+      title: "AI сводка",
+      description:
+        "Подключите бесплатный ключ Gemini, чтобы получать аналитику ваших ошибок и успехов.",
+      keyPlaceholder: "Gemini API ключ",
+      apply: "Применить",
+      validating: "Проверяем…",
+      refresh: "Обновить",
+      removeKey: "Удалить ключ",
     },
     share: {
       title: "Общий доступ",

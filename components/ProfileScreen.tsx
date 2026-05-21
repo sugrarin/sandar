@@ -13,6 +13,7 @@ import { SegmentedControl } from "@/components/SegmentedControl";
 import { useNavigation } from "@/contexts/NavigationContext";
 import { DIFFICULTIES, type Difficulty } from "@/types";
 import { useGameStore } from "@/stores/gameStore";
+import { AiSummaryPanel } from "@/components/AiSummaryPanel";
 
 function formatAccuracy(correct: number, total: number): string {
   if (!total) return "—";
@@ -206,6 +207,8 @@ export function ProfileScreen() {
               </span>
             </div>
           </div>
+
+          <AiSummaryPanel />
 
           <div className="panel__header panel__header--tight">
             <h2 className="panel__title">{t("profile.activity")}</h2>

@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS profiles (
     email TEXT UNIQUE NOT NULL,
     display_name TEXT,
     avatar_url TEXT,
+    gemini_api_key TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     last_active_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

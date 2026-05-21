@@ -33,6 +33,7 @@ export interface AccountUser {
   email: string | null;
   displayName: string | null;
   avatarUrl: string | null;
+  geminiApiKey: string | null;
   createdAt: string | null;
 }
 
@@ -90,6 +91,7 @@ interface StatsState {
   updateProfile: (data: {
     displayName?: string;
     avatarUrl?: string;
+    geminiApiKey?: string | null;
   }) => Promise<{ success: boolean; error?: string }>;
   dismissAchievement: (code: string) => void;
   reset: () => void;
@@ -125,7 +127,7 @@ export const useStatsStore = create<StatsState>((set, get) => ({
     }
     const { data: profile } = await supabase
       .from("profiles")
-      .select("display_name, avatar_url")
+      .select("display_name, avatar_url, gemini_api_key")
       .eq("id", user.id)
       .single();
     const account: AccountUser = {
@@ -133,6 +135,7 @@ export const useStatsStore = create<StatsState>((set, get) => ({
       email: user.email ?? null,
       displayName: profile?.display_name ?? null,
       avatarUrl: profile?.avatar_url ?? null,
+      geminiApiKey: profile?.gemini_api_key ?? null,
       createdAt: user.created_at ?? null,
     };
     set({ user: account, userResolved: true });
@@ -257,14 +260,19 @@ export const useStatsStore = create<StatsState>((set, get) => ({
     }
   },
 
-  updateProfile: async ({ displayName, avatarUrl }) => {
+  updateProfile: async ({ displayName, avatarUrl, geminiApiKey }) => {
     const user = get().user;
     if (!user) return { success: false, error: "User not authenticated" };
 
     const supabase = createClient();
-    const updates: { display_name?: string; avatar_url?: string } = {};
+    const updates: {
+      display_name?: string;
+      avatar_url?: string;
+      gemini_api_key?: string | null;
+    } = {};
     if (displayName !== undefined) updates.display_name = displayName;
     if (avatarUrl !== undefined) updates.avatar_url = avatarUrl;
+    if (geminiApiKey !== undefined) updates.gemini_api_key = geminiApiKey;
 
     const { error } = await supabase
       .from("profiles")
@@ -281,6 +289,8 @@ export const useStatsStore = create<StatsState>((set, get) => ({
         ...user,
         displayName: displayName !== undefined ? displayName : user.displayName,
         avatarUrl: avatarUrl !== undefined ? avatarUrl : user.avatarUrl,
+        geminiApiKey:
+          geminiApiKey !== undefined ? geminiApiKey : user.geminiApiKey,
       },
     });
 

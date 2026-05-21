@@ -2099,6 +2099,7 @@ button {
   font-size: 0.8rem;
   color: var(--text-soft);
   line-height: 1.3;
+  margin-bottom: 0.6rem;
 }
 
 .info-card .action-button--small {
@@ -2124,7 +2125,7 @@ button {
 .share-code-display {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   min-width: 0;
 }
 
@@ -2132,7 +2133,7 @@ button {
   flex: 1;
   min-width: 0;
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: 700;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -2150,15 +2151,13 @@ button {
 
 .share-code-input .text-input {
   flex: 1;
-  height: 2.4rem;
-  padding: 0 1rem;
+  padding: 0.5rem 1rem;
   border: 1px solid var(--button-neutral-border);
   border-radius: var(--radius-button);
   background: var(--button-neutral);
   color: var(--text-main);
   font-size: 1rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
   font-family: var(--font-display);
@@ -2167,10 +2166,18 @@ button {
     box-shadow var(--transition);
 }
 
+@media (max-width: 360px) {
+  .share-code-display,
+  .share-code-input {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
 .share-code-input .text-input:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
+  /* box-shadow: 0 0 0 3px var(--accent-soft); */
 }
 
 .share-code-input .text-input:disabled {
@@ -2249,4 +2256,153 @@ button {
   .skeleton--animated::after {
     --skeleton-shimmer: rgba(255, 255, 255, 0.08);
   }
+}
+
+/* AI Summary Panel */
+.ai-summary {
+  margin-top: 0.6rem;
+}
+
+.ai-summary__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.ai-summary__title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.ai-summary__title svg {
+  width: 1rem;
+  height: 1rem;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.ai-summary__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.ai-summary__actions .icon-button {
+  width: 1.8rem;
+  height: 1.8rem;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-button);
+  background: transparent;
+  border: none;
+  color: var(--text-soft);
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+
+.ai-summary__actions .icon-button:hover {
+  color: var(--text-main);
+  background: var(--bg-soft);
+}
+
+.ai-summary__actions .icon-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ai-summary__actions .icon-button svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
+.ai-summary__onboarding {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ai-summary__description {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  line-height: 1.35;
+}
+
+.ai-summary__input-row {
+  display: flex;
+  gap: 0.4rem;
+  align-items: stretch;
+}
+
+.ai-summary__input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-button);
+  background: var(--bg-base);
+  color: var(--text-main);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.ai-summary__input:focus {
+  border-color: var(--accent);
+}
+
+.ai-summary__input::placeholder {
+  color: var(--text-soft);
+}
+
+.ai-summary__input-row .accent-button {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  padding: 0.5rem 0.9rem;
+  min-height: auto;
+}
+
+.ai-summary__error {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-error, #e53e3e);
+  line-height: 1.3;
+}
+
+.ai-summary__content {
+  min-height: 1rem;
+}
+
+.ai-summary__text {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-main);
+  line-height: 1.45;
+  white-space: pre-line;
+}
+
+.ai-summary__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
 }
