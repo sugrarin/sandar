@@ -2408,3 +2408,20 @@ button {
 .spin {
   animation: spin 1s linear infinite;
 }
+
+/* Save error toast */
+.save-error {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--error-soft);
+  border: 1px solid var(--error);
+  color: var(--error);
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  z-index: 200;
+  white-space: nowrap;
+}

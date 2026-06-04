@@ -116,6 +116,11 @@ function createOptions(answer: number): number[] {
     attempts++;
   }
 
+  // Sequential fallback to guarantee exactly 4 distinct options
+  for (let i = 1; options.size < 4; i++) {
+    if (!options.has(i)) options.add(i);
+  }
+
   return shuffle(Array.from(options).slice(0, 4));
 }
 

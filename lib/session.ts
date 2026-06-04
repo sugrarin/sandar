@@ -29,15 +29,12 @@ export async function saveSession(
   } = await supabase.auth.getUser();
 
   if (!user) {
-    // Store locally for later sync
+    const MAX_PENDING = 50;
     const pendingSessions = JSON.parse(
       localStorage.getItem("pendingSessions") || "[]",
     );
-    pendingSessions.push({
-      ...sessionData,
-      timestamp: new Date().toISOString(),
-    });
-    localStorage.setItem("pendingSessions", JSON.stringify(pendingSessions));
+    pendingSessions.push({ ...sessionData, timestamp: new Date().toISOString() });
+    localStorage.setItem("pendingSessions", JSON.stringify(pendingSessions.slice(-MAX_PENDING)));
     return { success: true };
   }
 

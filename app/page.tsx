@@ -6,6 +6,7 @@ import { HomeScreen } from "@/components/HomeScreen";
 import { GameScreen } from "@/components/GameScreen";
 import { ResultScreen } from "@/components/ResultScreen";
 import { AuthModal } from "@/components/AuthModal";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ProfileScreen } from "@/components/ProfileScreen";
 import { ProfileEditScreen } from "@/components/ProfileEditScreen";
 import { SharedAccess } from "@/components/SharedAccess";
@@ -25,6 +26,7 @@ import type { GameMode, Difficulty } from "@/types";
 
 function AppContent() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const { stack, push, replace, reset } = useNavigation();
   const currentRoute = stack[stack.length - 1];
 
@@ -75,9 +77,11 @@ function AppContent() {
       .then((res) => {
         if (res.success) {
           useStatsStore.getState().loadAll(true);
+        } else {
+          setSaveError("Не удалось сохранить результат");
         }
       })
-      .catch(console.error);
+      .catch(() => setSaveError("Не удалось сохранить результат"));
   };
 
   const onSelectDifficulty = (difficulty: Difficulty) => {
@@ -215,16 +219,23 @@ function AppContent() {
 
       {authModalOpen && <AuthModal onClose={() => setAuthModalOpen(false)} />}
       <AchievementToast />
+      {saveError && (
+        <div className="save-error" role="alert" onClick={() => setSaveError(null)}>
+          {saveError}
+        </div>
+      )}
     </>
   );
 }
 
 export default function Home() {
   return (
-    <NavigationProvider>
-      <TranslationProvider>
-        <AppContent />
-      </TranslationProvider>
-    </NavigationProvider>
+    <ErrorBoundary>
+      <NavigationProvider>
+        <TranslationProvider>
+          <AppContent />
+        </TranslationProvider>
+      </NavigationProvider>
+    </ErrorBoundary>
   );
 }
