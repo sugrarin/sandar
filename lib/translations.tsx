@@ -120,6 +120,7 @@ const translations: Record<Locale, Translations> = {
       login: "Кіру",
       changeEmail: "Email-ді өзгерту",
       invalidCode: "Қате немесе ескірген код",
+      invalidEmail: "Дұрыс email енгізіңіз",
     },
     achievements: {
       unlocked: "ашылды",
@@ -369,6 +370,7 @@ const translations: Record<Locale, Translations> = {
       login: "Войти",
       changeEmail: "Изменить email",
       invalidCode: "Неверный или устаревший код",
+      invalidEmail: "Введите корректный email",
     },
     achievements: {
       unlocked: "открыто",
