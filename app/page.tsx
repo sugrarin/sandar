@@ -7,6 +7,7 @@ import { GameScreen } from '@/components/GameScreen';
 import { ResultScreen } from '@/components/ResultScreen';
 import { AuthButton } from '@/components/AuthButton';
 import { AuthModal } from '@/components/AuthModal';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { saveSession } from '@/lib/session';
 import type { GameMode, Difficulty } from '@/types';
 
@@ -15,6 +16,7 @@ type Screen = 'home' | 'game' | 'result';
 export default function Home() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const {
     settings,
@@ -31,7 +33,6 @@ export default function Home() {
     getCurrentTask
   } = useGameStore();
 
-  // Handle screen transitions
   useEffect(() => {
     if (activeRound) {
       setCurrentScreen('game');
@@ -39,6 +40,23 @@ export default function Home() {
       setCurrentScreen('result');
     }
   }, [activeRound, lastSession, currentScreen]);
+
+  const doSaveSession = (duration: number) => {
+    const session = useGameStore.getState().lastSession;
+    const answers = useGameStore.getState().answers;
+    if (!session) return;
+    saveSession({
+      mode: session.mode,
+      difficulty: session.difficulty,
+      totalQuestions: session.total,
+      correctAnswers: session.score,
+      wrongAnswers: session.total - session.score,
+      durationSeconds: duration,
+      answers
+    }).then(result => {
+      if (!result.success) setSaveError('Не удалось сохранить результат');
+    }).catch(() => setSaveError('Не удалось сохранить результат'));
+  };
 
   const onSelectDifficulty = (difficulty: Difficulty) => {
     setDifficulty(difficulty);
@@ -50,28 +68,27 @@ export default function Home() {
 
   const onAnswer = (selected: number) => {
     const result = handleAnswer(selected);
-
     if (result.shouldAdvance) {
       setTimeout(() => {
         const advanceResult = advanceRound();
-        if (advanceResult && advanceResult.type === 'finished') {
-          // Save session to backend if user is logged in
-          const round = useGameStore.getState().lastSession;
-          if (round) {
-            saveSession(round).catch(console.error);
-          }
+        if (advanceResult?.type === 'finished') {
+          doSaveSession(advanceResult.duration);
         }
       }, result.isCorrect ? 200 : 0);
+    }
+  };
+
+  const onAdvance = () => {
+    const advanceResult = advanceRound();
+    if (advanceResult?.type === 'finished') {
+      doSaveSession(advanceResult.duration);
     }
   };
 
   const onFinishGame = () => {
     const result = finishCurrentRound();
     if (result) {
-      const round = useGameStore.getState().lastSession;
-      if (round) {
-        saveSession(round).catch(console.error);
-      }
+      doSaveSession(result.duration);
     }
   };
 
@@ -92,7 +109,7 @@ export default function Home() {
   const round = activeRound;
 
   return (
-    <>
+    <ErrorBoundary>
       <AuthButton onClick={() => setAuthModalOpen(true)} />
 
       <main className="app">
@@ -115,15 +132,7 @@ export default function Home() {
             allowAdvance={round.allowAdvance}
             lastAnswer={round.lastAnswer}
             onAnswer={onAnswer}
-            onAdvance={() => {
-              const result = advanceRound();
-              if (result && result.type === 'finished') {
-                const session = useGameStore.getState().lastSession;
-                if (session) {
-                  saveSession(session).catch(console.error);
-                }
-              }
-            }}
+            onAdvance={onAdvance}
             onFinish={onFinishGame}
           />
         )}
@@ -141,9 +150,15 @@ export default function Home() {
         )}
       </main>
 
+      {saveError && (
+        <div className="save-error" role="alert" onClick={() => setSaveError(null)}>
+          {saveError}
+        </div>
+      )}
+
       {authModalOpen && (
         <AuthModal onClose={() => setAuthModalOpen(false)} />
       )}
-    </>
+    </ErrorBoundary>
   );
 }

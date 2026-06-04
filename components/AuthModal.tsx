@@ -18,6 +18,11 @@ export function AuthModal({ onClose }: AuthModalProps) {
 
   const sendCode = async (e: React.FormEvent) => {
     e.preventDefault();
+    const trimmed = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      setError('Введите корректный email');
+      return;
+    }
     setLoading(true);
     setError(null);
 

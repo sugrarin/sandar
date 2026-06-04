@@ -31,8 +31,8 @@ interface GameState {
   startReviewRound: () => void;
   replayCurrentMode: () => void;
   handleAnswer: (selected: number) => { isCorrect: boolean; shouldAdvance: boolean };
-  advanceRound: () => void;
-  finishCurrentRound: () => void;
+  advanceRound: () => { type: 'finished'; duration: number } | { type: 'advanced' } | undefined;
+  finishCurrentRound: () => { duration: number } | undefined;
   returnHome: () => void;
   getCurrentTask: () => Task | null;
   generateTask: (mode: GameMode, difficultyId: Difficulty) => Task;
@@ -94,6 +94,11 @@ function createOptions(answer: number): number[] {
     const candidate = Math.max(0, answer + jitter);
     if (candidate !== answer) options.add(candidate);
     attempts++;
+  }
+
+  // Sequential fallback to guarantee exactly 4 distinct options
+  for (let i = 1; options.size < 4; i++) {
+    if (!options.has(i)) options.add(i);
   }
 
   return shuffle(Array.from(options).slice(0, 4));

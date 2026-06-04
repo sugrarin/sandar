@@ -1,7 +1,7 @@
 import { createClient } from './supabase/client';
 import type { SessionAnswer, GameMode, Difficulty } from '@/types';
 
-interface SessionData {
+export interface SessionData {
   mode: GameMode;
   difficulty: Difficulty;
   totalQuestions: number;
@@ -18,13 +18,10 @@ export async function saveSession(sessionData: SessionData): Promise<{ success: 
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    // Store locally for later sync
+    const MAX_PENDING = 50;
     const pendingSessions = JSON.parse(localStorage.getItem('pendingSessions') || '[]');
-    pendingSessions.push({
-      ...sessionData,
-      timestamp: new Date().toISOString()
-    });
-    localStorage.setItem('pendingSessions', JSON.stringify(pendingSessions));
+    pendingSessions.push({ ...sessionData, timestamp: new Date().toISOString() });
+    localStorage.setItem('pendingSessions', JSON.stringify(pendingSessions.slice(-MAX_PENDING)));
     return { success: true };
   }
 
