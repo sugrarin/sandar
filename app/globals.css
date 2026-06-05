@@ -82,6 +82,7 @@ body {
   background: var(--bg);
   color: var(--text-main);
   overflow: hidden;
+  overscroll-behavior: none;
 }
 
 button,
@@ -93,11 +94,12 @@ textarea {
 
 button {
   cursor: pointer;
+  color: inherit;
 }
 
 .page {
-  position: relative;
-  height: 100%;
+  position: fixed;
+  inset: 0;
   overflow-x: hidden;
 }
 
@@ -259,7 +261,9 @@ button {
 }
 
 .difficulty-picker__emoji {
-  font-size: 1.25rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  object-fit: contain;
 }
 
 .difficulty-picker--plain {
@@ -1455,11 +1459,15 @@ button {
   position: fixed;
   inset: 0;
   z-index: 100;
-  display: grid;
-  place-items: center;
-  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: calc(var(--header-height) + var(--safe-top) + 1rem) 1rem 1rem;
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(4px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .auth-modal {
@@ -2349,7 +2357,7 @@ button {
   min-width: 0;
   padding: 0.5rem 0.7rem;
   font-size: 0.8rem;
-  border: 1px solid var(--border);
+  border: 1px solid var(--button-neutral-border);
   border-radius: var(--radius-button);
   background: var(--bg-base);
   color: var(--text-main);

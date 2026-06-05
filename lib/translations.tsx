@@ -219,8 +219,7 @@ const translations: Record<Locale, Translations> = {
     aiSummary: {
       title: "AI сводка",
       description:
-        "Тегін Gemini API кілтін қосыңыз, қателеріңіз бен жетістіктеріңіз туралы аналитика алу үшін.",
-      keyPlaceholder: "Gemini API кілтін енгізіңіз",
+        "Gemini тегін кілтін қосыңыз, қателеріңіз бен жетістіктеріңіздің аналитикасын алу үшін. Кілтті алу үшін Google AI Studio өтіңіз, «Get API key» түймесін, содан кейін «Create API key» түймесін басыңыз.",
       apply: "Қолдану",
       validating: "Тексерілуде…",
       refresh: "Жаңарту",
@@ -469,7 +468,7 @@ const translations: Record<Locale, Translations> = {
     aiSummary: {
       title: "AI сводка",
       description:
-        "Подключите бесплатный ключ Gemini, чтобы получать аналитику ваших ошибок и успехов.",
+        "Подключите бесплатный ключ Gemini, чтобы получать аналитику ваших ошибок и успехов. Чтобы получить  ключ, передите в Google AI Studio, нажмите Get API key, затем Create API key.",
       keyPlaceholder: "Gemini API ключ",
       apply: "Применить",
       validating: "Проверяем…",

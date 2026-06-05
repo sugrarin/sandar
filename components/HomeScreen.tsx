@@ -15,6 +15,13 @@ interface HomeScreenProps {
   onStartGame: (mode: GameMode) => void;
 }
 
+const DIFFICULTY_ICONS: Record<string, string> = {
+  easy: "/icons/baby.png",
+  medium: "/icons/child.png",
+  hard: "/icons/old-man.png",
+  brain: "/icons/brain.png",
+};
+
 const MODES: GameMode[] = [
   "addition",
   "subtraction",
@@ -81,9 +88,14 @@ export function HomeScreen({
               role="tab"
               aria-selected={difficulty === key}
             >
-              <span className="difficulty-picker__emoji" aria-hidden="true">
-                {profile.emoji}
-              </span>
+              <img
+                className="difficulty-picker__emoji"
+                src={DIFFICULTY_ICONS[key]}
+                alt=""
+                aria-hidden="true"
+                width={24}
+                height={24}
+              />
               <span className="difficulty-picker__label">
                 {DIFFICULTY_LABELS[key]}
               </span>
