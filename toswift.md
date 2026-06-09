@@ -1,67 +1,74 @@
 # Sandar — iOS SwiftUI: Техническое задание
 
 ## Цель
-Реализовать iOS-приложение «Sandar — тренажёр счёта» на SwiftUI, полностью повторяющее функциональность веб-версии. Приложение предназначено для детей и их родителей. Язык UI — русский (по умолчанию) с поддержкой казахского.
+Реализовать iOS-приложение «Sandar — тренажёр счёта» на SwiftUI. Приложение предназначено для детей и их родителей. Язык UI — русский (по умолчанию) с поддержкой казахского.
 
 ---
 
 ## Стек и требования окружения
 
-- **Язык:** Swift 5.9+
-- **UI Framework:** SwiftUI (минимальный iOS 16)
+- **Язык:** Swift 6
+- **UI Framework:** SwiftUI, минимальный таргет **iOS 18**
 - **Async:** Swift Concurrency (`async/await`, `Task`, `@MainActor`)
-- **Хранилище:** `@AppStorage` для настроек, `UserDefaults` для кэша, `Keychain` для токенов
-- **БД/Auth:** Supabase — использовать официальный SDK `supabase-swift` (пакет `Supabase/supabase-swift`)
-- **Сеть:** URLSession через Supabase SDK + кастомный `APIClient` для REST-эндпоинтов
-- **Графики:** `Charts` framework (iOS 16+)
-- **Фото:** `PhotosUI` (`PhotosPicker`) для загрузки аватара
-- **Clipboard:** `UIPasteboard.general.string`
-- **Навигация:** `NavigationStack` (iOS 16+), не `NavigationView`
-- **Конфетти:** реализовать через `UIViewRepresentable` с `CAEmitterLayer`
-- **Dependency Injection:** `@EnvironmentObject` для глобальных store-ов
-- **Хранение pending сессий:** `UserDefaults` с кодеком `Codable` (массив `PendingSession`, макс. 50)
+- **State:** `@Observable` macro (iOS 17+) вместо `ObservableObject`/`@Published` — использовать везде
+- **Хранилище:** `@AppStorage` для настроек и предпочтений, `UserDefaults` + `Codable` для кэша сессий
+- **Auth/DB:** Supabase — пакет `Supabase/supabase-swift`, сессия хранится в Keychain через SDK автоматически
+- **Сеть:** кастомный `APIClient` на основе `URLSession` + `async/await`
+- **Графики:** фреймворк `Charts` (iOS 16+)
+- **Фото:** `PhotosUI` (`PhotosPicker`)
+- **Навигация:** `NavigationStack` с `NavigationPath`
+- **Конфетти:** `UIViewRepresentable` обёртка над `CAEmitterLayer`
+- **Dependency Injection:** `@Environment` с кастомными ключами для store-ов (iOS 18 подход через `@Observable`)
 
-### Важные iOS-специфичные правила
-1. Никогда не вызывать UI-обновления вне `@MainActor` — все `@Published` свойства в `ObservableObject` должны обновляться на главном потоке.
-2. Все сетевые вызовы делать в `Task { }` внутри `.task { }` модификатора или `.onAppear`.
-3. Не использовать `DispatchQueue.main.async` — только `await MainActor.run { }` или `@MainActor`.
-4. `NavigationStack` с `path: NavigationPath` — один стек на весь app, передавать через `@EnvironmentObject`.
-5. Для Supabase Auth хранить сессию в Keychain через SDK (он делает это автоматически).
-6. Поддержка Dark Mode обязательна — использовать семантические цвета через `Color` extension или Asset Catalog.
-7. Safe area: использовать `.safeAreaInset` и `.ignoresSafeArea(.keyboard)` там, где нужно.
-8. Keyboard avoidance для полей ввода — использовать `.scrollDismissesKeyboard(.interactively)`.
-9. Для хаптик-фидбека при ответах: `UIImpactFeedbackGenerator` (correct → `.medium`, wrong → `.heavy`).
-10. `ModeStats.id` — не хранить вычисляемый `UUID()` как `var`, это создаст новый UUID при каждом обращении. Сделать `id` через `"\(mode.rawValue)-\(difficulty.rawValue)"`.
+### iOS-специфичные правила
+1. Все UI-обновления только на `@MainActor`. С `@Observable` это проще — помечать классы `@MainActor` целиком.
+2. Сетевые вызовы — в `.task { }` модификаторе или явном `Task { }` внутри `@MainActor` контекста.
+3. `DispatchQueue.main` не использовать — только Swift Concurrency.
+4. `NavigationStack` — один на всё приложение, передавать через `@Environment`.
+5. `GameView` и `ResultView` — через `fullScreenCover`, не push, с `.interactiveDismissDisabled(true)`.
+6. Dark Mode — через семантические цвета в Asset Catalog (Color Set с Any/Dark вариантами).
+7. Safe area — `.safeAreaInset`, `.ignoresSafeArea(.keyboard)` где нужно.
+8. Поля ввода — `.scrollDismissesKeyboard(.interactively)` в скроллируемых экранах.
+9. Haptic при ответе: `UIImpactFeedbackGenerator(style: .medium/heavy)`.
+10. `ModeStats.id` — вычисляемая строка `"\(mode.rawValue)-\(difficulty.rawValue)"`, не `UUID()`.
 
 ---
 
 ## Цветовая схема
 
-Реализовать как `extension Color` или через Asset Catalog:
+Определить в Asset Catalog как Color Set с вариантами Any/Dark. Именовать:
 
+- `AppBackground` — основной фон
+- `AppElevated` — фон карточек и панелей
+- `AppTextMain` — основной текст
+- `AppTextSoft` — вторичный текст
+- `AppAccent` — акцентный цвет (зелёный)
+- `AppAccentStrong` — более насыщенный акцент
+- `AppAccentSoft` — бледный акцент для фонов кнопок
+- `AppDanger` — цвет ошибки
+- `AppWarning` — предупреждение
+
+Referencing в коде через `extension Color`:
 ```swift
-// Light mode / Dark mode
-Color.appBackground      // light: #F4F2EA, dark: #111318
-Color.appElevated        // light: rgba(255,255,255,0.74), dark: rgba(24,27,35,0.76)
-Color.appTextMain        // light: #161515, dark: #F2EFE8
-Color.appTextSoft        // light: #161515 @ 66%, dark: #F2EFE8 @ 60%
-Color.appAccent          // light: #1F8A70, dark: #56C0A1
-Color.appAccentStrong    // light: #16745E, dark: #3DAA8A
-Color.appAccentSoft      // appAccent @ 12% opacity
-Color.appDanger          // #CC584C
-Color.appWarning         // #E7B94E
-Color.appSuccess         // = appAccent
+extension Color {
+    static let appBackground = Color("AppBackground")
+    static let appElevated   = Color("AppElevated")
+    static let appAccent     = Color("AppAccent")
+    // и т.д.
+}
 ```
-
-Конфетти: `[#1F8A70, #F6C86A, #FF7F6A, #4C89FF, #FFFFFF]`
 
 ---
 
-## Модели данных (Codable, Identifiable, Equatable)
+## Модели данных
+
+Все модели — `Codable`, `Identifiable`, `Equatable` где нужно.
 
 ```swift
 enum GameMode: String, Codable, CaseIterable {
     case addition, subtraction, multiplication, division, table, mixed, review
+    // При добавлении нового режима — добавить case сюда и зарегистрировать
+    // TaskGeneratorStrategy в TaskGenerator.registry (см. раздел Extensibility)
 }
 
 enum Difficulty: String, Codable, CaseIterable {
@@ -81,15 +88,25 @@ enum Difficulty: String, Codable, CaseIterable {
     }
 }
 
+// AnswerKind — тип ответа. Текущие режимы используют .integer.
+// Дроби будут использовать .fraction, сравнения — .symbol.
+// GameView переключает InputView в зависимости от этого поля.
+enum AnswerKind: String, Codable {
+    case integer    // 42
+    case fraction   // "3/4" (будущий режим)
+    case symbol     // ">", "<", "=" (будущий режим сравнений)
+}
+
 struct GameTask: Identifiable, Codable, Equatable {
     let id: UUID
-    var question: String
-    var answer: Int
-    var options: [Int]       // всегда 4 варианта
+    var question: String       // отображаемое выражение, например "12 + 8"
+    var answer: Int            // правильный ответ для integer-режимов
+    var options: [Int]         // 4 варианта для кнопочного режима
     var operation: GameMode
     var left: Int
     var right: Int
     var subtitle: String?
+    var answerKind: AnswerKind = .integer
 }
 
 struct SessionAnswer: Codable {
@@ -105,8 +122,8 @@ struct GameSession: Codable {
     var sourceMode: GameMode
     var mode: GameMode
     var difficulty: Difficulty
-    var index: Int            // текущий вопрос (0-based)
-    var total: Int            // всегда 12
+    var index: Int
+    var total: Int             // 12 по умолчанию
     var score: Int
     var tasks: [GameTask]
     var mistakes: [GameTask]
@@ -137,7 +154,6 @@ struct UserStats: Codable {
 }
 
 struct ModeStats: Codable, Identifiable {
-    // Важно: не использовать вычисляемый UUID() — он создаёт новый id при каждом обращении
     var id: String { "\(mode.rawValue)-\(difficulty.rawValue)" }
     var mode: GameMode
     var difficulty: Difficulty
@@ -145,35 +161,30 @@ struct ModeStats: Codable, Identifiable {
     var questionsCount: Int
     var correctCount: Int
     var wrongCount: Int
-
     var accuracy: Double { questionsCount > 0 ? Double(correctCount) / Double(questionsCount) : 0 }
 }
 
 struct ActivityDay: Codable, Identifiable {
     var id: String { date }
-    var date: String         // "YYYY-MM-DD"
+    var date: String           // "YYYY-MM-DD"
     var sessions: Int
     var questions: Int
     var correct: Int
 
-    var level: Int {         // 0-4 для цвета ячейки heatmap
+    var level: Int {           // 0–4 для интенсивности цвета в heatmap
         switch sessions {
-        case 0: return 0
-        case 1: return 1
-        case 2...3: return 2
-        case 4...6: return 3
-        default: return 4
+        case 0: return 0; case 1: return 1; case 2...3: return 2
+        case 4...6: return 3; default: return 4
         }
     }
 }
 
 struct Achievement: Identifiable, Codable {
-    var id: String           // "first_session", "ten_sessions", etc.
+    var id: String
     var unlockedAt: String?
     var progress: Int?
-
-    // Статические данные (icon, title, description) — хранить в AchievementCatalog.swift
     var isUnlocked: Bool { unlockedAt != nil }
+    // Статические данные (заголовок, описание, иконка SF Symbol) — в AchievementCatalog.swift
 }
 
 struct AccountUser: Codable {
@@ -185,14 +196,13 @@ struct AccountUser: Codable {
     var createdAt: String?
 
     var initials: String {
-        let name = displayName ?? email ?? "?"
-        return String(name.prefix(2)).uppercased()
+        String((displayName ?? email ?? "?").prefix(2)).uppercased()
     }
 }
 
 struct ShareCode: Codable {
     var id: String
-    var code: String         // 8 символов, uppercase
+    var code: String           // 8 символов uppercase
     var createdAt: String
     var isActive: Bool
 }
@@ -207,7 +217,7 @@ struct ShareAccessViewer: Identifiable, Codable {
 }
 
 struct LinkedStudent: Identifiable, Codable {
-    var id: String           // access_id
+    var id: String             // access_id
     var studentId: String
     var studentEmail: String
     var studentDisplayName: String?
@@ -245,37 +255,75 @@ struct StudentStatBundle: Codable {
 
 | Difficulty | +/− | × | ÷ |
 |---|---|---|---|
-| easy | 1–10 | 1–10 × 1–10 | делимое = произведение двух чисел 1–10 |
+| easy | 1–10 | 1–10 × 1–10 | делимое = произведение двух 1–10 |
 | medium | 10–99 | 2–19 × 2–9 | делитель 2–9, результат 2–19 |
 | hard | 100–999 | 10–50 × 2–15 | делитель 2–15, результат 10–50 |
 | brain | 1000–9999 | 10–99 × 10–50 | делитель 10–50, результат 10–99 |
 
-**Blending (hard/brain):** 80% задач генерировать из текущей сложности, 20% из предыдущей — для плавного прогрева.
+**Blending (hard/brain):** 80% задач из текущей сложности, 20% из предыдущей.
 
-### Алгоритм генерации вариантов ответа (4 штуки)
+### Генерация вариантов ответа (4 варианта для кнопочного режима)
 ```
-1. Добавить правильный ответ
+1. Правильный ответ
 2. answer ± 1
 3. answer ± 10
-4. Если answer имеет ≥2 цифры — транспозиция цифр (12 → 21, 123 → 213)
-   Иначе — jitter ±20% от answer (минимум 1)
-5. Убрать дубликаты и отрицательные числа
-6. Если меньше 4 — добавить последовательно answer+n, пока не наберём 4
-7. Перемешать через .shuffled()
+4. Если answer имеет ≥2 цифры — транспозиция цифр (12→21); иначе jitter ±20%
+5. Убрать дубликаты и отрицательные
+6. Если < 4 — дополнить answer+1, answer+2, ...
+7. .shuffled()
 ```
 
-### Режим `table` (таблица умножения)
-- 12 задач: умножение числа от 1 до 12 на фиксированный множитель
-- Множитель выбирается случайно из 2–9 в начале раунда
-- Subtitle: "× {multiplier}"
+### Режимы
+- **`table`**: 12 задач умножения на фиксированный множитель (случайный из 2–9). `subtitle = "× N"`
+- **`review`**: входные данные — `session.mistakes`. Перемешать, взять ≤12. Результат не сохранять на сервер.
+- **`mixed`**: для каждой задачи случайный выбор из addition/subtraction/multiplication/division
 
-### Режим `review`
-- Входные данные: `session.mistakes` из предыдущей сессии
-- Перемешать, взять первые 12 (или меньше если ошибок < 12)
-- После прохождения: сессию НЕ сохранять на сервер
+---
 
-### Режим `mixed`
-- Для каждой задачи случайно выбирать операцию из: addition, subtraction, multiplication, division
+## Расширяемость (Extensibility)
+
+Архитектура рассчитана на добавление новых режимов (сравнения `>/<`, дроби, уравнения) без изменения существующего кода.
+
+### Паттерн: Strategy Registry в TaskGenerator
+
+```swift
+// Протокол генератора для одного режима
+protocol TaskGeneratorStrategy {
+    func generate(difficulty: Difficulty) -> GameTask
+}
+
+// Реестр — добавление нового режима = один новый файл + одна строка регистрации
+enum TaskGenerator {
+    private static var registry: [GameMode: any TaskGeneratorStrategy] = [
+        .addition:       AdditionStrategy(),
+        .subtraction:    SubtractionStrategy(),
+        .multiplication: MultiplicationStrategy(),
+        .division:       DivisionStrategy(),
+        .table:          TableStrategy(),
+    ]
+
+    static func register(_ strategy: some TaskGeneratorStrategy, for mode: GameMode) {
+        registry[mode] = strategy
+    }
+
+    static func generate(mode: GameMode, difficulty: Difficulty) -> GameTask {
+        guard let strategy = registry[mode] else { fatalError("No strategy for \(mode)") }
+        return strategy.generate(difficulty: difficulty)
+    }
+}
+```
+
+### Расширяемость входного интерфейса (AnswerInputMode)
+
+В `GameView` компонент ввода ответа подбирается по `task.answerKind`:
+- `.integer` → либо `AnswerButtonsView` (4 кнопки), либо `AnswerKeyboardView` (TextField + numpad) — переключается пользователем через `AnswerInputModePicker`
+- `.symbol` — 4 кнопки с символами `>`, `<`, `=`, `≈` (для будущего режима сравнений, не требует keyboard-режима)
+- `.fraction` — `AnswerKeyboardView` с форматированием дроби (для будущего)
+
+Добавление нового режима требует только:
+1. Новый `case` в `GameMode`
+2. Новый класс, реализующий `TaskGeneratorStrategy`
+3. При необходимости — новый `AnswerKind` и соответствующий Input-компонент
 
 ---
 
@@ -285,8 +333,8 @@ struct StudentStatBundle: Codable {
 ```
 Sandar/
 ├── App/
-│   ├── SandarApp.swift          // @main, создать store-ы, inject @EnvironmentObject
-│   └── AppEnvironment.swift     // хранение и создание всех store-ов
+│   ├── SandarApp.swift
+│   └── AppEnvironment.swift      // создание всех Observable объектов
 ├── Stores/
 │   ├── GameStore.swift
 │   ├── StatsStore.swift
@@ -295,9 +343,15 @@ Sandar/
 ├── Models/
 │   └── Models.swift
 ├── Services/
-│   ├── SupabaseService.swift    // singleton SupabaseClient
-│   ├── APIClient.swift          // URLSession обёртка для /api/* эндпоинтов
-│   └── TaskGenerator.swift
+│   ├── SupabaseService.swift
+│   ├── APIClient.swift
+│   └── TaskGenerator/
+│       ├── TaskGenerator.swift          // реестр + протокол
+│       ├── AdditionStrategy.swift
+│       ├── SubtractionStrategy.swift
+│       ├── MultiplicationStrategy.swift
+│       ├── DivisionStrategy.swift
+│       └── TableStrategy.swift
 ├── Views/
 │   ├── Home/
 │   │   ├── HomeView.swift
@@ -307,7 +361,9 @@ Sandar/
 │   │   ├── GameView.swift
 │   │   ├── ProgressBarView.swift
 │   │   ├── ProblemCardView.swift
-│   │   └── AnswerGridView.swift
+│   │   ├── AnswerInputModePicker.swift  // segmented control кнопки/клавиатура
+│   │   ├── AnswerButtonsView.swift      // 4 кнопки-варианта
+│   │   └── AnswerKeyboardView.swift     // TextField + numpad
 │   ├── Result/
 │   │   ├── ResultView.swift
 │   │   └── ConfettiView.swift
@@ -328,28 +384,30 @@ Sandar/
 │       ├── AvatarView.swift
 │       ├── BadgeRowView.swift
 │       ├── AchievementToastView.swift
-│       ├── SkeletonView.swift
-│       └── AccentButtonStyle.swift
+│       └── SkeletonView.swift
+├── Catalog/
+│   └── AchievementCatalog.swift         // статические данные достижений
 └── Extensions/
     ├── Color+App.swift
     ├── Date+Formatting.swift
     └── String+Pluralization.swift
 ```
 
-### GameStore
+### GameStore (`@Observable`)
+
 ```swift
+@Observable
 @MainActor
-final class GameStore: ObservableObject {
-    @Published var session: GameSession?
-    @Published var isLoading = false
-    @AppStorage("difficulty") var difficulty: Difficulty = .easy
+final class GameStore {
+    var session: GameSession?
+    var isLoading = false
+    @ObservationIgnored @AppStorage("difficulty") var difficulty: Difficulty = .easy
 
     func startGame(mode: GameMode)
-    func submitAnswer(_ answer: Int)   // обновляет session синхронно + запускает Task для auto-advance
+    func submitAnswer(_ answer: Int)
     func advance()
-    func completeSession() async       // сохранить на сервер или в pending
+    func completeSession() async
 
-    // Pending sessions (офлайн)
     func savePendingSession(_ s: PendingSession)
     func syncPendingSessions() async
     private func loadPendingSessions() -> [PendingSession]
@@ -358,49 +416,54 @@ final class GameStore: ObservableObject {
 ```
 
 Логика `submitAnswer`:
-1. Записать `SessionAnswer` в `session.answers`
-2. Если правильно → `score += 1`, haptic `.medium`, `session.allowAdvance = true`
-3. Если неправильно → добавить в `session.mistakes`, haptic `.heavy`, `session.allowAdvance = true`
-4. Подсветить ответы — через 200ms `Task { try await Task.sleep(for: .milliseconds(200)); advance() }` только если correct
+1. Записать `SessionAnswer`
+2. Correct → `score += 1`, haptic `.medium`, `allowAdvance = true`, через 200ms `advance()`
+3. Wrong → добавить в `mistakes`, haptic `.heavy`, `allowAdvance = true`
 
-### StatsStore
+### StatsStore (`@Observable`)
+
 ```swift
+@Observable
 @MainActor
-final class StatsStore: ObservableObject {
-    @Published var profile: AccountUser?
-    @Published var userStats: UserStats?
-    @Published var modeStats: [ModeStats] = []
-    @Published var activityDays: [ActivityDay] = []
-    @Published var achievements: [Achievement] = []
-    @Published var newAchievements: [Achievement] = []  // очередь для toast
-    @Published var isLoading = false
-    @Published var error: String?
+final class StatsStore {
+    var profile: AccountUser?
+    var userStats: UserStats?
+    var modeStats: [ModeStats] = []
+    var activityDays: [ActivityDay] = []
+    var achievements: [Achievement] = []
+    var newAchievements: [Achievement] = []
+    var isLoading = false
+    var error: String?
 
     private var lastFetchedAt: Date?
     private let cacheTTL: TimeInterval = 60
 
-    func loadIfNeeded() async          // пропустить если TTL не истёк
-    func reload() async                // принудительное обновление
+    func loadIfNeeded() async
+    func reload() async
+    func clear()
     func updateProfile(displayName: String?, avatarUrl: String?, geminiApiKey: String?) async throws
     func dismissAchievement(_ id: String)
 }
 ```
 
-### AccountStore
+### AccountStore (`@Observable`)
+
 ```swift
+@Observable
 @MainActor
-final class AccountStore: ObservableObject {
-    @Published var shareCode: ShareCode?
-    @Published var viewers: [ShareAccessViewer] = []
-    @Published var students: [LinkedStudent] = []
-    @Published var studentStatCache: [String: StudentStatBundle] = [:]
-    @Published var isLoading = false
+final class AccountStore {
+    var shareCode: ShareCode?
+    var viewers: [ShareAccessViewer] = []
+    var students: [LinkedStudent] = []
+    var studentStatCache: [String: StudentStatBundle] = [:]
+    var isLoading = false
 
     func loadShareData() async
     func activateCode(_ code: String) async throws
     func revokeViewer(accessId: String) async throws
     func unlinkStudent(accessId: String) async throws
     func prefetchStudentStats(studentId: String) async
+    func clear()
 }
 ```
 
@@ -416,11 +479,12 @@ enum AppRoute: Hashable {
     case studentStats(studentId: String, activatedAt: String)
 }
 
+@Observable
 @MainActor
-final class Router: ObservableObject {
-    @Published var path = NavigationPath()
-    @Published var activeGame: GameSession? = nil    // fullScreenCover для игры
-    @Published var showResult = false
+final class Router {
+    var path = NavigationPath()
+    var showGame = false
+    var showResult = false
 
     func push(_ route: AppRoute) { path.append(route) }
     func pop() { guard !path.isEmpty else { return }; path.removeLast() }
@@ -428,133 +492,188 @@ final class Router: ObservableObject {
 }
 ```
 
-В `SandarApp.swift`:
+В `SandarApp.swift` инжектировать через `@Environment`:
 ```swift
-NavigationStack(path: $router.path) {
-    HomeView()
-        .navigationDestination(for: AppRoute.self) { route in
-            switch route {
-            case .profile: ProfileView()
-            case .profileEdit: ProfileEditView()
-            case .shareAccess: SharedAccessView()
-            case .studentStats(let id, let date): StudentStatsView(studentId: id, activatedAt: date)
-            }
-        }
-}
-.fullScreenCover(isPresented: $router.showGame) { GameView() }
-.environmentObject(router)
-.environmentObject(gameStore)
-.environmentObject(statsStore)
-.environmentObject(accountStore)
-```
+@main
+struct SandarApp: App {
+    @State private var router = Router()
+    @State private var gameStore = GameStore()
+    @State private var statsStore = StatsStore()
+    @State private var accountStore = AccountStore()
 
-**Важно:** GameView и ResultView показывать через `fullScreenCover`, а не push — чтобы нельзя было свайпнуть назад во время игры. `.interactiveDismissDisabled(true)` для GameView.
+    var body: some Scene {
+        WindowGroup {
+            NavigationStack(path: $router.path) {
+                HomeView()
+                    .navigationDestination(for: AppRoute.self) { route in
+                        switch route {
+                        case .profile:                         ProfileView()
+                        case .profileEdit:                     ProfileEditView()
+                        case .shareAccess:                     SharedAccessView()
+                        case .studentStats(let id, let date):  StudentStatsView(studentId: id, activatedAt: date)
+                        }
+                    }
+            }
+            .fullScreenCover(isPresented: $router.showGame) { GameView() }
+            .fullScreenCover(isPresented: $router.showResult) { ResultView() }
+            .environment(router)
+            .environment(gameStore)
+            .environment(statsStore)
+            .environment(accountStore)
+        }
+    }
+}
+```
 
 ---
 
-## Экраны — детальное описание
+## Экраны
 
 ### 1. HomeView
-- Заголовок "SANDAR" (`.textCase(.uppercase)`, small caps эффект), subtitle "Тренажёр счёта"
-- `DifficultyPickerView` — 4 кнопки в `HStack` с emoji и подписью. Активная кнопка — `.appAccentSoft` фон, `.appAccent` текст. Остальные — `.appElevated` фон.
-- `LazyVGrid(columns: [.init(), .init(), .init()])` из 6 `ModeCardView`:
-  - Сложение (SF: `plus`), Вычитание (SF: `minus`), Умножение (SF: `multiply`), Деление (SF: `divide`), Таблица (SF: `tablecells`), Всё подряд (SF: `shuffle`)
-- Нажатие на карточку → `gameStore.startGame(mode:)`, `router.showGame = true`
-- В `.toolbar`: кнопка профиля справа (аватар или `person.circle`) → `router.push(.profile)`; выбор языка слева
+- Заголовок приложения, подзаголовок
+- `DifficultyPickerView` — `Picker` стиль `.segmented` или кастомные кнопки, 4 варианта с emoji. Выбор сохраняется в `gameStore.difficulty` через `@AppStorage`.
+- Сетка 3×2 из `ModeCardView` — стандартные `Button` с иконкой SF Symbol и названием режима. Нажатие → `gameStore.startGame(mode:)` + `router.showGame = true`.
+- `.toolbar { ToolbarItem(placement: .topBarTrailing) { ProfileButton() } }` — кнопка профиля. `.toolbar { ToolbarItem(placement: .topBarLeading) { LanguagePicker() } }`
 
-### 2. GameView (fullScreenCover)
-- `.interactiveDismissDisabled(true)` — нельзя закрыть свайпом
-- Кастомный navbar: слева — название режима, справа — "X / 12", кнопка × с `confirmationDialog("Прервать игру?")` → `router.showGame = false`
-- `ProgressBarView` — `GeometryReader` для ширины, анимация `.animation(.easeInOut, value: progress)`
-- `ProblemCardView`: subtitle мелким шрифтом, вопрос `font(.system(size: 48, weight: .bold, design: .rounded))`
-- `AnswerGridView` — `LazyVGrid(columns: [.init(), .init()])` из 4 кнопок:
-  - Состояния: `.normal`, `.correct` (`.appSuccess` фон), `.wrong` (`.appDanger` фон), `.locked` (opacity 0.4, disabled)
-  - После выбора: заблокировать все кнопки, показать цвета, через 200ms вызвать `gameStore.advance()`
-- Когда `session.index >= session.total` → закрыть fullScreenCover, показать ResultView
+### 2. GameView (`fullScreenCover`)
+- `.interactiveDismissDisabled(true)`
+- Кастомный toolbar или `VStack` с: название режима слева, счётчик "N / 12" справа, кнопка закрыть (xmark) с `confirmationDialog`
+- `ProgressBarView` — стандартный `ProgressView(value:)` или `GeometryReader` + `Rectangle`
+- `ProblemCardView` — вопрос крупным шрифтом, subtitle мелким
+- Область ответа (нижняя часть экрана):
+  - Справа над кнопками/полем: `AnswerInputModePicker` (segmented control)
+  - Под пикером: `AnswerButtonsView` или `AnswerKeyboardView` — в зависимости от выбранного режима
+- `session.index >= session.total` → `router.showGame = false; router.showResult = true`
 
-### 3. ResultView (fullScreenCover)
-- `ConfettiView()` поверх всего через `ZStack` — показывать только если `score == total`
-  - `CAEmitterLayer`: 90 частиц, 5 цветов, duration 2.6с, затем `emitter.birthRate = 0`
-- Заголовок "Готово!", subtitle "Результаты", большой счёт "score / total" в `font(.system(size: 72, weight: .bold))`
-- Кнопка "Разбор ошибок" — `.disabled(session.mistakes.isEmpty)` → `gameStore.startGame(mode: .review)`, `router.showResult = false`, `router.showGame = true`
-- Кнопка "Ещё раунд" → `gameStore.startGame(mode: session.sourceMode)`, replace covers
-- Сетка режимов (те же 6 карточек что на Home) для быстрого нового раунда
+#### AnswerInputModePicker
+```swift
+// Персистентный выбор между кнопками и клавиатурой
+@AppStorage("answerInputMode") private var inputMode: AnswerInputMode = .buttons
+
+enum AnswerInputMode: String {
+    case buttons   // 4 кнопки с вариантами
+    case keyboard  // TextField + numberPad
+}
+
+// UI: Picker с двумя иконками, стиль .segmented, размещается справа над областью ответа
+Picker("", selection: $inputMode) {
+    Image(systemName: "rectangle.grid.2x2.fill").tag(AnswerInputMode.buttons)
+    Image(systemName: "keyboard").tag(AnswerInputMode.keyboard)
+}
+.pickerStyle(.segmented)
+.fixedSize()
+```
+
+**Поведение:**
+- `@AppStorage` — выбор сохраняется между раундами и сессиями приложения
+- В keyboard-режиме клавиатура не скрывается между вопросами до конца раунда — поле получает фокус через `@FocusState` и `focused($isFocused)`, `isFocused = true` вызывается при каждом переходе к новому вопросу в `advance()`
+- При старте нового раунда активируется тот же режим, что был сохранён
+
+#### AnswerButtonsView
+- `LazyVGrid` 2 колонки, 4 кнопки с вариантами ответа
+- Состояния кнопки: обычное / correct (акцент) / wrong (danger) / locked (disabled)
+- После выбора: все кнопки блокируются, через 200ms `gameStore.advance()`
+
+#### AnswerKeyboardView
+```swift
+// TextField с .keyboardType(.numberPad), поле всегда в фокусе внутри раунда
+@FocusState private var isFocused: Bool
+@State private var input: String = ""
+
+// Структура:
+// TextField("Ответ", text: $input)
+//     .keyboardType(.numberPad)
+//     .focused($isFocused)
+//     .onSubmit { submitKeyboardAnswer() }  // кнопка Done на клавиатуре
+// + кнопка "Проверить" рядом с полем (на случай если onSubmit не сработает)
+
+func submitKeyboardAnswer() {
+    guard let answer = Int(input) else { return }
+    input = ""
+    gameStore.submitAnswer(answer)
+    // задержка 200ms при correct, потом isFocused = true снова
+}
+```
+
+**Важно:** `.keyboardType(.numberPad)` не показывает кнопку Done по умолчанию. Добавить кнопку Done через `toolbar`:
+```swift
+.toolbar {
+    ToolbarItemGroup(placement: .keyboard) {
+        Spacer()
+        Button("Готово") { submitKeyboardAnswer() }
+    }
+}
+```
+
+### 3. ResultView (`fullScreenCover`)
+- `ConfettiView` как overlay — только при `score == total`
+- Заголовок, счёт "score / total"
+- Кнопка "Разбор ошибок" — `.disabled(session.mistakes.isEmpty)` → review-раунд
+- Кнопка "Ещё раунд" → тот же режим заново
+- Сетка из 6 `ModeCardView` для быстрого старта другого режима
 
 ### 4. ProfileView
 - **Авторизован:**
-  - `AsyncImage(url: URL(string: profile.avatarUrl))` в круглой маске 60pt, fallback — инициалы на `.appAccentSoft` фоне
-  - Имя/email, дата регистрации через `Date+Formatting`
-  - Кнопка pencil → `router.push(.profileEdit)`
-  - `BadgeRowView`: 🔥 N дней, ⚡ N XP — горизонтальный `HStack` с капсулами
-  - `StatGridView` — `LazyVGrid(columns: [.init(), .init(), .init()])` 2 строки: сессии, вопросы, точность %, правильных, серия, рекорд
-  - `AISummaryPanel` (если `profile.geminiApiKey != nil`)
+  - `AvatarView` — `AsyncImage` с fallback на инициалы. Кнопка редактировать в toolbar.
+  - Имя / email / дата регистрации
+  - `BadgeRowView` — 🔥 дней подряд, ⚡ XP
+  - `StatGridView` — 6 ячеек: сессии, вопросы, точность, правильных, серия, рекорд серии
+  - `AISummaryPanel` (если `geminiApiKey != nil`)
   - `ActivityHeatmapView`
   - `WeeklyAccuracyChartView`
-  - `ModeStatsListView` с `Picker("", selection: $filterDifficulty) { ... }.pickerStyle(.segmented)`
+  - `ModeStatsListView` с `Picker` `.segmented` для фильтра по сложности
   - `AchievementsView`
-  - Карточка-кнопка "Поделиться" → `router.push(.shareAccess)`
-  - Кнопка "Выход" → `supabase.auth.signOut()`, очистить store-ы, pop to root
-- **Не авторизован:** кнопка "Войти" → `.sheet(isPresented:) { AuthView() }`
-- Skeleton через `redacted(reason: .placeholder)` пока `isLoading`
+  - Кнопка "Поделиться" → `router.push(.shareAccess)`
+  - Кнопка "Выход" → `supabase.auth.signOut()`, `statsStore.clear()`, `accountStore.clear()`
+- **Не авторизован:** кнопка "Войти" → `.sheet { AuthView() }`
+- `redacted(reason: .placeholder)` во время загрузки
 
 ### 5. ProfileEditView
-- `PhotosPicker(selection: $photoItem, matching: .images)` → конвертировать в `Data` (JPEG, compressionQuality: 0.8), проверить ≤ 2MB
-- `TextField("Имя", text: $displayName).onChange { if displayName.count > 50 { displayName = String(displayName.prefix(50)) } }`
-- Email — `Text(profile.email ?? "")` (не редактируемый)
-- Кнопка "Сохранить" — `@State var isSaving = false`, `.disabled(isSaving)`
-- Загрузка: `supabase.storage.from("avatars").upload(path: "\(userId).jpg", file: imageData, options: .init(contentType: "image/jpeg", upsert: true))` → `supabase.storage.from("avatars").getPublicURL(path:)` → обновить профиль
+- `PhotosPicker(selection: $photoItem, matching: .images)` — конвертировать в JPEG `Data`, проверить ≤ 2MB
+- `TextField` для имени, ограничение 50 символов через `.onChange`
+- Email — нередактируемый `Text`
+- Кнопка "Сохранить" — `.disabled(isSaving)`
+- Загрузка через `supabase.storage.from("avatars").upload(...)` → получить publicURL → обновить профиль
 
 ### 6. AuthView (sheet)
-- `@State var step: AuthStep = .email` (enum: `.email`, `.code`)
-- **Шаг email:** `TextField("Email", text: $email).keyboardType(.emailAddress).textInputAutocapitalization(.never)` + кнопка "Отправить код" → `supabase.auth.signInWithOTP(email: email)`
-- **Шаг code:** `SecureField("Код", text: $code).keyboardType(.numberPad)` + кнопка "Войти" → `supabase.auth.verifyOTP(email: email, token: code, type: .email)` + кнопка "Назад"
-- После успешного логина: dismiss sheet, `statsStore.reload()`, `gameStore.syncPendingSessions()`
-- Ошибки показывать через `@State var errorMessage: String?` под кнопкой
+- Шаг 1: `TextField` для email (`.keyboardType(.emailAddress)`, `.textInputAutocapitalization(.never)`) + кнопка "Отправить код" → `supabase.auth.signInWithOTP(email:)`
+- Шаг 2: `TextField` для 6-значного кода (`.keyboardType(.numberPad)`) + кнопка "Войти" → `supabase.auth.verifyOTP(email:token:type:.email)` + кнопка "Назад"
+- После логина: dismiss, `statsStore.reload()`, `gameStore.syncPendingSessions()`
+- Ошибки — `Text` под кнопкой
 
 ### 7. SharedAccessView
-- `Picker("", selection: $tab) { Text("Родитель").tag(0); Text("Студент").tag(1) }.pickerStyle(.segmented)`
-- **Вкладка "Родитель":**
-  - `TextField("Код доступа", text: $codeInput).textInputAutocapitalization(.characters).disableAutocorrection(true).onChange { codeInput = String(codeInput.prefix(8)) }`
-  - Кнопка "Добавить" → `accountStore.activateCode(codeInput)`
-  - `List(accountStore.students)` — каждый LinkedStudent с `AvatarView`, именем, датой, `chevron.right` → `router.push(.studentStats(...))`
-- **Вкладка "Студент":**
-  - Код в `Text(shareCode.code).font(.system(.title, design: .monospaced).bold())`
-  - Кнопка "Копировать" → `UIPasteboard.general.string = "https://sandar.kz/share?code=\(code)"` → через `Task.sleep(.seconds(2))` вернуть label обратно
-  - `List(accountStore.viewers)` — каждый viewer с аватаром, именем, датой и кнопкой × с `confirmationDialog` → `accountStore.revokeViewer(accessId:)`
+- `Picker` `.segmented`: "Родитель" / "Студент"
+- **Родитель:** `TextField` для кода (`.autocapitalization(.characters)`) + кнопка "Добавить". `List` студентов → `router.push(.studentStats(...))`
+- **Студент:** моноширинный `Text` с кодом. Кнопка "Копировать" → `UIPasteboard.general.string = deepLink`, label меняется на "Скопировано!" на 2с. `List` вьюеров с кнопкой отзыва через `confirmationDialog`.
 
 ### 8. StudentStatsView
-- Профиль студента read-only: `AvatarView`, имя, email, "Доступ с \(activatedAt)"
+- Read-only профиль студента
 - `BadgeRowView`, `StatGridView`, `ActivityHeatmapView`, `WeeklyAccuracyChartView`, `ModeStatsListView`
 - Данные из `accountStore.studentStatCache[studentId]`
-- `.toolbar { Button("Отвязать") { showUnlink = true } }.confirmationDialog(...)` → `accountStore.unlinkStudent(accessId:)` → `router.pop()`
-- В `.task { await accountStore.prefetchStudentStats(studentId: studentId) }`
+- Toolbar кнопка "Отвязать" → `confirmationDialog` → `accountStore.unlinkStudent(accessId:)` → `router.pop()`
 
 ### 9. ActivityHeatmapView
-- 26 недель × 7 дней = 182 ячейки
-- `LazyHGrid(rows: Array(repeating: .init(.fixed(14)), count: 7), spacing: 3)` — колонки = недели слева направо
-- Каждая ячейка: `RoundedRectangle(cornerRadius: 2).fill(colorForLevel(day.level))` 14×14pt
-- Цвет уровней: 0 → `.appElevated`, 1–4 → `appAccent.opacity(0.2 * Double(level) + 0.1)`
-- Тап по ячейке → `.popover` или `.overlay` с датой и кол-вом сессий
+- 26 недель × 7 дней, 182 ячейки
+- `LazyHGrid` с 7 строками (дни недели) — колонки слева направо = недели
+- Интенсивность цвета по `day.level` (0–4): от `AppElevated` до `AppAccent`
+- Тап → `.popover` или `.overlay` с датой и кол-вом сессий
 
 ### 10. WeeklyAccuracyChartView
-- Агрегировать `activityDays` по ISO неделям: для каждой недели вычислить `sum(correct) / sum(questions)`
-- `Chart { ForEach(weeklyData) { BarMark(x: .value("Неделя", $0.weekLabel), y: .value("Точность", $0.accuracy * 100)) .foregroundStyle(Color.appAccent) } }.chartYScale(domain: 0...100)`
-- Минимальная высота 150pt
+- `Charts` framework, `BarMark` по неделям, Y-axis 0–100%
+- Данные: агрегировать `activityDays` по ISO-неделям, считать `sum(correct) / sum(questions)`
 
 ---
 
 ## API Layer
 
-Все запросы через `APIClient`. Auth-заголовок получать перед каждым запросом:
-
 ```swift
 actor APIClient {
     static let shared = APIClient()
-    private let baseURL: URL   // из Info.plist ключ "API_BASE_URL"
+    private let baseURL: URL   // из Info.plist, ключ "API_BASE_URL"
 
-    private func authHeader() async throws -> [String: String] {
+    private func authHeaders() async throws -> [String: String] {
         let token = try await SupabaseService.shared.client.auth.session.accessToken
-        return ["Authorization": "Bearer \(token)"]
+        return ["Authorization": "Bearer \(token)", "Content-Type": "application/json"]
     }
 
     func getStats() async throws -> StatsResponse
@@ -562,7 +681,6 @@ actor APIClient {
     func saveSession(_ payload: CompletedSessionPayload) async throws
     func getSessions() async throws -> [ServerSession]
 
-    // Share
     func getShareCode() async throws -> ShareCode
     func getViewers() async throws -> [ShareAccessViewer]
     func activateCode(_ code: String) async throws -> ActivateCodeResponse
@@ -570,16 +688,12 @@ actor APIClient {
     func unlinkStudent(accessId: String) async throws
     func revokeViewer(accessId: String) async throws
 
-    // Student data (для родителя)
     func getStudentProfile(studentId: String) async throws -> AccountUser
     func getStudentStats(studentId: String) async throws -> UserStats
     func getStudentModeStats(studentId: String) async throws -> [ModeStats]
     func getStudentActivity(studentId: String) async throws -> [ActivityDay]
 }
-```
 
-Payload для сохранения сессии:
-```swift
 struct CompletedSessionPayload: Encodable {
     var mode: String
     var difficulty: String
@@ -589,20 +703,14 @@ struct CompletedSessionPayload: Encodable {
     var durationSeconds: Int
     var answers: [SessionAnswer]
 }
-```
 
-Обработка ошибок:
-```swift
-enum APIError: Error, LocalizedError {
-    case unauthorized
-    case notFound
+enum APIError: Error {
+    case unauthorized           // HTTP 401 → показать AuthView
+    case notFound               // HTTP 404
     case serverError(Int)
     case decodingError(Error)
     case networkError(Error)
 }
-// HTTP 401 → .unauthorized → показать AuthView
-// HTTP 404 → .notFound
-// HTTP 429 → обработать отдельно для Gemini (rate limit)
 ```
 
 ---
@@ -610,30 +718,29 @@ enum APIError: Error, LocalizedError {
 ## AI Summary (Gemini)
 
 ```swift
+@Observable
 @MainActor
-final class AIStore: ObservableObject {
-    @Published var summary: String?
-    @Published var isLoading = false
-    @Published var error: AIError?
+final class AIStore {
+    var summary: String?
+    var isLoading = false
+    var error: AIError?
 
-    // Кэш
-    @AppStorage("aiSummary") private var cachedSummary: String = ""
-    @AppStorage("aiSummaryStatsHash") private var cachedHash: String = ""
+    @ObservationIgnored @AppStorage("aiSummaryCache") private var cachedSummary = ""
+    @ObservationIgnored @AppStorage("aiSummaryHash") private var cachedHash = ""
 
     func generateSummary(stats: UserStats, modeStats: [ModeStats]) async
-    func validateAndSave(apiKey: String) async throws  // проверить через тестовый запрос
+    func validateAndSave(apiKey: String) async throws
     func clearSummary()
 
-    private func statsHash(_ stats: UserStats, _ modeStats: [ModeStats]) -> String
-    // Простой хэш: "\(stats.totalCorrect)-\(stats.totalSessions)-\(stats.currentStreak)"
+    private func statsHash(_ stats: UserStats) -> String {
+        "\(stats.totalCorrect)-\(stats.totalSessions)-\(stats.currentStreak)"
+    }
 }
 ```
 
-Вызов Gemini:
-- URL: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=\(apiKey)`
-- Метод: POST, Content-Type: application/json
-- Валидация ключа: `NSPredicate(format: "SELF MATCHES %@", "AIza[0-9A-Za-z_-]{35}").evaluate(with: key)`
-- Ошибки: HTTP 400/403 → `.invalidKey`, 429 → `.rateLimit`
+- Gemini endpoint: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=KEY`
+- Валидация ключа: `NSPredicate(format: "SELF MATCHES %@", "AIza[0-9A-Za-z_-]{35}")`
+- HTTP 400/403 → `.invalidKey`, 429 → `.rateLimit`
 - Регенерировать только если `statsHash != cachedHash`
 
 ---
@@ -641,33 +748,27 @@ final class AIStore: ObservableObject {
 ## Offline режим
 
 ```swift
-// UserDefaults key: "pendingSessions"
-// Тип: Data (JSONEncoder/JSONDecoder на [PendingSession])
-// Макс: 50 сессий (при превышении удалять самые старые)
+// UserDefaults key: "pendingSessions", тип [PendingSession] через JSONEncoder
+// Максимум 50 — при превышении удалять самые старые
 
 // GameStore.completeSession():
 func completeSession() async {
     let payload = buildPayload()
+    guard await isLoggedIn() else { savePendingSession(payload); return }
     do {
-        guard await isLoggedIn() else {
-            savePendingSession(payload)
-            return
-        }
         try await APIClient.shared.saveSession(payload)
         await statsStore.reload()
         checkAchievements()
     } catch {
-        savePendingSession(payload)  // сохранить локально при любой ошибке
+        savePendingSession(payload)
     }
 }
 
-// При логине вызывать:
+// Вызывать при signedIn:
 func syncPendingSessions() async {
     let pending = loadPendingSessions()
     guard !pending.isEmpty else { return }
-    for session in pending {
-        try? await APIClient.shared.saveSession(session)
-    }
+    for session in pending { try? await APIClient.shared.saveSession(session) }
     clearPendingSessions()
     await statsStore.reload()
 }
@@ -677,7 +778,7 @@ func syncPendingSessions() async {
 
 ## Достижения
 
-11 достижений, описание хранить в `AchievementCatalog.swift` как статический словарь. Проверять после каждой сохранённой сессии:
+Статические данные в `AchievementCatalog.swift`. Проверять после каждой сохранённой сессии:
 
 | ID | Условие |
 |---|---|
@@ -688,27 +789,20 @@ func syncPendingSessions() async {
 | `thousand_questions` | totalQuestions >= 1000 |
 | `perfect_streak_5` | currentStreak >= 5 |
 | `perfect_streak_10` | currentStreak >= 10 |
-| `all_modes` | попробованы все 6 режимов (хранить Set в UserDefaults) |
-| `multiplication_master` | accuracy >= 0.9 && questionsCount >= 50 для multiplication |
-| `division_master` | accuracy >= 0.9 && questionsCount >= 50 для division |
+| `all_modes` | попробованы все 6 режимов (Set в UserDefaults) |
+| `multiplication_master` | accuracy >= 0.9 && questionsCount >= 50 (multiplication) |
+| `division_master` | accuracy >= 0.9 && questionsCount >= 50 (division) |
 | `sharp_shooter` | accuracy >= 0.95 && totalQuestions >= 100 |
 
-**Toast:** `AchievementToastView` в корневом `ZStack` через `@EnvironmentObject` StatsStore. Показывать через `.transition(.move(edge: .bottom).combined(with: .opacity))`, `withAnimation`. Скрывать через `Task.sleep(.seconds(3))`. Хранить множество показанных в `UserDefaults("seenAchievements")`.
+**Toast:** `AchievementToastView` поверх всего через `ZStack` в корне приложения, стандартные SwiftUI анимации, автоскрытие через `Task.sleep(.seconds(3))`. Показанные хранить в `UserDefaults("seenAchievements")`.
 
 ---
 
 ## Локализация
 
-Поддерживать два языка: `ru` (по умолчанию), `kk`. Хранить выбор в `@AppStorage("appLocale")`. Применять через кастомный `LocaleManager`:
+Языки: `ru` (по умолчанию), `kk`. Выбор в `@AppStorage("appLocale")`.
 
-```swift
-final class LocaleManager: ObservableObject {
-    @AppStorage("appLocale") var locale: String = "ru"
-    func string(_ key: String) -> String { /* lookup в словаре */ }
-}
-```
-
-Файлы `Localizable.strings` (ru) и `Localizable.strings` (kk) — добавить через Add Files в Xcode с выбором локализации.
+Стандартные `Localizable.strings` (добавить через Add Files → Localize). Обращение через `String(localized:)` или кастомный `LocaleManager` если нужен runtime switch без перезапуска.
 
 Ключевые строки:
 ```
@@ -743,7 +837,7 @@ final class LocaleManager: ObservableObject {
 "share.noViewers" = "Нет зрителей";
 ```
 
-Склонение дней для стрика — отдельная функция:
+Склонение дней:
 ```swift
 func daysString(_ n: Int) -> String {
     switch n % 10 {
@@ -759,29 +853,24 @@ func daysString(_ n: Int) -> String {
 ## Supabase конфигурация
 
 ```swift
-// SupabaseService.swift
-import Supabase
-
 final class SupabaseService {
     static let shared = SupabaseService()
     let client: SupabaseClient
 
     private init() {
-        // Читать из Info.plist
-        let url = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL") as! String
-        let key = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_ANON_KEY") as! String
+        let url  = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL")  as! String
+        let key  = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_ANON_KEY") as! String
         client = SupabaseClient(supabaseURL: URL(string: url)!, supabaseKey: key)
     }
 }
 ```
 
-В `Info.plist` добавить ключи `SUPABASE_URL` и `SUPABASE_ANON_KEY` — читать из `.xcconfig` файла (не хардкодить в коде). Добавить `.xcconfig` в `.gitignore`.
+Ключи — в `.xcconfig`, подключить через Build Settings. `.xcconfig` добавить в `.gitignore`.
 
-Слушать изменения auth состояния:
+Auth state listener (в `SandarApp` или `AppEnvironment`):
 ```swift
-// В SandarApp или AppEnvironment:
 Task {
-    for await (event, session) in supabase.auth.authStateChanges {
+    for await (event, _) in supabase.auth.authStateChanges {
         switch event {
         case .signedIn:
             await statsStore.reload()
@@ -799,31 +888,26 @@ Task {
 
 ## XP и уровни
 
-- XP начисляется сервером (DB trigger), клиент только отображает
-- Локальный расчёт для предварительного показа:
-  - easy: 1 × correctAnswers
-  - medium: 2 × correctAnswers
-  - hard: 3 × correctAnswers
-  - brain: 5 × correctAnswers
-  - Бонус +50 XP каждые 5 perfect-сессий подряд (`currentStreak % 5 == 0 && score == total`)
+- XP начисляется сервером (DB trigger). Клиент только отображает.
+- Локальный предварительный расчёт: `difficulty.xpMultiplier × correctAnswers` + `50` если `currentStreak % 5 == 0 && score == total`
 - `level = totalXP / 1000 + 1`
-- Прогресс до следующего уровня: `Double(totalXP % 1000) / 1000.0`
+- Прогресс к следующему уровню: `Double(totalXP % 1000) / 1000.0`
 
 ---
 
 ## Проверка реализации
 
-1. Запустить на симуляторе iOS 16+ (iPhone 15 Pro) и реальном устройстве
-2. Пройти полную игровую сессию → сессия должна появиться в `/api/sessions`
-3. Открыть Profile → stats, heatmap, chart обновились
-4. Включить Airplane Mode → пройти сессию → pending сохранён → выключить → зайти в профиль → sync произошёл
-5. Набрать perfect score → конфетти 2.6с, haptic, стрик увеличился
-6. Попробовать режим review после ошибок
-7. Загрузить аватар (PhotosPicker) → отображается в профиле
-8. Добавить Gemini API key → сгенерировать summary
-9. Создать share code → ввести с другого аккаунта → студент появляется в списке родителя
-10. Открыть studentStats → все данные загружены
-11. Dark Mode: Settings → Display & Brightness → все цвета корректны
-12. Переключить язык ru ↔ kk → все UI-строки обновились
-13. Проверить `.interactiveDismissDisabled` — нельзя случайно закрыть GameView
-14. Повернуть устройство — layout не ломается
+1. Запустить на симуляторе iOS 18 и реальном устройстве
+2. Пройти полный раунд — сессия появляется в API
+3. Переключить на keyboard-режим → клавиатура не исчезает между вопросами
+4. Закрыть приложение, открыть снова — keyboard-режим сохранился (`@AppStorage`)
+5. Airplane Mode → раунд → pending сохранён → выключить → sync при открытии
+6. Perfect score → конфетти + стрик
+7. Разбор ошибок работает как отдельный раунд без записи на сервер
+8. PhotosPicker → аватар обновился
+9. Gemini API key → summary сгенерирован, кэширован
+10. Share code → активировать с другого аккаунта → студент в списке родителя
+11. Dark Mode → все цвета из Asset Catalog переключаются корректно
+12. Переключить язык ru ↔ kk → все строки обновились
+13. Нельзя свайпнуть GameView назад (`.interactiveDismissDisabled`)
+14. Добавить новый режим игры: создать один Strategy-файл, зарегистрировать в реестре — убедиться что остальной код не затронут
