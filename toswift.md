@@ -200,29 +200,46 @@ struct AccountUser: Codable {
     }
 }
 
+// share_codes: id, user_id, code, created_at (нет is_active — удалена при миграции)
 struct ShareCode: Codable {
     var id: String
     var code: String           // 8 символов uppercase
     var createdAt: String
-    var isActive: Bool
 }
 
+// Возвращается RPC get_owner_share_access — viewer-данные приходят из JOIN с profiles
 struct ShareAccessViewer: Identifiable, Codable {
-    var id: String
+    var id: String             // share_access.id
+    var shareCodeId: String
+    var viewerId: String
     var viewerEmail: String
     var viewerDisplayName: String?
     var viewerAvatarUrl: String?
-    var activatedAt: String
+    var activatedAt: String    // алиас share_access.created_at в RPC
     var isActive: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case id, viewerId = "viewer_id", shareCodeId = "share_code_id"
+        case viewerEmail = "viewer_email", viewerDisplayName = "viewer_display_name"
+        case viewerAvatarUrl = "viewer_avatar_url", activatedAt = "activated_at", isActive = "is_active"
+    }
 }
 
+// Возвращается RPC get_viewed_students
 struct LinkedStudent: Identifiable, Codable {
-    var id: String             // access_id
-    var studentId: String
+    var id: String             // share_access.id (access_id для отвязки)
+    var studentId: String      // share_codes.user_id
     var studentEmail: String
     var studentDisplayName: String?
     var studentAvatarUrl: String?
-    var activatedAt: String
+    var activatedAt: String    // алиас share_access.created_at в RPC
+    var isActive: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case id, studentId = "student_id", studentEmail = "student_email"
+        case studentDisplayName = "student_display_name", studentAvatarUrl = "student_avatar_url"
+        case activatedAt = "activated_at", isActive = "is_active"
+    }
 }
 
 struct PendingSession: Codable {
@@ -666,55 +683,70 @@ func submitKeyboardAnswer() {
 
 ## API Layer — прямые запросы к Supabase
 
-**Важно:** iOS-приложение НЕ вызывает `/api/*` эндпоинты веб-сервера. Это серверные Next.js обёртки, написанные для браузерной cookie-авторизации. iOS работает **напрямую с Supabase** через SDK — авторизация через JWT-токен в Keychain, RLS-политики обеспечивают безопасность.
+**Важно:** iOS-приложение НЕ вызывает `/api/*` эндпоинты веб-сервера. Это Next.js обёртки для браузерной cookie-авторизации. iOS работает **напрямую с Supabase** через SDK. Никакого `API_BASE_URL` не нужно — только `SUPABASE_URL` и `SUPABASE_ANON_KEY`.
 
-Никакого `API_BASE_URL` в конфиге не нужно. Нужны только `SUPABASE_URL` и `SUPABASE_ANON_KEY`.
+Ниже — точные вызовы по реальным схемам из `schema.sql` и `migration_share.sql`.
 
 ### Статистика пользователя
 
 ```swift
-// Вместо GET /api/stats
 let db = SupabaseService.shared.client
 
-// user_stats
-let statsRow = try await db
+// Таблица user_stats: user_id, total_sessions, total_questions, total_correct,
+// total_wrong, total_time_seconds, total_xp, current_streak, best_streak,
+// streak_days, last_session_at, last_session_date, updated_at
+let userStats: UserStats = try await db
     .from("user_stats")
     .select()
     .eq("user_id", value: userId)
     .single()
     .execute()
-    .value as UserStatsRow
+    .value
 
-// mode_stats
-let modeRows = try await db
+// Таблица mode_stats: id, user_id, mode, difficulty, sessions_count,
+// questions_count, correct_count, wrong_count, avg_time_per_question, last_played_at
+let modeStats: [ModeStats] = try await db
     .from("mode_stats")
     .select()
     .eq("user_id", value: userId)
     .execute()
-    .value as [ModeStatsRow]
+    .value
 ```
 
 ### Активность (heatmap)
 
 ```swift
-// Вместо GET /api/activity
-// Запросить сессии за 26 недель, агрегировать по дате на клиенте
+// sessions: created_at, total_questions, correct_answers
 let since = Calendar.current.date(byAdding: .weekOfYear, value: -26, to: Date())!
-let rows = try await db
+let isoSince = ISO8601DateFormatter().string(from: since)
+
+struct SessionActivityRow: Decodable {
+    let createdAt: String
+    let totalQuestions: Int
+    let correctAnswers: Int
+    enum CodingKeys: String, CodingKey {
+        case createdAt = "created_at"
+        case totalQuestions = "total_questions"
+        case correctAnswers = "correct_answers"
+    }
+}
+
+let rows: [SessionActivityRow] = try await db
     .from("sessions")
     .select("created_at, total_questions, correct_answers")
     .eq("user_id", value: userId)
-    .gte("created_at", value: ISO8601DateFormatter().string(from: since))
+    .gte("created_at", value: isoSince)
     .execute()
-    .value as [SessionActivityRow]
+    .value
 // Группировать по "YYYY-MM-DD" на клиенте → [ActivityDay]
 ```
 
 ### Сохранение сессии
 
 ```swift
-// Вместо POST /api/sessions
-// Шаг 1: вставить сессию — DB-триггер update_user_stats_after_session() сработает автоматически
+// КРИТИЧНО: триггер update_user_stats_after_session() срабатывает только при
+// WHEN (NEW.completed_at IS NOT NULL) — обязательно передавать completed_at!
+
 struct SessionInsert: Encodable {
     let user_id: String
     let mode: String
@@ -723,17 +755,29 @@ struct SessionInsert: Encodable {
     let correct_answers: Int
     let wrong_answers: Int
     let duration_seconds: Int
+    let completed_at: String   // ISO8601, обязательно — иначе триггер не сработает
 }
 
-let inserted = try await db
+struct SessionIdRow: Decodable { let id: String }
+
+let row: SessionIdRow = try await db
     .from("sessions")
-    .insert(SessionInsert(...))
+    .insert(SessionInsert(
+        user_id: userId,
+        mode: session.mode.rawValue,
+        difficulty: session.difficulty.rawValue,
+        total_questions: session.total,
+        correct_answers: session.score,
+        wrong_answers: session.total - session.score,
+        duration_seconds: durationSeconds,
+        completed_at: ISO8601DateFormatter().string(from: Date())
+    ))
     .select("id")
     .single()
     .execute()
-    .value as SessionIdRow
+    .value
 
-// Шаг 2: вставить детальные ответы (опционально)
+// Детальные ответы (опционально)
 struct AnswerInsert: Encodable {
     let session_id: String
     let question: String
@@ -741,125 +785,177 @@ struct AnswerInsert: Encodable {
     let user_answer: Int
     let is_correct: Bool
 }
-try await db.from("session_answers").insert(answers).execute()
+let answerRows = session.answers.map {
+    AnswerInsert(session_id: row.id, question: $0.question,
+                 correct_answer: $0.correctAnswer, user_answer: $0.userAnswer,
+                 is_correct: $0.isCorrect)
+}
+try await db.from("session_answers").insert(answerRows).execute()
 ```
 
-### Share code (генерация кода)
+### Share code — получить или создать
 
 ```swift
-// Вместо GET /api/share/code
-// RPC get_or_create_share_code определён в schema.sql
+// RPC: get_or_create_share_code(p_user_id UUID)
+// Возвращает: TABLE(id UUID, code TEXT, created_at TIMESTAMPTZ)
+// share_codes НЕ имеет колонки is_active
 struct ShareCodeParams: Encodable { let p_user_id: String }
+struct ShareCodeRow: Decodable {
+    let id: String
+    let code: String
+    let createdAt: String
+    enum CodingKeys: String, CodingKey {
+        case id, code, createdAt = "created_at"
+    }
+}
 
-let result = try await db
+let row: ShareCodeRow = try await db
     .rpc("get_or_create_share_code", params: ShareCodeParams(p_user_id: userId))
-    .execute()
-    .value as ShareCodeRow
-```
-
-### Активация кода (родитель добавляет студента)
-
-```swift
-// Вместо POST /api/share/activate
-struct ValidateParams: Encodable { let p_code: String }
-
-let owner = try await db
-    .rpc("validate_share_code", params: ValidateParams(p_code: code))
     .single()
     .execute()
-    .value as ShareCodeOwnerRow
+    .value
+```
 
-// Затем вставить запись доступа
+### Активация кода (родитель добавляет студента) — два шага
+
+```swift
+// Шаг 1: RPC validate_share_code(p_code TEXT)
+// Возвращает: TABLE(id UUID, user_id UUID)
+//   id      = share_codes.id (нужен для вставки в share_access)
+//   user_id = владелец кода (студент)
+struct ValidateParams: Encodable { let p_code: String }
+struct ValidateResult: Decodable {
+    let id: String
+    let userId: String
+    enum CodingKeys: String, CodingKey { case id, userId = "user_id" }
+}
+
+let validated: ValidateResult = try await db
+    .rpc("validate_share_code", params: ValidateParams(p_code: code.uppercased()))
+    .single()
+    .execute()
+    .value
+
+// Шаг 2: INSERT INTO share_access
+// share_access: id, share_code_id, viewer_id, created_at, is_active
+// RLS INSERT CHECK: auth.uid() = viewer_id
 struct ShareAccessInsert: Encodable {
     let share_code_id: String
-    let viewer_id: String
-    let viewer_email: String
-    let viewer_display_name: String?
-    let viewer_avatar_url: String?
+    let viewer_id: String      // = текущий пользователь
 }
-try await db.from("share_access").insert(ShareAccessInsert(...)).execute()
+try await db
+    .from("share_access")
+    .insert(ShareAccessInsert(share_code_id: validated.id, viewer_id: currentUserId))
+    .execute()
 ```
 
 ### Список вьюеров (кто смотрит мою статистику)
 
 ```swift
-// Вместо GET /api/share/access
-// RPC get_owner_share_access определён в schema.sql
-struct OwnerParams: Encodable { let p_user_id: String }
+// RPC: get_owner_share_access(p_owner_id UUID)
+// Возвращает: TABLE(id, share_code_id, viewer_id, viewer_email, viewer_display_name,
+//                   viewer_avatar_url, activated_at [=share_access.created_at], is_active)
+struct OwnerParams: Encodable { let p_owner_id: String }
 
-let viewers = try await db
-    .rpc("get_owner_share_access", params: OwnerParams(p_user_id: userId))
+let viewers: [ShareAccessViewer] = try await db
+    .rpc("get_owner_share_access", params: OwnerParams(p_owner_id: userId))
     .execute()
-    .value as [ShareAccessViewer]
+    .value
 ```
 
 ### Список студентов (которых я вижу как родитель)
 
 ```swift
-// Вместо GET /api/share/viewed
+// RPC: get_viewed_students(p_viewer_id UUID)
+// Возвращает: TABLE(id [=share_access.id], student_id [=share_codes.user_id],
+//                   student_email, student_display_name, student_avatar_url,
+//                   activated_at [=share_access.created_at], is_active)
 struct ViewedParams: Encodable { let p_viewer_id: String }
 
-let students = try await db
+let students: [LinkedStudent] = try await db
     .rpc("get_viewed_students", params: ViewedParams(p_viewer_id: userId))
     .execute()
-    .value as [LinkedStudent]
+    .value
 ```
 
 ### Данные студента (для родителя)
 
 ```swift
-// Вместо GET /api/share/student/{id}/stats
-// Проверка доступа — через RLS политику check_student_access в schema.sql
-// Если RLS настроен корректно, просто запрашиваем напрямую:
-let studentStats = try await db
-    .from("user_stats")
-    .select()
-    .eq("user_id", value: studentId)
-    .single()
-    .execute()
-    .value as UserStatsRow
+// Все данные студента — через SECURITY DEFINER RPC (обходят RLS)
+struct StudentIdParams: Encodable { let p_student_id: String }
+
+// get_student_profile(p_student_id UUID) → TABLE(id, email, display_name, avatar_url, created_at)
+let profile: AccountUser = try await db
+    .rpc("get_student_profile", params: StudentIdParams(p_student_id: studentId))
+    .single().execute().value
+
+// get_student_stats(p_student_id UUID) → TABLE(total_sessions, total_questions, total_correct,
+//   total_wrong, total_time_seconds, total_xp, current_streak, best_streak, streak_days,
+//   last_session_at, last_session_date, updated_at)
+let stats: UserStats = try await db
+    .rpc("get_student_stats", params: StudentIdParams(p_student_id: studentId))
+    .single().execute().value
+
+// get_student_mode_stats(p_student_id UUID) → TABLE(id, mode, difficulty, sessions_count,
+//   questions_count, correct_count, wrong_count, avg_time_per_question, last_played_at)
+let modeStats: [ModeStats] = try await db
+    .rpc("get_student_mode_stats", params: StudentIdParams(p_student_id: studentId))
+    .execute().value
+
+// get_student_activity(p_student_id UUID) → TABLE(created_at, total_questions, correct_answers)
+// Возвращает последние 180 сессий, агрегировать по дате на клиенте → [ActivityDay]
+let activityRows: [SessionActivityRow] = try await db
+    .rpc("get_student_activity", params: StudentIdParams(p_student_id: studentId))
+    .execute().value
 ```
 
-### Отзыв доступа / отвязка
+### Отзыв доступа
 
 ```swift
-// Вместо DELETE /api/share/revoke и /api/share/viewed
+// Владелец отзывает чужой доступ:
+// RPC: revoke_access_by_owner(p_access_id UUID, p_owner_id UUID) → VOID
+struct RevokeParams: Encodable { let p_access_id: String; let p_owner_id: String }
+try await db
+    .rpc("revoke_access_by_owner", params: RevokeParams(p_access_id: accessId, p_owner_id: userId))
+    .execute()
+
+// Вьюер сам отвязывается (RLS UPDATE позволяет где viewer_id = auth.uid()):
 try await db
     .from("share_access")
     .update(["is_active": false])
     .eq("id", value: accessId)
+    .eq("viewer_id", value: currentUserId)
     .execute()
 ```
 
 ### Профиль пользователя
 
 ```swift
-// Чтение
-let profile = try await db
+// profiles: id, email, display_name, avatar_url, gemini_api_key,
+//           created_at, updated_at, last_active_at
+let profile: AccountUser = try await db
     .from("profiles")
     .select()
     .eq("id", value: userId)
     .single()
     .execute()
-    .value as ProfileRow
+    .value
 
-// Обновление
 try await db
     .from("profiles")
-    .update(["display_name": name, "avatar_url": url])
+    .update(["display_name": name, "avatar_url": avatarUrl,
+             "updated_at": ISO8601DateFormatter().string(from: Date())])
     .eq("id", value: userId)
     .execute()
 ```
 
-### Обработка ошибок
+### Ошибки
 
 ```swift
-enum DBError: Error {
-    case notFound
-    case unauthorized
-    case rpcError(String)
-}
-// PostgrestError из Supabase SDK содержит code и message — маппить по необходимости
+// supabase-swift бросает PostgrestError (message, code, details, hint)
+// PGRST116 — нет строки для .single() → пустое состояние
+// 42501     — нет прав RLS → разлогинить
+// 23505     — UNIQUE violation (share_access уже существует) → "уже подключён"
 ```
 
 ---
