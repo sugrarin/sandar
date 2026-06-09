@@ -13,7 +13,7 @@
 - **State:** `@Observable` macro (iOS 17+) вместо `ObservableObject`/`@Published` — использовать везде
 - **Хранилище:** `@AppStorage` для настроек и предпочтений, `UserDefaults` + `Codable` для кэша сессий
 - **Auth/DB:** Supabase — пакет `Supabase/supabase-swift`, сессия хранится в Keychain через SDK автоматически
-- **Сеть:** кастомный `APIClient` на основе `URLSession` + `async/await`
+- **Сеть:** `supabase-swift` SDK — все запросы напрямую к Supabase, никаких HTTP-вызовов к стороннему серверу
 - **Графики:** фреймворк `Charts` (iOS 16+)
 - **Фото:** `PhotosUI` (`PhotosPicker`)
 - **Навигация:** `NavigationStack` с `NavigationPath`
@@ -344,7 +344,7 @@ Sandar/
 │   └── Models.swift
 ├── Services/
 │   ├── SupabaseService.swift
-│   ├── APIClient.swift
+│   └── SupabaseService.swift
 │   └── TaskGenerator/
 │       ├── TaskGenerator.swift          // реестр + протокол
 │       ├── AdditionStrategy.swift
@@ -664,53 +664,202 @@ func submitKeyboardAnswer() {
 
 ---
 
-## API Layer
+## API Layer — прямые запросы к Supabase
+
+**Важно:** iOS-приложение НЕ вызывает `/api/*` эндпоинты веб-сервера. Это серверные Next.js обёртки, написанные для браузерной cookie-авторизации. iOS работает **напрямую с Supabase** через SDK — авторизация через JWT-токен в Keychain, RLS-политики обеспечивают безопасность.
+
+Никакого `API_BASE_URL` в конфиге не нужно. Нужны только `SUPABASE_URL` и `SUPABASE_ANON_KEY`.
+
+### Статистика пользователя
 
 ```swift
-actor APIClient {
-    static let shared = APIClient()
-    private let baseURL: URL   // из Info.plist, ключ "API_BASE_URL"
+// Вместо GET /api/stats
+let db = SupabaseService.shared.client
 
-    private func authHeaders() async throws -> [String: String] {
-        let token = try await SupabaseService.shared.client.auth.session.accessToken
-        return ["Authorization": "Bearer \(token)", "Content-Type": "application/json"]
-    }
+// user_stats
+let statsRow = try await db
+    .from("user_stats")
+    .select()
+    .eq("user_id", value: userId)
+    .single()
+    .execute()
+    .value as UserStatsRow
 
-    func getStats() async throws -> StatsResponse
-    func getActivity() async throws -> ActivityResponse
-    func saveSession(_ payload: CompletedSessionPayload) async throws
-    func getSessions() async throws -> [ServerSession]
+// mode_stats
+let modeRows = try await db
+    .from("mode_stats")
+    .select()
+    .eq("user_id", value: userId)
+    .execute()
+    .value as [ModeStatsRow]
+```
 
-    func getShareCode() async throws -> ShareCode
-    func getViewers() async throws -> [ShareAccessViewer]
-    func activateCode(_ code: String) async throws -> ActivateCodeResponse
-    func getLinkedStudents() async throws -> [LinkedStudent]
-    func unlinkStudent(accessId: String) async throws
-    func revokeViewer(accessId: String) async throws
+### Активность (heatmap)
 
-    func getStudentProfile(studentId: String) async throws -> AccountUser
-    func getStudentStats(studentId: String) async throws -> UserStats
-    func getStudentModeStats(studentId: String) async throws -> [ModeStats]
-    func getStudentActivity(studentId: String) async throws -> [ActivityDay]
+```swift
+// Вместо GET /api/activity
+// Запросить сессии за 26 недель, агрегировать по дате на клиенте
+let since = Calendar.current.date(byAdding: .weekOfYear, value: -26, to: Date())!
+let rows = try await db
+    .from("sessions")
+    .select("created_at, total_questions, correct_answers")
+    .eq("user_id", value: userId)
+    .gte("created_at", value: ISO8601DateFormatter().string(from: since))
+    .execute()
+    .value as [SessionActivityRow]
+// Группировать по "YYYY-MM-DD" на клиенте → [ActivityDay]
+```
+
+### Сохранение сессии
+
+```swift
+// Вместо POST /api/sessions
+// Шаг 1: вставить сессию — DB-триггер update_user_stats_after_session() сработает автоматически
+struct SessionInsert: Encodable {
+    let user_id: String
+    let mode: String
+    let difficulty: String
+    let total_questions: Int
+    let correct_answers: Int
+    let wrong_answers: Int
+    let duration_seconds: Int
 }
 
-struct CompletedSessionPayload: Encodable {
-    var mode: String
-    var difficulty: String
-    var totalQuestions: Int
-    var correctAnswers: Int
-    var wrongAnswers: Int
-    var durationSeconds: Int
-    var answers: [SessionAnswer]
-}
+let inserted = try await db
+    .from("sessions")
+    .insert(SessionInsert(...))
+    .select("id")
+    .single()
+    .execute()
+    .value as SessionIdRow
 
-enum APIError: Error {
-    case unauthorized           // HTTP 401 → показать AuthView
-    case notFound               // HTTP 404
-    case serverError(Int)
-    case decodingError(Error)
-    case networkError(Error)
+// Шаг 2: вставить детальные ответы (опционально)
+struct AnswerInsert: Encodable {
+    let session_id: String
+    let question: String
+    let correct_answer: Int
+    let user_answer: Int
+    let is_correct: Bool
 }
+try await db.from("session_answers").insert(answers).execute()
+```
+
+### Share code (генерация кода)
+
+```swift
+// Вместо GET /api/share/code
+// RPC get_or_create_share_code определён в schema.sql
+struct ShareCodeParams: Encodable { let p_user_id: String }
+
+let result = try await db
+    .rpc("get_or_create_share_code", params: ShareCodeParams(p_user_id: userId))
+    .execute()
+    .value as ShareCodeRow
+```
+
+### Активация кода (родитель добавляет студента)
+
+```swift
+// Вместо POST /api/share/activate
+struct ValidateParams: Encodable { let p_code: String }
+
+let owner = try await db
+    .rpc("validate_share_code", params: ValidateParams(p_code: code))
+    .single()
+    .execute()
+    .value as ShareCodeOwnerRow
+
+// Затем вставить запись доступа
+struct ShareAccessInsert: Encodable {
+    let share_code_id: String
+    let viewer_id: String
+    let viewer_email: String
+    let viewer_display_name: String?
+    let viewer_avatar_url: String?
+}
+try await db.from("share_access").insert(ShareAccessInsert(...)).execute()
+```
+
+### Список вьюеров (кто смотрит мою статистику)
+
+```swift
+// Вместо GET /api/share/access
+// RPC get_owner_share_access определён в schema.sql
+struct OwnerParams: Encodable { let p_user_id: String }
+
+let viewers = try await db
+    .rpc("get_owner_share_access", params: OwnerParams(p_user_id: userId))
+    .execute()
+    .value as [ShareAccessViewer]
+```
+
+### Список студентов (которых я вижу как родитель)
+
+```swift
+// Вместо GET /api/share/viewed
+struct ViewedParams: Encodable { let p_viewer_id: String }
+
+let students = try await db
+    .rpc("get_viewed_students", params: ViewedParams(p_viewer_id: userId))
+    .execute()
+    .value as [LinkedStudent]
+```
+
+### Данные студента (для родителя)
+
+```swift
+// Вместо GET /api/share/student/{id}/stats
+// Проверка доступа — через RLS политику check_student_access в schema.sql
+// Если RLS настроен корректно, просто запрашиваем напрямую:
+let studentStats = try await db
+    .from("user_stats")
+    .select()
+    .eq("user_id", value: studentId)
+    .single()
+    .execute()
+    .value as UserStatsRow
+```
+
+### Отзыв доступа / отвязка
+
+```swift
+// Вместо DELETE /api/share/revoke и /api/share/viewed
+try await db
+    .from("share_access")
+    .update(["is_active": false])
+    .eq("id", value: accessId)
+    .execute()
+```
+
+### Профиль пользователя
+
+```swift
+// Чтение
+let profile = try await db
+    .from("profiles")
+    .select()
+    .eq("id", value: userId)
+    .single()
+    .execute()
+    .value as ProfileRow
+
+// Обновление
+try await db
+    .from("profiles")
+    .update(["display_name": name, "avatar_url": url])
+    .eq("id", value: userId)
+    .execute()
+```
+
+### Обработка ошибок
+
+```swift
+enum DBError: Error {
+    case notFound
+    case unauthorized
+    case rpcError(String)
+}
+// PostgrestError из Supabase SDK содержит code и message — маппить по необходимости
 ```
 
 ---
@@ -756,7 +905,7 @@ func completeSession() async {
     let payload = buildPayload()
     guard await isLoggedIn() else { savePendingSession(payload); return }
     do {
-        try await APIClient.shared.saveSession(payload)
+        try await SupabaseService.shared.saveSession(payload)
         await statsStore.reload()
         checkAchievements()
     } catch {
@@ -768,7 +917,7 @@ func completeSession() async {
 func syncPendingSessions() async {
     let pending = loadPendingSessions()
     guard !pending.isEmpty else { return }
-    for session in pending { try? await APIClient.shared.saveSession(session) }
+    for session in pending { try? await SupabaseService.shared.saveSession(session) }
     clearPendingSessions()
     await statsStore.reload()
 }
