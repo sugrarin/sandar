@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Upload, User } from "lucide-react";
+import { Upload } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useTranslations } from "@/lib/translations";
+import { AvatarImage } from "@/components/AvatarImage";
 import { AccentButton } from "@/components/AccentButton";
 import { useStatsStore } from "@/stores/statsStore";
 import { useNavigation } from "@/contexts/NavigationContext";
@@ -106,9 +107,8 @@ export function ProfileEditScreen() {
             aria-label={t("profile.uploadAvatar")}
           >
             {avatarUrl ? (
-              <img
+              <AvatarImage
                 src={avatarUrl}
-                alt=""
                 className="profile-edit__avatar-img"
               />
             ) : (

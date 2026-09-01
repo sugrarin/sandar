@@ -14,6 +14,7 @@ import { useNavigation } from "@/contexts/NavigationContext";
 import { DIFFICULTIES, type Difficulty } from "@/types";
 import { useGameStore } from "@/stores/gameStore";
 import { AiSummaryPanel } from "@/components/AiSummaryPanel";
+import { AvatarImage } from "@/components/AvatarImage";
 
 function formatAccuracy(correct: number, total: number): string {
   if (!total) return "—";
@@ -82,7 +83,10 @@ export function ProfileScreen() {
       <section className="panel panel--soft profile-user">
         <div className="profile-user__avatar" aria-hidden="true">
           {avatarUrl ? (
-            <img src={avatarUrl} alt="" className="profile-user__avatar-img" />
+            <AvatarImage
+              src={avatarUrl}
+              className="profile-user__avatar-img"
+            />
           ) : (
             (displayName || email || "?").slice(0, 2).toUpperCase()
           )}

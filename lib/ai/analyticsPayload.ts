@@ -1,4 +1,4 @@
-import { useStatsStore, type ModeStatsRow, type UserStatsRow } from "@/stores/statsStore";
+import { useStatsStore, type ModeStatsRow } from "@/stores/statsStore";
 import type { GameMode } from "@/types";
 
 export interface OperationStat {

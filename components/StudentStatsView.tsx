@@ -6,6 +6,7 @@ import { useTranslations, useLocale } from "@/lib/translations";
 import { ActivityHeatmap } from "@/components/ActivityHeatmap";
 import { AccuracyChart } from "@/components/AccuracyChart";
 import { SegmentedControl } from "@/components/SegmentedControl";
+import { AvatarImage } from "@/components/AvatarImage";
 import { useNavigation } from "@/contexts/NavigationContext";
 import { useAccountStore } from "@/stores/accountStore";
 import { DIFFICULTIES, type Difficulty } from "@/types";
@@ -110,7 +111,10 @@ export function StudentStatsView({
       <section className="panel panel--soft profile-user">
         <div className="profile-user__avatar" aria-hidden="true">
           {avatarUrl ? (
-            <img src={avatarUrl} alt="" className="profile-user__avatar-img" />
+            <AvatarImage
+              src={avatarUrl}
+              className="profile-user__avatar-img"
+            />
           ) : (
             (displayName || email || "?").slice(0, 2).toUpperCase()
           )}

@@ -20,7 +20,6 @@ interface GameScreenProps {
   lastAnswer: number | null;
   onAnswer: (selected: number) => void;
   onAdvance: () => void;
-  onFinish: () => void;
 }
 
 const THIN_SPACE = "\u2009";
@@ -35,14 +34,11 @@ export function GameScreen({
   lastAnswer,
   onAnswer,
   onAdvance,
-  onFinish,
 }: GameScreenProps) {
   const t = useTranslations();
-  const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
 
   useEffect(() => {
-    setSelectedOption(null);
     setShowResult(false);
   }, [task]);
 
@@ -56,7 +52,6 @@ export function GameScreen({
 
     if (showResult) return;
 
-    setSelectedOption(option);
     setShowResult(true);
     onAnswer(option);
   };

@@ -2,56 +2,56 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { HomeScreen } from "@/components/HomeScreen";
+import type { User } from "@supabase/supabase-js";
 import { SharedAccess } from "@/components/SharedAccess";
 import { AuthButton } from "@/components/AuthButton";
+import { AuthModal } from "@/components/AuthModal";
 import { HeaderBadges } from "@/components/HeaderBadges";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { TranslationProvider, useTranslations } from "@/lib/translations";
 import { createClient } from "@/lib/supabase/client";
 import { useStatsStore } from "@/stores/statsStore";
 
-export default function SharePage() {
+function SharePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const code = searchParams.get("code");
   const t = useTranslations();
-  const [mounted, setMounted] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const supabase = createClient();
 
     const checkAuth = async () => {
-      const supabase = createClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();
       setUser(user);
     };
 
-    checkAuth();
+    void checkAuth();
     useStatsStore.getState().loadAll();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  if (!mounted) {
-    return null;
-  }
-
-  const handleClose = () => {
-    router.push("/");
-  };
-
   return (
-    <TranslationProvider>
+    <>
       <header className="site-header">
         <LanguageSelector />
         <div className="header-right">
           <HeaderBadges />
           <AuthButton
-            onLoginClick={() => {}}
-            onProfileClick={() => {}}
-            active={false}
+            onLoginClick={() => setAuthModalOpen(true)}
+            onProfileClick={() => router.push("/")}
+            active={Boolean(user)}
           />
         </div>
       </header>
@@ -64,20 +64,28 @@ export default function SharePage() {
               {t("share.authRequiredDescription")}
             </p>
             <AuthButton
-              onLoginClick={() => {}}
-              onProfileClick={() => {}}
+              onLoginClick={() => setAuthModalOpen(true)}
+              onProfileClick={() => router.push("/")}
               active={false}
             />
           </div>
         ) : (
           <section className="screen screen--active">
-            <SharedAccess
-              onClose={handleClose}
-              initialCode={code || undefined}
-            />
+            <SharedAccess initialCode={code || undefined} />
           </section>
         )}
       </main>
+      {authModalOpen && (
+        <AuthModal onClose={() => setAuthModalOpen(false)} />
+      )}
+    </>
+  );
+}
+
+export default function SharePage() {
+  return (
+    <TranslationProvider>
+      <SharePageContent />
     </TranslationProvider>
   );
 }

@@ -1,10 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import { Plus, Minus, X, Divide, Grid3X3, Dices } from "lucide-react";
 import { useTranslations } from "@/lib/translations";
 import {
   DIFFICULTIES,
-  MODE_LABELS,
   type Difficulty,
   type GameMode,
 } from "@/types";
@@ -55,10 +55,7 @@ export function HomeScreen({
     brain: t("common.brain"),
   };
 
-  const difficulties = Object.entries(DIFFICULTIES) as [
-    Difficulty,
-    typeof DIFFICULTIES.easy,
-  ][];
+  const difficulties = Object.keys(DIFFICULTIES) as Difficulty[];
 
   return (
     <section className="screen screen--active">
@@ -77,7 +74,7 @@ export function HomeScreen({
           role="tablist"
           aria-label={t("home.selectDifficulty")}
         >
-          {difficulties.map(([key, profile]) => (
+          {difficulties.map((key) => (
             <button
               key={key}
               type="button"
@@ -88,13 +85,14 @@ export function HomeScreen({
               role="tab"
               aria-selected={difficulty === key}
             >
-              <img
+              <Image
                 className="difficulty-picker__emoji"
                 src={DIFFICULTY_ICONS[key]}
                 alt=""
                 aria-hidden="true"
                 width={24}
                 height={24}
+                unoptimized
               />
               <span className="difficulty-picker__label">
                 {DIFFICULTY_LABELS[key]}

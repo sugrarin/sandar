@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations, useLocale } from "@/lib/translations";
+import { AvatarImage } from "@/components/AvatarImage";
 
 interface ProfileUserProps {
   avatarUrl?: string | null;
@@ -65,7 +66,10 @@ export function ProfileUser({
     >
       <div className="profile-user__avatar" aria-hidden="true">
         {avatarUrl ? (
-          <img src={avatarUrl} alt="" className="profile-user__avatar-img" />
+          <AvatarImage
+            src={avatarUrl}
+            className="profile-user__avatar-img"
+          />
         ) : (
           (displayName || email || "?").slice(0, 2).toUpperCase()
         )}

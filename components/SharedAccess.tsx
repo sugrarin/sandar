@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useContext } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Copy, X, ChevronRight, Plus } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "@/lib/translations";
@@ -12,14 +12,12 @@ import { NavigationContext } from "@/contexts/NavigationContext";
 import { useAccountStore } from "@/stores/accountStore";
 
 interface SharedAccessProps {
-  onClose?: () => void;
   initialCode?: string;
 }
 
 type Tab = "student" | "parent";
 
 export function SharedAccess({
-  onClose,
   initialCode: initialCodeProp,
 }: SharedAccessProps = {}) {
   const t = useTranslations();
@@ -33,6 +31,7 @@ export function SharedAccess({
   const [copied, setCopied] = useState(false);
   const [activating, setActivating] = useState(false);
   const [error, setError] = useState("");
+  const activatedInitialCode = useRef<string | null>(null);
 
   const shareCode = useAccountStore((s) => s.shareCode);
   const isGeneratingCode = useAccountStore((s) => s.isGeneratingCode);
@@ -48,14 +47,6 @@ export function SharedAccess({
   useEffect(() => {
     loadAccountSession();
   }, [loadAccountSession]);
-
-  // Auto-activate code if provided
-  useEffect(() => {
-    if (initialCode && tab === "parent") {
-      setInputCode(initialCode);
-      handleActivateCode(initialCode);
-    }
-  }, [initialCode]);
 
   const handleCopyLink = async () => {
     const link = `${window.location.origin}/share?code=${shareCode}`;
@@ -74,32 +65,47 @@ export function SharedAccess({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleActivateCode = async (codeToActivate?: string) => {
-    const codeValue = codeToActivate || inputCode;
-    if (!codeValue) return;
+  const handleActivateCode = useCallback(
+    async (codeValue: string) => {
+      if (!codeValue) return;
 
-    setActivating(true);
-    setError("");
+      setActivating(true);
+      setError("");
 
-    try {
-      const res = await fetch("/api/share/activate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: codeValue }),
-      });
+      try {
+        const res = await fetch("/api/share/activate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code: codeValue }),
+        });
 
-      if (res.ok) {
-        setInputCode("");
-        refreshStudents();
-      } else {
+        if (res.ok) {
+          setInputCode("");
+          refreshStudents();
+        } else {
+          setError(t("share.invalidCode"));
+        }
+      } catch {
         setError(t("share.invalidCode"));
+      } finally {
+        setActivating(false);
       }
-    } catch (err) {
-      setError(t("share.invalidCode"));
-    } finally {
-      setActivating(false);
+    },
+    [refreshStudents, t],
+  );
+
+  // Auto-activate code if provided
+  useEffect(() => {
+    if (
+      initialCode &&
+      tab === "parent" &&
+      activatedInitialCode.current !== initialCode
+    ) {
+      activatedInitialCode.current = initialCode;
+      setInputCode(initialCode);
+      void handleActivateCode(initialCode);
     }
-  };
+  }, [handleActivateCode, initialCode, tab]);
 
   const handleRevokeAccess = async (accessId: string) => {
     if (!confirm(t("share.revokeConfirm"))) return;
@@ -115,23 +121,6 @@ export function SharedAccess({
       }
     } catch (err) {
       console.error("Failed to revoke access:", err);
-    }
-  };
-
-  const handleUnlinkStudent = async (accessId: string) => {
-    if (!confirm(t("share.unlinkConfirm"))) return;
-
-    try {
-      const res = await fetch("/api/share/viewed", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accessId }),
-      });
-      if (res.ok) {
-        refreshStudents();
-      }
-    } catch (err) {
-      console.error("Failed to unlink student:", err);
     }
   };
 
@@ -177,7 +166,7 @@ export function SharedAccess({
                 className="text-input"
               />
               <AccentButton
-                onClick={() => handleActivateCode()}
+                onClick={() => handleActivateCode(inputCode)}
                 disabled={!inputCode || activating}
               >
                 <Plus size={16} />

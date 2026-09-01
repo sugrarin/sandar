@@ -20,7 +20,6 @@ interface ResultScreenProps {
   hasMistakes: boolean;
   onReview: () => void;
   onReplay: () => void;
-  onReturnHome: () => void;
   onStartGame: (mode: GameMode) => void;
 }
 
@@ -49,7 +48,6 @@ export function ResultScreen({
   hasMistakes,
   onReview,
   onReplay,
-  onReturnHome,
   onStartGame,
 }: ResultScreenProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);

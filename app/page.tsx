@@ -15,7 +15,7 @@ import { StudentStatsView } from "@/components/StudentStatsView";
 import { AchievementToast } from "@/components/AchievementToast";
 import { Navbar } from "@/components/Navbar";
 import { TranslationProvider } from "@/lib/translations";
-import { saveSession } from "@/lib/session";
+import { saveSession, syncPendingSessions } from "@/lib/session";
 import { useStatsStore } from "@/stores/statsStore";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -27,7 +27,7 @@ import type { GameMode, Difficulty } from "@/types";
 function AppContent() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const { stack, push, replace, reset } = useNavigation();
+  const { stack, push, replace } = useNavigation();
   const currentRoute = stack[stack.length - 1];
 
   const {
@@ -40,7 +40,6 @@ function AppContent() {
     replayCurrentMode,
     handleAnswer,
     advanceRound,
-    finishCurrentRound,
     returnHome,
     getCurrentTask,
   } = useGameStore();
@@ -57,8 +56,13 @@ function AppContent() {
       const store = useStatsStore.getState();
       if (event === "SIGNED_OUT" || !session?.user) {
         store.reset();
-      } else if (event === "SIGNED_IN") {
-        store.loadAll(true);
+      } else if (
+        (event === "SIGNED_IN" || event === "INITIAL_SESSION") &&
+        session?.user
+      ) {
+        setTimeout(() => {
+          void syncPendingSessions().then(() => store.loadAll(true));
+        }, 0);
       }
     });
 
@@ -115,22 +119,6 @@ function AppContent() {
         result.isCorrect ? 200 : 0,
       );
     }
-  };
-
-  const onFinishGame = () => {
-    const result = finishCurrentRound();
-    if (result) {
-      replace({ name: "result" });
-      const round = useGameStore.getState().lastSession;
-      if (round) {
-        persistSession(round);
-      }
-    }
-  };
-
-  const onReturnHome = () => {
-    returnHome();
-    reset();
   };
 
   const onReviewMistakes = () => {
@@ -200,7 +188,6 @@ function AppContent() {
                 }
               }
             }}
-            onFinish={onFinishGame}
           />
         )}
 
@@ -211,7 +198,6 @@ function AppContent() {
             hasMistakes={lastSession.mistakes.length > 0}
             onReview={onReviewMistakes}
             onReplay={onReplay}
-            onReturnHome={onReturnHome}
             onStartGame={onStartGame}
           />
         )}
