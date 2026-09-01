@@ -1,10 +1,16 @@
 import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
 import { cookies } from "next/headers";
 import { CellTooltip } from "@/components/CellTooltip";
 import "./globals.css";
 
+const inter = Inter({
+  subsets: ["latin", "cyrillic"],
+  display: "swap",
+});
+
 export async function generateMetadata(): Promise<Metadata> {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const locale = cookieStore.get("locale")?.value || "kk";
 
   const title =
@@ -33,27 +39,17 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const locale = cookieStore.get("locale")?.value || "kk";
 
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
-          rel="stylesheet"
-        />
         <link
           rel="icon"
           type="image/png"
@@ -72,7 +68,7 @@ export default function RootLayout({
           href="/apple-touch-icon.png"
         />
       </head>
-      <body className="page">
+      <body className={`page ${inter.className}`}>
         {children}
         <CellTooltip />
       </body>

@@ -1,26 +1,27 @@
 import { createClient } from "./supabase/client";
-import type { SessionAnswer, GameMode, Difficulty } from "@/types";
+import { buildSessionRequest } from "./sessionPayload";
+import type { CompletedSession } from "@/types";
 
-interface SessionData {
-  sourceMode: GameMode;
-  mode: GameMode;
-  difficulty: Difficulty;
-  score: number;
-  total: number;
-  mistakes: {
-    question: string;
-    answer: number;
-    options: number[];
-    operation: GameMode;
-    left: number;
-    right: number;
-  }[];
-  finishedAt: number;
+const MAX_PENDING = 50;
+
+function readPendingSessions(): CompletedSession[] {
+  try {
+    const value = JSON.parse(localStorage.getItem("pendingSessions") || "[]");
+    return Array.isArray(value) ? value : [];
+  } catch {
+    return [];
+  }
 }
 
 export async function saveSession(
-  sessionData: SessionData,
+  sessionData: CompletedSession,
 ): Promise<{ success: boolean; error?: string }> {
+  // Error-review rounds are practice and must not inflate progress statistics.
+  const requestBody = buildSessionRequest(sessionData);
+  if (!requestBody) {
+    return { success: true };
+  }
+
   const supabase = createClient();
 
   // Check if user is authenticated
@@ -29,32 +30,25 @@ export async function saveSession(
   } = await supabase.auth.getUser();
 
   if (!user) {
-    const MAX_PENDING = 50;
-    const pendingSessions = JSON.parse(
-      localStorage.getItem("pendingSessions") || "[]",
+    const pendingSessions = readPendingSessions();
+    pendingSessions.push(sessionData);
+    localStorage.setItem(
+      "pendingSessions",
+      JSON.stringify(pendingSessions.slice(-MAX_PENDING)),
     );
-    pendingSessions.push({ ...sessionData, timestamp: new Date().toISOString() });
-    localStorage.setItem("pendingSessions", JSON.stringify(pendingSessions.slice(-MAX_PENDING)));
     return { success: true };
   }
 
   try {
-    // Insert session
-    const wrongCount = sessionData.mistakes.length;
-    const correctCount = sessionData.score;
-    const totalCount = sessionData.total;
-
-    const { error: sessionError } = await supabase.from("sessions").insert({
-      user_id: user.id,
-      mode: sessionData.mode,
-      difficulty: sessionData.difficulty,
-      total_questions: totalCount,
-      correct_answers: correctCount,
-      wrong_answers: wrongCount,
-      completed_at: new Date(sessionData.finishedAt).toISOString(),
+    const response = await fetch("/api/sessions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(requestBody),
     });
 
-    if (sessionError) throw sessionError;
+    if (!response.ok) {
+      throw new Error(`Session API returned ${response.status}`);
+    }
 
     return { success: true };
   } catch (error) {
@@ -74,9 +68,7 @@ export async function syncPendingSessions(): Promise<{
 
   if (!user) return { synced: 0, failed: 0 };
 
-  const pendingSessions = JSON.parse(
-    localStorage.getItem("pendingSessions") || "[]",
-  );
+  const pendingSessions = readPendingSessions();
   if (pendingSessions.length === 0) return { synced: 0, failed: 0 };
 
   let synced = 0;

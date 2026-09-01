@@ -41,6 +41,19 @@ export interface GameSession {
   lastAnswer: number | null;
   reviewQueue: Task[];
   startTime?: number;
+  questionStartedAt?: number;
+}
+
+export interface CompletedSession {
+  sourceMode: GameMode;
+  mode: GameMode;
+  difficulty: Difficulty;
+  score: number;
+  total: number;
+  mistakes: Task[];
+  answers: SessionAnswer[];
+  durationSeconds: number;
+  finishedAt: number;
 }
 
 export interface UserStats {

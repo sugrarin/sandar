@@ -57,7 +57,7 @@ export const useAiStore = create<AiStoreState>()(
         // Single request: validate + generate in one call
         await get().generateAiSummary();
 
-        const { isKeyValid, summaryError } = get();
+        const { summaryError } = get();
         if (summaryError === "invalid_key") {
           set({ isKeyValid: false, summaryError: "Неверный API ключ" });
           return { success: false, error: "Неверный API ключ" };

@@ -1,8 +1,8 @@
 import { MetadataRoute } from "next";
 import { cookies } from "next/headers";
 
-export default function manifest(): MetadataRoute.Manifest {
-  const cookieStore = cookies();
+export default async function manifest(): Promise<MetadataRoute.Manifest> {
+  const cookieStore = await cookies();
   const locale = cookieStore.get("locale")?.value || "kk";
 
   const name =

@@ -8,6 +8,7 @@ import type {
   Task,
   GameSession,
   SessionAnswer,
+  CompletedSession,
 } from "@/types";
 import { DIFFICULTIES, MODE_LABELS, OPERATION_SYMBOLS } from "@/types";
 
@@ -20,15 +21,7 @@ interface GameState {
     difficulty: Difficulty;
   };
   activeRound: GameSession | null;
-  lastSession: {
-    sourceMode: GameMode;
-    mode: GameMode;
-    difficulty: Difficulty;
-    score: number;
-    total: number;
-    mistakes: Task[];
-    finishedAt: number;
-  } | null;
+  lastSession: CompletedSession | null;
   answers: SessionAnswer[];
 
   // Actions
@@ -80,7 +73,7 @@ function pickDifficultyProfile(difficultyId: Difficulty): Difficulty {
   return Math.random() < b.current ? difficultyId : b.previous;
 }
 
-function createOptions(answer: number): number[] {
+export function createOptions(answer: number): number[] {
   const options = new Set([answer]);
   const offsets = shuffle([1, -1, 10, -10]);
 
@@ -233,6 +226,7 @@ export const useGameStore = create<GameState>()(
             lastAnswer: null,
             reviewQueue: [],
             startTime: Date.now(),
+            questionStartedAt: Date.now(),
           },
           answers: [],
         });
@@ -260,6 +254,7 @@ export const useGameStore = create<GameState>()(
             lastAnswer: null,
             reviewQueue: mistakes,
             startTime: Date.now(),
+            questionStartedAt: Date.now(),
           },
           answers: [],
         });
@@ -286,8 +281,8 @@ export const useGameStore = create<GameState>()(
         }
 
         const isCorrect = selected === task.answer;
-        const timeSpent = round.startTime
-          ? Math.floor((Date.now() - round.startTime) / 1000)
+        const timeSpent = round.questionStartedAt
+          ? Math.floor((Date.now() - round.questionStartedAt) / 1000)
           : undefined;
 
         const answer: SessionAnswer = {
@@ -343,6 +338,8 @@ export const useGameStore = create<GameState>()(
               score: round.score,
               total: round.total,
               mistakes: round.mistakes,
+              answers: get().answers,
+              durationSeconds: duration,
               finishedAt: Date.now(),
             },
             activeRound: null,
@@ -356,6 +353,7 @@ export const useGameStore = create<GameState>()(
             ...round,
             allowAdvance: false,
             lastAnswer: null,
+            questionStartedAt: Date.now(),
           },
         });
 
@@ -378,6 +376,8 @@ export const useGameStore = create<GameState>()(
             score: round.score,
             total: round.total,
             mistakes: round.mistakes,
+            answers: get().answers,
+            durationSeconds: duration,
             finishedAt: Date.now(),
           },
           activeRound: null,
